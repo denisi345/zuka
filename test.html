@@ -1,0 +1,36 @@
+html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZUKA</title>
+</head>
+<body>
+  <p id="status">Connecting...</p>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+    const supabaseUrl = 'https://fgocnybpjweezxwvycdt.supabase.co'
+    const supabaseKey = 'sb_publishable_Ga9F1m1M6Bt-NtDF_n5tJQ_CInc6npc'
+
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    async function test() {
+      const el = document.getElementById('status')
+      try {
+        const { error } = await supabase.from('profiles').select('*').limit(1)
+        if (error) {
+          el.textContent = 'Connected: ' + error.message
+        } else {
+          el.textContent = 'Connected Successfully'
+        }
+      } catch (e) {
+        el.textContent = 'Failed: ' + e.message
+      }
+    }
+    test()
+  </script>
+</body>
+</html>
