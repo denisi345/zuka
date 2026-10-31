@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZUKA - Global Social</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:background .2s}
+body{background:#000;color:#fff;overflow:hidden}
+body.light{background:#fff;color:#000}
+.header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222}
+.header.light{border-color:#eee}
+.logo{font-weight:900;font-size:22px} .logo span{color:#00ff88}
+.stories{display:flex;gap:12px;padding:12px;overflow-x:auto;border-bottom:1px solid #222}
+.stories.light{border-color:#eee}
+.story{flex:0 0 62px;text-align:center}
+.story-ring{width:62px;height:62px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)}
+.story-ring img{width:100%;height:100%;border-radius:50%;border:3px solid #000;object-fit:cover}
+.story-add{width:62px;height:62px;border-radius:50%;background:#111;border:2px dashed #444;display:grid;place-items:center;font-size:28px;cursor:pointer}
+.story p{font-size:11px;margin-top:4px;opacity:.8}
+.main{height:calc(100vh - 125px);display:flex}
+.chat-box{flex:1;display:flex;flex-direction:column}
+.messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:70%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4}
+.me{align-self:flex-end;background:#00ff88;color:#000;border-bottom-right-radius:4px}
+.them{align-self:flex-start;background:#1c1c1e;border-bottom-left-radius:4px}
+.them.light{background:#f0f0f0;color:#000}
+.input-bar{display:flex;gap:8px;padding:10px;border-top:1px solid #222}
+.input-bar.light{border-color:#eee}
+.input-bar input{flex:1;background:#111;border:1px solid #333;border-radius:24px;padding:12px 16px;color:#fff;outline:none}
+.input-bar.light input{background:#f8f8f8;color:#000;border-color:#ddd}
+.btn{border:none;border-radius:50%;width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
+.btn-video{background:#1c1c1e} .btn-send{background:#00ff88}
+#videoModal{position:fixed;inset:0;background:#000;z-index:99;display:none;flex-direction:column}
+#videoModal video{width:100%;height:100%;object-fit:cover}
+.video-controls{position:absolute;bottom:24px;left:0;right:0;display:flex;justify-content:center;gap:16px}
+#notif{position:fixed;top:60px;right:16px;background:#111;padding:8px 16px;border-radius:8px;display:none;z-index:100}
+#profileModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;place-items:center;z-index:200}
+.profile-card{background:#111;padding:24px;border-radius:16px;text-align:center;width:300px}
+.profile-card.light{background:#fff;color:#000}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">ZU<span>KA</span></div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn btn-video" onclick="startVideo()">📹</button>
+    <button class="btn" onclick="toggleTheme()">🌙</button>
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#00ff88,#00d4ff);cursor:pointer" onclick="showProfile()"></div>
+  </div>
+</div>
+
+<div class="stories" id="stories">
+  <div class="story"><div class="story-add" onclick="addStory()">+</div><p>Add</p></div>
+  <div class="story"><div class="story-ring"><img src="https://i.pravatar.cc/100?img=5"></div><p>Neema</p></div>
+  <div class="story"><div class="story-ring"><img src="https://i.pravatar.cc/100?img=8"></div><p>Denisi</p></div>
+</div>
+
+<div class="main">
+  <div class="chat-box">
+    <div class="messages" id="msgs">
+      <div class="bubble them">Hey! Is ZUKA V3 live? 🔥</div>
+      <div class="bubble me">Yes! With notifications, theme & profiles!</div>
+    </div>
+    <div class="input-bar">
+      <input id="msgInput" placeholder="Type a message...">
+      <button class="btn btn-send" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div id="videoModal">
+  <video id="localVideo" autoplay muted playsinline></video>
+  <div class="video-controls">
+    <button class="btn" style="background:#ff3b30;color:#fff" onclick="stopVideo()">✕ End</button>
+  </div>
+</div>
+
+<div id="notif">🔔 New message!</div>
+<div id="profileModal">
+  <div class="profile-card">
+    <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(45deg,#00ff88,#00d4ff);margin:0 auto 16px"></div>
+    <h3>Your Profile</h3>
+    <p>@username</p>
+    <button class="btn" style="margin-top:16px;background:#222;width:100%" onclick="hideProfile()">Close</button>
+  </div>
+</div>
+
+<script>
+const msgs=document.getElementById('msgs');
+const input=document.getElementById('msgInput');
+let isLight=false;
+function sendMsg(){
+  if(!input.value.trim())return;
+  const div=document.createElement('div');
+  div.className='bubble me'; div.textContent=input.value;
+  msgs.appendChild(div); input.value=''; msgs.scrollTop=msgs.scrollHeight;
+  localStorage.setItem('zuka_chat',msgs.innerHTML);
+  showNotif();
+  setTimeout(()=>{ const r=document.createElement('div'); r.className='bubble them'; r.textContent='Got it! 👊'; msgs.appendChild(r); msgs.scrollTop=msgs.scrollHeight; },700);
+}
+function showNotif(){ const n=document.getElementById('notif'); n.style.display='block'; setTimeout(()=>n.style.display='none',2000); }
+function toggleTheme(){ isLight=!isLight; document.body.className=isLight?'light':''; document.querySelectorAll('.header, .stories, .input-bar, .them, .profile-card').forEach(e=>e.className=(e.className+' '+(isLight?'light':'')).trim()); }
+function addStory(){ const url=prompt('Paste image URL:','https://i.pravatar.cc/150'); if(url){ const s=document.createElement('div'); s.className='story'; s.innerHTML=`<div class="story-ring"><img src="${url}"></div><p>You</p>`; document.getElementById('stories').appendChild(s); } }
+async function startVideo(){ document.getElementById('videoModal').style.display='flex'; try{ const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true}); document.getElementById('localVideo').srcObject=stream; window._stream=stream; }catch(e){alert('Allow camera');} }
+function stopVideo(){ document.getElementById('videoModal').style.display='none'; if(window._stream)window._stream.getTracks().forEach(t=>t.stop()); }
+function showProfile(){ document.getElementById('profileModal').style.display='grid'; }
+function hideProfile(){ document.getElementById('profileModal').style.display='none'; }
+msgs.innerHTML=localStorage.getItem('zuka_chat')||msgs.innerHTML;
+</script>
+</body>
+</html>
