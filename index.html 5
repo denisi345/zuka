@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZUKA - Super App</title>
+<style>
+:root{--accent:#00ff88}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif}
+body{background:#000;color:#fff;overflow:hidden}
+.header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222;background:#000;z-index:10}
+.logo{font-weight:900;font-size:22px} .logo span{color:var(--accent)}
+.search{flex:1;max-width:220px;margin:0 12px;background:#111;border:1px solid #333;border-radius:24px;padding:8px 14px;color:#fff;outline:none}
+.stories{display:flex;gap:12px;padding:12px;overflow-x:auto;border-bottom:1px solid #222}
+.story{flex:0 0 62px;text-align:center;cursor:pointer}
+.ring{width:62px;height:62px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)}
+.ring img{width:100%;height:100%;border-radius:50%;border:3px solid #000;object-fit:cover}
+.add{width:62px;height:62px;border-radius:50%;background:#111;border:2px dashed #444;display:grid;place-items:center;font-size:28px}
+.main{height:calc(100vh - 125px);display:flex}
+.chat-list{width:120px;border-right:1px solid #222;padding:8px;display:flex;flex-direction:column;gap:8px}
+.group{padding:8px 10px;background:#111;border-radius:10px;font-size:12px;cursor:pointer;text-align:center}
+.group.active{background:var(--accent);color:#000}
+.chat-box{flex:1;display:flex;flex-direction:column}
+.messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;position:relative}
+.bubble img{max-width:180px;border-radius:12px;margin-top:6px;display:block}
+.me{align-self:flex-end;background:var(--accent);color:#000;border-bottom-right-radius:4px}
+.them{align-self:flex-start;background:#1c1c1e;border-bottom-left-radius:4px}
+.input-bar{display:flex;gap:8px;padding:10px;border-top:1px solid #222;align-items:center}
+.input-bar input[type=text]{flex:1;background:#111;border:1px solid #333;border-radius:24px;padding:12px 16px;color:#fff;outline:none}
+.btn{border:none;border-radius:50%;width:42px;height:42px;display:grid;place-items:center;cursor:pointer;background:#1c1c1e;color:#fff;font-size:18px}
+.btn-send{background:var(--accent);color:#000}
+#themes{position:fixed;top:60px;right:12px;background:#111;padding:10px;border-radius:12px;display:none;gap:8px;z-index:20}
+.dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid #333}
+#videoModal{position:fixed;inset:0;background:#000;z-index:99;display:none;flex-direction:column}
+#videoModal video{width:100%;height:100%;object-fit:cover}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">ZU<span>KA</span></div>
+  <input class="search" id="search" placeholder="🔍 Search">
+  <div style="display:flex;gap:8px">
+    <button class="btn" onclick="toggleThemes()">🎨</button>
+    <button class="btn" onclick="startVideo()">📹</button>
+    <button class="btn" onclick="shareLoc()">📍</button>
+  </div>
+</div>
+
+<div id="themes">
+  <div class="dot" style="background:#00ff88" onclick="setTheme('#00ff88')"></div>
+  <div class="dot" style="background:#ff3b30" onclick="setTheme('#ff3b30')"></div>
+  <div class="dot" style="background:#0a84ff" onclick="setTheme('#0a84ff')"></div>
+  <div class="dot" style="background:#ffcc00" onclick="setTheme('#ffcc00')"></div>
+  <div class="dot" style="background:#af52de" onclick="setTheme('#af52de')"></div>
+</div>
+
+<div class="stories" id="stories">
+  <div class="story" onclick="addStory()"><div class="add">+</div><p>Add</p></div>
+  <div class="story"><div class="ring"><img src="https://i.pravatar.cc/100?img=5"></div><p>Neema</p></div>
+  <div class="story"><div class="ring"><img src="https://i.pravatar.cc/100?img=8"></div><p>Denisi</p></div>
+</div>
+
+<div class="main">
+  <div class="chat-list">
+    <div class="group active" onclick="switchGroup(this,'General')">General</div>
+    <div class="group" onclick="switchGroup(this,'Design Team')">Design</div>
+    <div class="group" onclick="switchGroup(this,'Dev Squad')">Devs</div>
+    <button class="group" style="border:1px dashed #333;background:transparent" onclick="createGroup()">+ Group</button>
+  </div>
+  <div class="chat-box">
+    <div class="messages" id="msgs">
+      <div class="bubble them">Welcome to ZUKA V5! Upload photos, share location, change theme 🎨</div>
+    </div>
+    <div class="input-bar">
+      <label class="btn" style="font-size:20px">📸<input type="file" id="fileUp" accept="image/*" hidden></label>
+      <input type="text" id="msgInput" placeholder="Type a message...">
+      <button class="btn" onclick="toggleEmoji()">😊</button>
+      <button class="btn btn-send" onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
+
+<div id="videoModal">
+  <video id="localVideo" autoplay muted playsinline></video>
+  <button class="btn" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:#ff3b30" onclick="stopVideo()">✕ End</button>
+</div>
+
+<script>
+const msgs=document.getElementById('msgs');
+const input=document.getElementById('msgInput');
+const emojis=['😊','🔥','❤️','👍','😂','🎉','👏','😎'];
+let currentGroup='General';
+
+function sendMsg(text=null, isLoc=false, imgSrc=null){
+  const val = text || input.value.trim();
+  if(!val && !imgSrc) return;
+  const div=document.createElement('div');
+  div.className='bubble me';
+  div.innerHTML = val + (imgSrc ? `<img src="${imgSrc}">` : '');
+  if(isLoc) div.innerHTML += ` <a href="${val}" target="_blank" style="color:#000;text-decoration:underline">View Location</a>`;
+  msgs.appendChild(div);
+  input.value=''; msgs.scrollTop=msgs.scrollHeight;
+  localStorage.setItem('zuka_'+currentGroup, msgs.innerHTML);
+}
+
+input.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg() });
+
+function toggleThemes(){ const t=document.getElementById('themes'); t.style.display = t.style.display==='flex'?'none':'flex'; }
+function setTheme(c){ document.documentElement.style.setProperty('--accent', c); toggleThemes(); }
+
+function addStory(){
+  const url=prompt('Paste image URL for story:','https://i.pravatar.cc/150?img=20');
+  if(!url) return;
+  const s=document.createElement('div'); s.className='story';
+  s.innerHTML=`<div class="ring"><img src="${url}"></div><p>You</p>`;
+  document.getElementById('stories').appendChild(s);
+}
+
+document.getElementById('fileUp').addEventListener('change', function(){
+  const file=this.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=> sendMsg('📸 Photo', false, e.target.result);
+  reader.readAsDataURL(file);
+});
+
+function toggleEmoji(){
+  const e = prompt('Pick emoji: 😊 🔥 ❤️ 👍 😂 🎉 👏 😎');
+  if(e) input.value += e;
+}
+
+function switchGroup(el, name){
+  document.querySelectorAll('.group').forEach(g=>g.classList.remove('active'));
+  el.classList.add('active');
+  currentGroup=name;
+  msgs.innerHTML = localStorage.getItem('zuka_'+name) || `<div class="bubble them">Welcome to ${name} group!</div>`;
+}
+
+function createGroup(){
+  const name=prompt('Group name:');
+  if(!name) return;
+  const g=document.createElement('div'); g.className='group'; g.textContent=name;
+  g.onclick=function(){ switchGroup(this, name) };
+  document.querySelector('.chat-list').insertBefore(g, document.querySelector('.chat-list').lastElementChild);
+}
+
+function shareLoc(){
+  if(!navigator.geolocation) return alert('Location not supported');
+  navigator.geolocation.getCurrentPosition(p=>{
+    const url=`https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;
+    sendMsg(url, true);
+  });
+}
+
+async function startVideo(){
+  document.getElementById('videoModal').style.display='flex';
+  try{ const s=await navigator.mediaDevices.getUserMedia({video:true,audio:true}); document.getElementById('localVideo').srcObject=s; window._s=s; }catch(e){ alert('Allow camera'); }
+}
+function stopVideo(){ document.getElementById('videoModal').style.display='none'; if(window._s) window._s.getTracks().forEach(t=>t.stop()); }
+
+document.getElementById('search').addEventListener('input', e=>{
+  const q=e.target.value.toLowerCase();
+  document.querySelectorAll('.story p').forEach(p=>{
+    p.parentElement.style.display = p.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+  });
+});
+</script>
+</body>
+</html>
