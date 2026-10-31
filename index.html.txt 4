@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZUKA - Global Social</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:background .2s}
+body{background:#000;color:#fff;overflow:hidden}
+body.light{background:#fff;color:#000}
+.header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222}
+.header.light{border-color:#eee}
+.logo{font-weight:900;font-size:22px} .logo span{color:#00ff88}
+.search-bar{flex:1;max-width:200px;margin:0 16px;background:#111;border:1px solid #333;border-radius:24px;padding:8px 12px;color:#fff}
+.search-bar.light{background:#f8f8f8;color:#000;border-color:#ddd}
+.stories{display:flex;gap:12px;padding:12px;overflow-x:auto;border-bottom:1px solid #222}
+.stories.light{border-color:#eee}
+.story{flex:0 0 62px;text-align:center}
+.story-ring{width:62px;height:62px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)}
+.story-ring img{width:100%;height:100%;border-radius:50%;border:3px solid #000;object-fit:cover}
+.main{height:calc(100vh - 125px);display:flex}
+.chat-box{flex:1;display:flex;flex-direction:column}
+.messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:70%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;position:relative}
+.me{align-self:flex-end;background:#00ff88;color:#000;border-bottom-right-radius:4px}
+.them{align-self:flex-start;background:#1c1c1e;border-bottom-left-radius:4px}
+.them.light{background:#f0f0f0;color:#000}
+.reaction{position:absolute;bottom:-8px;right:-8px;background:#111;padding:2px 6px;border-radius:12px;font-size:10px}
+.input-bar{display:flex;gap:8px;padding:10px;border-top:1px solid #222;position:relative}
+.input-bar.light{border-color:#eee}
+.input-bar input{flex:1;background:#111;border:1px solid #333;border-radius:24px;padding:12px 16px;color:#fff;outline:none}
+.input-bar.light input{background:#f8f8f8;color:#000;border-color:#ddd}
+.emoji-picker{position:absolute;bottom:60px;right:10px;background:#111;padding:8px;border-radius:8px;display:none;flex-wrap:wrap;width:200px;gap:4px}
+.emoji{font-size:20px;cursor:pointer}
+.btn{border:none;border-radius:50%;width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
+.btn-video{background:#1c1c1e} .btn-send{background:#00ff88}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">ZU<span>KA</span></div>
+  <input class="search-bar" placeholder="🔍 Search users...">
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn btn-video" onclick="startVideo()">📹</button>
+    <button class="btn" onclick="toggleTheme()">🌙</button>
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#00ff88,#00d4ff);cursor:pointer"></div>
+  </div>
+</div>
+
+<div class="stories" id="stories">
+  <div class="story"><div class="story-add" onclick="addStory()">+</div><p>Add</p></div>
+  <div class="story"><div class="story-ring"><img src="https://i.pravatar.cc/100?img=5"></div><p>Neema</p></div>
+</div>
+
+<div class="main">
+  <div class="chat-box">
+    <div class="messages" id="msgs">
+      <div class="bubble them">Hey! 😊<span class="reaction">👍</span></div>
+      <div class="bubble me">ZUKA V4 🔥</div>
+    </div>
+    <div class="input-bar">
+      <input id="msgInput" placeholder="Type a message...">
+      <button class="btn" onclick="toggleEmoji()">😊</button>
+      <button class="btn btn-send" onclick="sendMsg()">➤</button>
+      <div class="emoji-picker" id="emojiPicker">
+        😊👍❤️🔥😂👏😎🤔🎉😍🤩👋💯
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const msgs=document.getElementById('msgs');
+const input=document.getElementById('msgInput');
+let isLight=false;
+function sendMsg(){
+  if(!input.value.trim())return;
+  const div=document.createElement('div');
+  div.className='bubble me'; div.textContent=input.value;
+  msgs.appendChild(div); input.value=''; msgs.scrollTop=msgs.scrollHeight;
+}
+function toggleTheme(){ isLight=!isLight; document.body.className=isLight?'light':''; document.querySelectorAll('.header, .stories, .input-bar, .them').forEach(e=>e.className=(e.className+' '+(isLight?'light':'')).trim()); }
+function addStory(){ const url=prompt('Paste image URL:','https://i.pravatar.cc/150'); if(url){ const s=document.createElement('div'); s.className='story'; s.innerHTML=`<div class="story-ring"><img src="${url}"></div><p>You</p>`; document.getElementById('stories').appendChild(s); } }
+function startVideo(){ alert('Video call starting...'); }
+function toggleEmoji(){ document.getElementById('emojiPicker').style.display=document.getElementById('emojiPicker').style.display==='flex'?'none':'flex'; }
+document.getElementById('emojiPicker').addEventListener('click',e=>{ if(e.target.className==='emoji'){ input.value+=e.target.textContent; input.focus(); } });
+</script>
+</body>
+</html>
