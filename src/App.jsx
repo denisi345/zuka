@@ -1,34 +1,71 @@
 jsx
-import { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)
 
-export default function App(){
-  const [user,setUser]=useState(null)
-  const [posts,setPosts]=useState([])
-  const [text,setText]=useState('')
-  
-  useEffect(()=>{ check(); load() },[])
-  async function check(){ const {data}=await supabase.auth.getUser(); setUser(data.user) }
-  async function load(){ const {data}=await supabase.from('posts').select('*').order('created_at',{ascending:false}); if(data) setPosts(data) }
-  async function login(){
-    const email=prompt('Email:'); const password=prompt('Password:')
-    if(!email||!password) return
-    const {error}=await supabase.auth.signInWithPassword({email,password})
-    if(error){ const {error:e2}=await supabase.auth.signUp({email,password}); if(e2) alert(e2.message); else alert('Akaunti imeundwa!') }
-    check()
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+export default function App() {
+  const [posts, setPosts] = useState([])
+  const [newPost, setNewPost] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPosts()
+  }, [])
+
+  const fetchPosts = async () => {
+    const { data } = await supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(20)
+    if (data) setPosts(data)
+    setLoading(false)
   }
-  async function post(){
-    if(!text) return; if(!user) return login()
-    const {error}=await supabase.from('posts').insert({content:text, user_id:user.id})
-    if(error) alert(error.message); else {setText(''); load()}
+
+  const handlePost = async () => {
+    if (!newPost) return
+    await supabase.from('posts').insert([{ content: newPost }])
+    setNewPost('')
+    fetchPosts()
   }
-  return(
-    <div className="container">
-      <h1 style={{textAlign:'center'}}>ZUKA 🌍</h1>
-      <p style={{textAlign:'center',opacity:0.6}}>{user?user.email:'Hujajisajili'}</p>
-      <div className="card"><input value={text} onChange={e=>setText(e.target.value)} placeholder="Andika..."/><button className="btn" onClick={post}>Post</button><button className="btn" style={{marginTop:8,background:'#333'}} onClick={login}>{user?'Logout':'Login / Jisajili'}</button></div>
-      {posts.map(p=><div key={p.id} className="card"><p>{p.content}</p><small style={{opacity:0.5}}>{new Date(p.created_at).toLocaleString()}</small></div>)}
+
+  if (loading) {
+    return (
+      <div style={{ background: 'black', color: 'gold', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h1>ZUKA LOADING...</h1>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ background: '#0f0f0f', minHeight: '100vh', color: 'white' }}>
+      <div style={{ background: 'black', padding: '15px', borderBottom: '2px solid gold', display: 'flex', justifyContent: 'space-between' }}>
+        <h1 style={{ color: 'gold', margin: 0 }}>ZUKA WORLD</h1>
+        <span style={{ background: 'gold', color: 'black', padding: '5px 10px', borderRadius: '20px' }}>LIVE</span>
+      </div>
+
+      <div style={{ maxWidth: '600px', margin: '20px auto', padding: '10px' }}>
+        <div style={{ background: '#1a1a1a', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+          <textarea
+            value={newPost}
+            onChange={(e) => setNewPost(e.target.value)}
+            placeholder="Write something..."
+            style={{ width: '100%', padding: '10px', background: '#2a2a2a', color: 'white', border: 'none', borderRadius: '5px' }}
+            rows={3}
+          />
+          <button
+            onClick={handlePost}
+            style={{ background: 'gold', color: 'black', border: 'none', padding: '10px 20px', borderRadius: '5px', marginTop: '10px', fontWeight: 'bold', width: '100%' }}
+          >
+            Post
+          </button>
+        </div>
+
+        {posts.map((p) => (
+          <div key={p.id} style={{ background: '#1a1a1a', padding: '15px', borderRadius: '10px', marginBottom: '15px', borderLeft: '3px solid gold' }}>
+            <p>{p.content}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
