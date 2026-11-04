@@ -1,4 +1,5 @@
-CTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,6 +28,14 @@ button{background:#000;color:#fff;border:0;padding:11px 16px;border-radius:8px;c
 </head>
 <body>
 <header><div class="logo">ZUKA</div><div><span onclick="showSection('notifications')">Notifications</span> | <span onclick="showSection('messages')">Messages</span></div></header>
+
+<div style="padding:10px;background:#fff;margin:10px;border-radius:10px">
+  <input id="emailInput" placeholder="Email yako">
+  <input id="passwordInput" type="password" placeholder="Password">
+  <button onclick="signUp()">Jisajili</button>
+  <button onclick="signIn()">Ingia</button>
+  <button onclick="signOut()">Toka</button>
+</div>
 
 <section id="home" class="active">
 <h2>Home Feed</h2>
@@ -139,8 +148,9 @@ button{background:#000;color:#fff;border:0;padding:11px 16px;border-radius:8px;c
 </nav>
 
 <script>
-const supabase = window.supabase.createClient('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo};
-https://fgocnybpjweezxwvycdt.supabase.co/rest/v1/):
+const SUPABASE_URL = 'https://fgocnybpjweezxwvycdt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let currentConversation = null;
 
@@ -159,6 +169,23 @@ function showSection(id){
   if(id==='search') loadHashtags();
   if(id==='ai') {loadAiMessages(); loadAiPosts(); loadAiSettings();}
   if(id==='ceo') {loadCeoPanel(); loadCeoSettings(); loadReports(); loadTips();}
+}
+
+async function signUp(){
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passwordInput').value;
+  const { error } = await supabase.auth.signUp({email, password});
+  if(error) alert(error.message); else alert('Umejisajili! Sasa Ingia');
+}
+async function signIn(){
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passwordInput').value;
+  const { error } = await supabase.auth.signInWithPassword({email, password});
+  if(error) alert(error.message); else { init(); alert('Karibu ZUKA!'); }
+}
+async function signOut(){
+  await supabase.auth.signOut();
+  location.reload();
 }
 
 async function init(){
