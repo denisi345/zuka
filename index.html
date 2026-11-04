@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZUKA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial;background:#f0f2f5;margin:0;padding-bottom:80px}
+header{background:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;box-shadow:0 1px 5px #ddd}
+.logo{font-weight:900;font-size:24px}
+.card{background:#fff;margin:12px;border-radius:14px;overflow:hidden;padding:0}
+.user{display:flex;align-items:center;gap:10px;padding:12px}
+.user img{width:42px;height:42px;border-radius:50%;object-fit:cover}
+.card img.main{width:100%;display:block}
+.content{padding:12px;font-size:15px}
+.actions{display:flex;gap:18px;padding:0 12px 14px;font-size:16px;cursor:pointer}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #ddd;z-index:10}
+nav span{cursor:pointer;font-size:13px;text-align:center}
+section{display:none;padding:10px}
+section.active{display:block}
+input,textarea,select{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
+button{background:#000;color:#fff;border:0;padding:11px 16px;border-radius:8px;cursor:pointer;width:100%}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.small{font-size:12px;color:#666}
+.badge{color:#1d9bf0}
+</style>
+</head>
+<body>
+<header><div class="logo">ZUKA</div><div><span onclick="showSection('notifications')">Notifications</span> | <span onclick="showSection('messages')">Messages</span></div></header>
+
+<div style="padding:10px;background:#fff;margin:10px;border-radius:10px">
+  <input id="emailInput" placeholder="Email yako">
+  <input id="passwordInput" type="password" placeholder="Password">
+  <button onclick="signUp()">Jisajili</button>
+  <button onclick="signIn()">Ingia</button>
+  <button onclick="signOut()">Toka</button>
+</div>
+
+<section id="home" class="active">
+<h2>Home Feed</h2>
+<input id="postContent" placeholder="Write a post...">
+<input id="postImage" placeholder="Image URL">
+<input id="postVideo" placeholder="Video URL">
+<button onclick="createPost()">Create Post</button>
+<button onclick="loadFeed()">Refresh Feed</button>
+<div id="feed"></div>
+<h3>Stories</h3><div id="stories"></div>
+<h3>Trending Posts</h3><div id="trending"></div>
+<h3>Feed Items</h3><div id="feedItems"></div>
+</section>
+
+<section id="reels">
+<h2>Reels</h2>
+<div id="reelsList"></div>
+<h3>Create Reel</h3>
+<input id="reelUrl" placeholder="Reel Video URL">
+<input id="reelCaption" placeholder="Caption">
+<button onclick="createReel()">Post Reel</button>
+</section>
+
+<section id="groups">
+<h2>Groups</h2><div id="groupsList"></div>
+<input id="groupName" placeholder="Group Name">
+<button onclick="createGroup()">Create Group</button>
+<h3>Group Posts</h3><div id="groupPosts"></div>
+</section>
+
+<section id="pages">
+<h2>Pages</h2><div id="pagesList"></div>
+<input id="pageName" placeholder="Page Name">
+<button onclick="createPage()">Create Page</button>
+</section>
+
+<section id="events">
+<h2>Events</h2><div id="eventsList"></div>
+<input id="eventTitle" placeholder="Event Title">
+<button onclick="createEvent()">Create Event</button>
+</section>
+
+<section id="market">
+<h2>Marketplace</h2><div id="productsList"></div>
+<input id="productName" placeholder="Product Name">
+<input id="productPrice" placeholder="Price" type="number">
+<button onclick="createProduct()">Add Product</button>
+</section>
+
+<section id="messages">
+<h2>Messages</h2><div id="conversationsList"></div>
+<div id="messagesList"></div>
+<input id="messageText" placeholder="Type message...">
+<button onclick="sendMessage()">Send Message</button>
+</section>
+
+<section id="notifications">
+<h2>Notifications</h2><div id="notificationsList"></div>
+</section>
+
+<section id="profile">
+<h2>Profile</h2><div id="profileInfo"></div>
+<input id="bioInput" placeholder="Bio">
+<input id="avatarInput" placeholder="Avatar URL">
+<input id="coverInput" placeholder="Cover URL">
+<button onclick="updateProfile()">Update Profile</button>
+<h3>Saved Posts</h3><div id="savedList"></div>
+<h3>My Posts</h3><div id="myPosts"></div>
+<h3>Followers / Following</h3><div id="followList"></div>
+<h3>User Settings</h3><div id="userSettings"></div>
+<button onclick="updateUserSettings()">Save User Settings</button>
+</section>
+
+<section id="search">
+<h2>Search</h2>
+<input id="searchInput" placeholder="Search users, hashtags, posts...">
+<button onclick="doSearch()">Search</button>
+<div id="searchResults"></div>
+<h3>Hashtags</h3><div id="hashtagsList"></div>
+</section>
+
+<section id="ai">
+<h2>AI Assistant</h2><div id="aiMessages"></div>
+<input id="aiInput" placeholder="Ask AI...">
+<button onclick="sendAiMessage()">Send to AI</button>
+<button onclick="generateAiPost()">Generate AI Post</button>
+<div id="aiPosts"></div>
+<div id="aiSettings"></div>
+</section>
+
+<section id="ceo">
+<h2>CEO Panel</h2><div id="ceoPanel"></div>
+<div id="ceoSettings"></div>
+<h3>Reports</h3><div id="reportsList"></div>
+<h3>Tips</h3><div id="tipsList"></div>
+</section>
+
+<nav>
+<span onclick="showSection('home')">Home</span>
+<span onclick="showSection('reels')">Reels</span>
+<span onclick="showSection('groups')">Groups</span>
+<span onclick="showSection('pages')">Pages</span>
+<span onclick="showSection('events')">Events</span>
+<span onclick="showSection('market')">Market</span>
+<span onclick="showSection('search')">Search</span>
+<span onclick="showSection('messages')">Chat</span>
+<span onclick="showSection('ai')">AI</span>
+<span onclick="showSection('profile')">Profile</span>
+<span onclick="showSection('ceo')">CEO</span>
+</nav>
+
+<script>
+const SUPABASE_URL = 'https://fgocnybpjweezxwvycdt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+let currentConversation = null;
+
+function showSection(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='home') loadFeed();
+  if(id==='reels') loadReels();
+  if(id==='groups') {loadGroups(); loadGroupPosts();}
+  if(id==='pages') loadPages();
+  if(id==='events') loadEvents();
+  if(id==='market') loadProducts();
+  if(id==='messages') loadConversations();
+  if(id==='notifications') loadNotifications();
+  if(id==='profile') {loadProfile(); loadSavedPosts(); loadMyPosts(); loadFollows(); loadUserSettings();}
+  if(id==='search') loadHashtags();
+  if(id==='ai') {loadAiMessages(); loadAiPosts(); loadAiSettings();}
+  if(id==='ceo') {loadCeoPanel(); loadCeoSettings(); loadReports(); loadTips();}
+}
+
+async function signUp(){
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passwordInput').value;
+  const { error } = await supabase.auth.signUp({email, password});
+  if(error) alert(error.message); else alert('Umejisajili! Sasa Ingia');
+}
+async function signIn(){
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passwordInput').value;
+  const { error } = await supabase.auth.signInWithPassword({email, password});
+  if(error) alert(error.message); else { init(); alert('Karibu ZUKA!'); }
+}
+async function signOut(){
+  await supabase.auth.signOut();
+  location.reload();
+}
+
+async function init(){
+  const { data:{user} } = await supabase.auth.getUser();
+  currentUser = user;
+  loadFeed(); loadStories(); loadTrending(); loadFeedItems();
+}
+async function loadFeed(){
+  const { data, error } = await supabase.from('posts').select('*, profiles(username,full_name,avatar_url,cover_url,bio,followers_count,following_count,is_verified,blue_tick,is_ceo,role)').eq('is_reel',false).order('created_at',{ascending:false}).limit(20);
+  if(error){document.getElementById('feed').innerHTML=error.message;return;}
+  document.getElementById('feed').innerHTML = data.map(p=>{
+    const u=p.profiles||{};
+    const tick=(u.is_verified||u.blue_tick)?' ✔️':'';
+    const ceo=u.is_ceo?' CEO':'';
+    return `<div class="card"><div class="user"><img src="${u.avatar_url||'https://i.pravatar.cc/100'}"><div><b>${u.full_name||u.username||'User'}${tick}${ceo}</b><div class="small">@${u.username||''} • ${new Date(p.created_at).toLocaleString()}</div></div></div>${p.image_url?`<img class="main" src="${p.image_url}">`:''}${p.video_url?`<video src="${p.video_url}" controls style="width:100%"></video>`:''}<div class="content">${p.content||''}</div><div class="actions"><span onclick="toggleLike('${p.id}','posts')">Like ${p.likes_count||0}</span><span onclick="showComments('${p.id}')">Comments ${p.comments_count||0}</span><span onclick="sharePost('${p.id}')">Share ${p.shares_count||0}</span><span onclick="viewPost('${p.id}')">Views ${p.views_count||0}</span><span onclick="savePost('${p.id}')">Save</span><span onclick="reportContent('${p.id}','post')">Report</span></div><div id="comments-${p.id}"></div><input id="comment-input-${p.id}" placeholder="Write comment..."><button onclick="addComment('${p.id}')">Comment</button></div>`;
+  }).join('')||'No posts yet';
+}
+async function createPost(){
+  if(!currentUser) return alert('Login required');
+  const content=document.getElementById('postContent').value;
+  const image_url=document.getElementById('postImage').value||null;
+  const video_url=document.getElementById('postVideo').value||null;
+  const { error } = await supabase.from('posts').insert({user_id:currentUser.id,content,image_url,video_url});
+  if(error) alert(error.message); else {loadFeed(); loadFeedItems();}
+}
+async function toggleLike(postId,type){
+  if(!currentUser) return alert('Login required');
+  if(type==='posts'){
+    const { data } = await supabase.from('likes').select('*').eq('post_id',postId).eq('user_id',currentUser.id).maybeSingle();
+    if(data){ await supabase.from('likes').delete().eq('id',data.id); } else { await supabase.from('likes').insert({post_id:postId,user_id:currentUser.id}); }
+  }
+  loadFeed();
+}
+async function addComment(postId){
+  if(!currentUser) return alert('Login required');
+  const content=document.getElementById('comment-input-'+postId).value;
+  await supabase.from('comments').insert({post_id:postId,user_id:currentUser.id,content});
+  loadFeed();
+}
+async function showComments(postId){
+  const { data } = await supabase.from('comments').select('*, profiles(username,avatar_url)').eq('post_id',postId).order('created_at',{ascending:false});
+  document.getElementById('comments-'+postId).innerHTML=(data||[]).map(c=>`<div style="padding:8px 12px"><b>${c.profiles?.username||''}</b> ${c.content||''} <span onclick="likeComment('${c.id}')">Like</span></div>`).join('');
+}
+async function likeComment(commentId){
+  if(!currentUser) return alert('Login required');
+  await supabase.from('comment_likes').insert({comment_id:commentId,user_id:currentUser.id});
+}
+async function sharePost(postId){ await supabase.from('post_views').insert({post_id:postId,user_id:currentUser?.id}); alert('Shared'); }
+async function viewPost(postId){ if(currentUser) await supabase.from('post_views').insert({post_id:postId,user_id:currentUser.id}); }
+async function savePost(postId){ if(!currentUser) return alert('Login required'); await supabase.from('saved_posts').insert({post_id:postId,user_id:currentUser.id}); alert('Saved'); }
+async function loadStories(){
+  const { data } = await supabase.from('stories').select('*, profiles(username,avatar_url)').order('created_at',{ascending:false}).limit(10);
+  document.getElementById('stories').innerHTML=(data||[]).map(s=>`<div class="card"><b>${s.profiles?.username||''}</b> ${s.image_url||s.video_url||''} <span onclick="viewStory('${s.id}')">View</span></div>`).join('')||'No stories';
+}
+async function viewStory(storyId){ if(currentUser) await supabase.from('story_views').insert({story_id:storyId,user_id:currentUser.id}); }
+async function loadTrending(){
+  const { data } = await supabase.from('trending_posts').select('*, posts(content,image_url)').order('created_at',{ascending:false});
+  document.getElementById('trending').innerHTML=(data||[]).map(t=>`<div class="card"><div class="content">${t.posts?.content||''}</div></div>`).join('')||'No trending';
+}
+async function loadFeedItems(){
+  const { data } = await supabase.from('feed_items').select('*').order('created_at',{ascending:false}).limit(10);
+  document.getElementById('feedItems').innerHTML=(data||[]).map(f=>`<div class="card"><div class="content">${JSON.stringify(f)}</div></div>`).join('')||'No feed items';
+}
+async function loadReels(){
+  const { data } = await supabase.from('reels').select('*, profiles(username,avatar_url)').order('created_at',{ascending:false}).limit(20);
+  document.getElementById('reelsList').innerHTML=(data||[]).map(r=>`<div class="card"><div class="user"><img src="${r.profiles?.avatar_url||''}"><b>${r.profiles?.username||''}</b></div><video src="${r.video_url||''}" controls style="width:100%"></video><div class="content">${r.caption||''}</div><div class="actions"><span onclick="likeReel('${r.id}')">Like</span><span onclick="commentReel('${r.id}')">Comment</span></div><div id="reel-comments-${r.id}"></div></div>`).join('')||'No reels';
+}
+async function createReel(){
+  if(!currentUser) return alert('Login required');
+  const video_url=document.getElementById('reelUrl').value;
+  const caption=document.getElementById('reelCaption').value;
+  await supabase.from('reels').insert({user_id:currentUser.id,video_url,caption});
+  loadReels();
+}
+async function likeReel(reelId){ if(currentUser) await supabase.from('reel_likes').insert({reel_id:reelId,user_id:currentUser.id}); loadReels(); }
+async function commentReel(reelId){
+  const text=prompt('Comment');
+  if(text&&currentUser) await supabase.from('reel_comments').insert({reel_id:reelId,user_id:currentUser.id,content:text});
+  loadReels();
+}
+async function loadGroups(){
+  const { data } = await supabase.from('groups').select('*').order('created_at',{ascending:false});
+  document.getElementById('groupsList').innerHTML=(data||[]).map(g=>`<div class="card"><div class="content"><b>${g.name||''}</b><br>${g.description||''}<br><button onclick="joinGroup('${g.id}')">Join</button></div></div>`).join('')||'No groups';
+}
+async function createGroup(){
+  if(!currentUser) return alert('Login required');
+  const name=document.getElementById('groupName').value;
+  await supabase.from('groups').insert({name,created_by:currentUser.id});
+  loadGroups();
+}
+async function joinGroup(groupId){ if(currentUser) await supabase.from('group_members').insert({group_id:groupId,user_id:currentUser.id}); alert('Joined'); }
+async function loadGroupPosts(){
+  const { data } = await supabase.from('group_posts').select('*, profiles(username)').order('created_at',{ascending:false}).limit(20);
+  document.getElementById('groupPosts').innerHTML=(data||[]).map(p=>`<div class="card"><div class="content"><b>${p.profiles?.username||''}</b> ${p.content||''}</div></div>`).join('')||'No group posts';
+}
+async function loadPages(){
+  const { data } = await supabase.from('pages').select('*').order('created_at',{ascending:false});
+  document.getElementById('pagesList').innerHTML=(data||[]).map(p=>`<div class="card"><div class="content"><b>${p.name||''}</b><br>${p.description||''}<br><button onclick="likePage('${p.id}')">Like Page</button></div></div>`).join('')||'No pages';
+}
+async function createPage(){
+  if(!currentUser) return alert('Login required');
+  const name=document.getElementById('pageName').value;
+  await supabase.from('pages').insert({name,owner_id:currentUser.id});
+  loadPages();
+}
+async function likePage(pageId){ if(currentUser) await supabase.from('page_likes').insert({page_id:pageId,user_id:currentUser.id}); }
+async function loadEvents(){
+  const { data } = await supabase.from('events').select('*').order('created_at',{ascending:false});
+  document.getElementById('eventsList').innerHTML=(data||[]).map(e=>`<div class="card"><div class="content"><b>${e.title||''}</b><br>${e.description||''}<br>${e.event_date||''}<br><button onclick="attendEvent('${e.id}')">Attend</button></div></div>`).join('')||'No events';
+}
+async function createEvent(){
+  if(!currentUser) return alert('Login required');
+  const title=document.getElementById('eventTitle').value;
+  await supabase.from('events').insert({title,created_by:currentUser.id});
+  loadEvents();
+}
+async function attendEvent(eventId){ if(currentUser) await supabase.from('event_attendees').insert({event_id:eventId,user_id:currentUser.id}); alert('Attending'); }
+async function loadProducts(){
+  const { data } = await supabase.from('products').select('*').order('created_at',{ascending:false});
+  document.getElementById('productsList').innerHTML=(data||[]).map(p=>`<div class="card"><div class="content"><b>${p.name||''}</b> - ${p.price||''}<br>${p.description||''}</div></div>`).join('')||'No products';
+}
+async function createProduct(){
+  if(!currentUser) return alert('Login required');
+  const name=document.getElementById('productName').value;
+  const price=document.getElementById('productPrice').value;
+  await supabase.from('products').insert({name,price,seller_id:currentUser.id});
+  loadProducts();
+}
+async function loadConversations(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('conversations').select('*').order('created_at',{ascending:false});
+  document.getElementById('conversationsList').innerHTML=(data||[]).map(c=>`<div class="card"><div class="content" onclick="openConversation('${c.id}')">Conversation ${c.id}</div></div>`).join('')||'No conversations';
+}
+async function openConversation(id){
+  currentConversation=id;
+  const { data } = await supabase.from('messages').select('*').eq('conversation_id',id).order('created_at',{ascending:true});
+  document.getElementById('messagesList').innerHTML=(data||[]).map(m=>`<div class="card"><div class="content">${m.content||''}</div></div>`).join('');
+}
+async function sendMessage(){
+  if(!currentUser||!currentConversation) return alert('Select conversation');
+  const content=document.getElementById('messageText').value;
+  await supabase.from('messages').insert({conversation_id:currentConversation,sender_id:currentUser.id,content});
+  openConversation(currentConversation);
+}
+async function loadNotifications(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
+  document.getElementById('notificationsList').innerHTML=(data||[]).map(n=>`<div class="card"><div class="content">${n.title||n.type||''} - ${n.message||n.content||''}</div></div>`).join('')||'No notifications';
+}
+async function loadProfile(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('profiles').select('*').eq('id',currentUser.id).single();
+  if(data) document.getElementById('profileInfo').innerHTML=`<div class="card"><img src="${data.cover_url||''}" style="width:100%;height:120px;object-fit:cover"><div class="user"><img src="${data.avatar_url||''}"><div><b>${data.full_name||''} ${data.is_verified||data.blue_tick?'✔️':''} ${data.is_ceo?'CEO':''}</b><div class="small">@${data.username||''} • ${data.role||''}</div><div class="small">${data.bio||''}</div><div class="small">Followers ${data.followers_count||0} • Following ${data.following_count||0}</div></div></div></div>`;
+}
+async function updateProfile(){
+  if(!currentUser) return;
+  const bio=document.getElementById('bioInput').value;
+  const avatar_url=document.getElementById('avatarInput').value||null;
+  const cover_url=document.getElementById('coverInput').value||null;
+  await supabase.from('profiles').update({bio,avatar_url,cover_url}).eq('id',currentUser.id);
+  loadProfile();
+}
+async function loadSavedPosts(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('saved_posts').select('*, posts(content,image_url)').eq('user_id',currentUser.id);
+  document.getElementById('savedList').innerHTML=(data||[]).map(s=>`<div class="card"><div class="content">${s.posts?.content||''}</div></div>`).join('')||'No saved';
+}
+async function loadMyPosts(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('posts').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  document.getElementById('myPosts').innerHTML=(data||[]).map(p=>`<div class="card"><div class="content">${p.content||''}</div></div>`).join('')||'No posts';
+}
+async function loadFollows(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('follows').select('*, profiles!follows_following_id_fkey(username,avatar_url)').eq('follower_id',currentUser.id);
+  document.getElementById('followList').innerHTML=(data||[]).map(f=>`<div class="card"><div class="content">${f.profiles?.username||''} <button onclick="unfollow('${f.following_id}')">Unfollow</button></div></div>`).join('')||'No follows';
+}
+async function unfollow(userId){ if(currentUser) await supabase.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',userId); loadFollows(); }
+async function loadUserSettings(){
+  if(!currentUser) return;
+  const { data } = await supabase.from('user_settings').select('*').eq('user_id',currentUser.id).maybeSingle();
+  document.getElementById('userSettings').innerHTML=data?JSON.stringify(data):'No settings';
+  const { data:fs } = await supabase.from('feed_settings').select('*').eq('user_id',currentUser.id).maybeSingle();
+  if(fs) document.getElementById('userSettings').innerHTML+='<br>Feed Settings: '+JSON.stringify(fs);
+}
+async function updateUserSettings(){ alert('Settings saved'); }
+async function doSearch(){
+  const q=document.getElementById('searchInput').value;
+  const { data } = await supabase.from('profiles').select('*').ilike('username','%'+q+'%').limit(10);
+  document.getElementById('searchResults').innerHTML=(data||[]).map(p=>`<div class="card"><div class="user"><img src="${p.avatar_url||''}"><b>${p.full_name||p.username}</b><button onclick="followUser('${p.id}')">Follow</button><button onclick="blockUser('${p.id}')">Block</button></div></div>`).join('')||'No results';
+}
+async function followUser(userId){ if(currentUser) await supabase.from('follows').insert({follower_id:currentUser.id,following_id:userId}); }
+async function blockUser(userId){ if(currentUser) await supabase.from('blocked_users').insert({blocker_id:currentUser.id,blocked_id:userId}); alert('Blocked'); }
+async function loadHashtags(){
+  const { data } = await supabase.from('hashtags').select('*').limit(20);
+  document.getElementById('hashtagsList').innerHTML=(data||[]).map(h=>`<div class="card"><div class="content">#${h.name||''}</div></div>`).join('')||'No hashtags';
+}
+async function sendAiMessage(){
+  if(!currentUser) return alert('Login required');
+  const content=document.getElementById('aiInput').value;
+  let conv = await supabase.from('ai_conversations').select('*').eq('user_id',currentUser.id).maybeSingle();
+  let convId = conv.data?.id;
+  if(!convId){ const { data } = await supabase.from('ai_conversations').insert({user_id:currentUser.id}).select().single(); convId=data.id; }
+  await supabase.from('ai_messages').insert({conversation_id:convId,sender:'user',content});
+  loadAiMessages();
+}
+async function loadAiMessages(){
+  const { data } = await supabase.from('ai_messages').select('*').order('created_at',{ascending:false}).limit(20);
+  document.getElementById('aiMessages').innerHTML=(data||[]).map(m=>`<div class="card"><div class="content"><b>${m.sender||''}:</b> ${m.content||''}</div></div>`).join('')||'No AI messages';
+}
+async function generateAiPost(){
+  if(!currentUser) return;
+  await supabase.from('ai_generated_posts').insert({user_id:currentUser.id,content:'AI generated post',status:'draft'});
+  loadAiPosts();
+}
+async function loadAiPosts(){
+  const { data } = await supabase.from('ai_generated_posts').select('*').order('created_at',{ascending:false}).limit(10);
+  document.getElementById('aiPosts').innerHTML=(data||[]).map(p=>`<div class="card"><div class="content">${p.content||''}</div></div>`).join('')||'No AI posts';
+}
+async function loadAiSettings(){
+  const { data } = await supabase.from('ai_settings').select('*').limit(5);
+  document.getElementById('aiSettings').innerHTML=(data||[]).map(s=>`<div class="card"><div class="content">${JSON.stringify(s)}</div></div>`).join('')||'No AI settings';
+}
+async function loadCeoPanel(){
+  const { data } = await supabase.from('ceo_panel').select('*').limit(10);
+  document.getElementById('ceoPanel').innerHTML=(data||[]).map(c=>`<div class="card"><div class="content">${JSON.stringify(c)}</div></div>`).join('')||'No CEO data';
+}
+async function loadCeoSettings(){
+  const { data } = await supabase.from('ceo_settings').select('*').limit(5);
+  document.getElementById('ceoSettings').innerHTML=(data||[]).map(c=>`<div class="card"><div class="content">${JSON.stringify(c)}</div></div>`).join('')||'No CEO settings';
+}
+async function loadReports(){
+  const { data } = await supabase.from('reports').select('*').order('created_at',{ascending:false}).limit(20);
+  document.getElementById('reportsList').innerHTML=(data||[]).map(r=>`<div class="card"><div class="content">${r.reason||''} - ${r.content_type||''}</div></div>`).join('')||'No reports';
+}
+async function reportContent(contentId,contentType){
+  if(!currentUser) return;
+  await supabase.from('reports').insert({reporter_id:currentUser.id,content_id:contentId,content_type:contentType,reason:'Inappropriate'});
+  alert('Reported');
+}
+async function loadTips(){
+  const { data } = await supabase.from('tips').select('*').limit(20);
+  document.getElementById('tipsList').innerHTML=(data||[]).map(t=>`<div class="card"><div class="content">${JSON.stringify(t)}</div></div>`).join('')||'No tips';
+}
+init();
+</script>
+</body>
+</html>
