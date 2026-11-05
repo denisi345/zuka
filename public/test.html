@@ -1,0 +1,28 @@
+<!DOCTYPE html><html><head><title>TEST</title></head>
+<body style="padding:20px;font-family:sans-serif">
+<h1>TEST YA SUPABASE</h1>
+<input id="email" placeholder="Email" /><br><br>
+<input id="pass" type="password" placeholder="Password" /><br><br>
+<button onclick="signup()">Sign Up</button>
+<button onclick="login()">Login</button>
+<p id="msg"></p>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const URL = "https://fgocnybpjweezxwvycdt.supabase.co/rest/v1/";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
+const supabase = window.supabase.createClient(URL, KEY);
+async function signup(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('pass').value;
+  const { error } = await supabase.auth.signUp({ email, password });
+  document.getElementById('msg').innerText = error ? error.message : 'Check email';
+}
+async function login(){
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('pass').value;
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  document.getElementById('msg').innerText = error ? error.message : 'Logged in';
+}
+</script>
+</body>
+</html>
