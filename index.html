@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZUKA</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://jsdelivr.net"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
 body{background:#f0f2f5;padding-bottom:70px}
@@ -59,7 +59,7 @@ body{background:#f0f2f5;padding-bottom:70px}
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button class="btn" onclick="doLogin()">Log In</button>
-<button class="btn" style="background:#eee;color:#000;margin-left:6px" onclick="doSignup()">Sign Up</button>
+<button class="btn" style="background:#eee;color:#000;margin-top:6px" onclick="doSignup()">Sign Up</button>
 <p id="loginMsg" style="font-size:13px;margin-top:8px;color:red"></p>
 </div>
 <div id="homeSection" class="hidden">
@@ -75,7 +75,7 @@ body{background:#f0f2f5;padding-bottom:70px}
 </div>
 <div class="card"><div class="stories" id="stories"></div></div>
 <div id="feed"></div>
-<p style="text-align:center;padding:10px;color:#888;font-size:13px" onclick="loadFeed()">↻ Tap to refresh Feed</p>
+<p style="text-align:center;padding:10px;color:#888;font-size:13px;cursor:pointer" onclick="loadFeed()">↻ Tap to refresh Feed</p>
 </div>
 <div id="reelsSection" class="card hidden"><h3>Reels</h3><p>Reels will appear here. For now check photo posts on Home.</p></div>
 <div id="groupsSection" class="card hidden"><h3>Groups</h3><p>Groups will appear here.</p></div>
@@ -101,12 +101,13 @@ let liked = JSON.parse(localStorage.getItem('zuka_likes')||'{}');
 
 async function checkUser(){
   const {data} = await sb.auth.getUser();
-  if(data.user){
+  if(data && data.user){
     currentUser = data.user;
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('homeSection').classList.remove('hidden');
-    document.getElementById('myAvatar').innerText = currentUser.email[0].toUpperCase();
-    document.getElementById('menuUser').innerText = currentUser.email;
+    const letter = currentUser.email ? currentUser.email[0].toUpperCase() : 'Z';
+    document.getElementById('myAvatar').innerText = letter;
+    document.getElementById('menuUser').innerText = currentUser.email || '';
     loadStories();
     loadFeed();
   }
@@ -148,13 +149,13 @@ async function loadFeed(){
   if(!allPosts.length){ feed.innerHTML='<div class="card">No posts yet. Be the first to post!</div>'; return; }
   feed.innerHTML = allPosts.map(p=>{
     const pc = (comments||[]).filter(c=>c.post_id==p.id);
-    const letter = (currentUser? currentUser.email[0].toUpperCase() : 'Z');
+    const letter = (currentUser && currentUser.email ? currentUser.email[0].toUpperCase() : 'Z');
+    const username = (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'ZUKA User');
     const time = new Date(p.created_at).toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
     const likeCount = (liked[p.id]?1:0) + (p.likes||0);
     return `<div class="card" style="padding:0;overflow:hidden">
-    <div style="display:flex;gap:10px;padding:12px;align-items:center"><div class="avatar">${letter}</div><div><b>${currentUser?currentUser.email.split('@')[0]:'ZUKA User'}</b><br><small>${time} • Public</small></div></div>
+    <div style="display:flex;gap:10px;padding:12px;align-items:center"><div class="avatar">${letter}</div><div><b>${username}</b><br><small>${time} • Public</small></div></div>
     <div class="post-text" style="padding:0 12px">${p.content||''}</div>
     ${p.image_url?`<img src="${p.image_url}" class="post-img" style="display:block" onerror="this.style.display='none'">`:''}
     <div class="counts" style="margin:0 12px"><span>👍 ${likeCount} Likes</span><span>${pc.length} Comments</span></div>
     <div class="actions">
-    <button onclick="toggleLike(${p.id},this)" class="${liked[p.id]?'liked':''}">👍 ${liked[p.id]?'Liked':'Like'}</button>
