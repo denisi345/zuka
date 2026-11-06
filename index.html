@@ -32,7 +32,7 @@ button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
 <p id="userEmail" style="font-weight:bold"></p>
 <button class="small" onclick="doLogout()">Logout</button>
 <hr>
-<input id="postInput" placeholder="Andika kitu hapa...">
+<input id="postInput" placeholder="Write Something...">
 <button onclick="doPost()">POST</button>
 <div id="feedList"></div>
 </div>
@@ -52,7 +52,7 @@ async function doSignup(){
   const email = document.getElementById("emailInput").value.trim();
   const password = document.getElementById("passInput").value;
   const { error } = await sb.auth.signUp({ email, password });
-  msg.innerText = error ? error.message : "Signup imefanikiwa! Sasa bonyeza LOGIN";
+  msg.innerText = error ? error.message : "Registration Successfully Click here to log in";
 }
 async function doLogin(){
   const email = document.getElementById("emailInput").value.trim();
