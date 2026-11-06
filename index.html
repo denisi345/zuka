@@ -98,65 +98,63 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 let allPosts = [];
 let liked = JSON.parse(localStorage.getItem('zuka_likes')||'{}');
+
 async function checkUser(){
-const {data} = await sb.auth.getUser();
-if(data.user){
-currentUser = data.user;
-document.getElementById('loginSection').classList.add('hidden');
-document.getElementById('homeSection').classList.remove('hidden');
-document.getElementById('myAvatar').innerText = currentUser.email[0].toUpperCase();
-document.getElementById('menuUser').innerText = currentUser.email;
-loadStories();
-loadFeed();
-}
+  const {data} = await sb.auth.getUser();
+  if(data.user){
+    currentUser = data.user;
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('homeSection').classList.remove('hidden');
+    document.getElementById('myAvatar').innerText = currentUser.email[0].toUpperCase();
+    document.getElementById('menuUser').innerText = currentUser.email;
+    loadStories();
+    loadFeed();
+  }
 }
 async function doSignup(){
-const email=document.getElementById('email').value, password=document.getElementById('password').value;
-const {error}=await sb.auth.signUp({email,password});
-document.getElementById('loginMsg').innerText = error? error.message : "Signed up! Now Log In.";
-if(!error) checkUser();
+  const email=document.getElementById('email').value, password=document.getElementById('password').value;
+  const {error}=await sb.auth.signUp({email,password});
+  document.getElementById('loginMsg').innerText = error? error.message : "Signed up! Now Log In.";
+  if(!error) checkUser();
 }
 async function doLogin(){
-const email=document.getElementById('email').value, password=document.getElementById('password').value;
-const {error}=await sb.auth.signInWithPassword({email,password});
-document.getElementById('loginMsg').innerText = error? error.message : "Logged in!";
-if(!error) checkUser();
+  const email=document.getElementById('email').value, password=document.getElementById('password').value;
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  document.getElementById('loginMsg').innerText = error? error.message : "Logged in!";
+  if(!error) checkUser();
 }
 async function doLogout(){
-await sb.auth.signOut();
-location.reload();
+  await sb.auth.signOut();
+  location.reload();
 }
 function loadStories(){
-const names=['You','Alex','Maya','Jordan','Priya','Wasafi','Millard'];
-document.getElementById('stories').innerHTML = names.map(n=>`<div class="story"><div class="avatar">${n[0]}</div><small>${n}</small></div>`).join('');
+  const names=['You','Alex','Maya','Jordan','Priya','Wasafi','Millard'];
+  document.getElementById('stories').innerHTML = names.map(n=>`<div class="story"><div class="avatar">${n[0]}</div><small>${n}</small></div>`).join('');
 }
 async function createPost(){
-const content=document.getElementById('postText').value.trim();
-const image_url=document.getElementById('postImage').value.trim();
-if(!content && !image_url) return alert("Write something first");
-if(!currentUser) return alert("Please log in first");
-const {error}=await sb.from('posts').insert([{content, image_url: image_url||null, user_id: currentUser.id}]);
-if(error) alert(error.message);
-else { document.getElementById('postText').value=''; document.getElementById('postImage').value=''; loadFeed(); }
+  const content=document.getElementById('postText').value.trim();
+  const image_url=document.getElementById('postImage').value.trim();
+  if(!content && !image_url) return alert("Write something first");
+  if(!currentUser) return alert("Please log in first");
+  const {error}=await sb.from('posts').insert([{content, image_url: image_url||null, user_id: currentUser.id}]);
+  if(error) alert(error.message);
+  else { document.getElementById('postText').value=''; document.getElementById('postImage').value=''; loadFeed(); }
 }
 async function loadFeed(){
-const {data:posts}=await sb.from('posts').select('*').order('created_at',{ascending:false});
-allPosts = posts||[];
-const {data:comments}=await sb.from('comments').select('*').order('created_at',{ascending:true});
-const feed=document.getElementById('feed');
-if(!allPosts.length){ feed.innerHTML='<div class="card">No posts yet. Be the first to post!</div>'; return; }
-feed.innerHTML = allPosts.map(p=>{
-const pc = (comments||[]).filter(c=>c.post_id==p.id);
-const letter = (currentUser? currentUser.email[0].toUpperCase() : 'Z');
-const time = new Date(p.created_at).toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
-const likeCount = (liked[p.id]?1:0) + (p.likes||0);
-return `<div class="card" style="padding:0;overflow:hidden">
-<div style="display:flex;gap:10px;padding:12px;align-items:center"><div class="avatar">${letter}</div><div><b>${currentUser?currentUser.email.split('@')[0]:'ZUKA User'}</b><br><small>${time} • Public</small></div></div>
-<div class="post-text" style="padding:0 12px">${p.content||''}</div>
-${p.image_url?`<img src="${p.image_url}" class="post-img" style="display:block" onerror="this.style.display='none'">`:''}
-<div class="counts" style="margin:0 12px"><span>👍 ${likeCount} Likes</span><span>${pc.length} Comments</span></div>
-<div class="actions">
-<button onclick="toggleLike(${p.id},this)" class="${liked[p.id]?'liked':''}">👍 ${liked[p.id]?'Liked':'Like'}</button>
-<button onclick="toggleComments(${p.id})">💬 Comment</button>
-<button onclick="sharePost(${p.id})">↗️ Share</button>
-</div>
+  const {data:posts}=await sb.from('posts').select('*').order('created_at',{ascending:false});
+  allPosts = posts||[];
+  const {data:comments}=await sb.from('comments').select('*').order('created_at',{ascending:true});
+  const feed=document.getElementById('feed');
+  if(!allPosts.length){ feed.innerHTML='<div class="card">No posts yet. Be the first to post!</div>'; return; }
+  feed.innerHTML = allPosts.map(p=>{
+    const pc = (comments||[]).filter(c=>c.post_id==p.id);
+    const letter = (currentUser? currentUser.email[0].toUpperCase() : 'Z');
+    const time = new Date(p.created_at).toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
+    const likeCount = (liked[p.id]?1:0) + (p.likes||0);
+    return `<div class="card" style="padding:0;overflow:hidden">
+    <div style="display:flex;gap:10px;padding:12px;align-items:center"><div class="avatar">${letter}</div><div><b>${currentUser?currentUser.email.split('@')[0]:'ZUKA User'}</b><br><small>${time} • Public</small></div></div>
+    <div class="post-text" style="padding:0 12px">${p.content||''}</div>
+    ${p.image_url?`<img src="${p.image_url}" class="post-img" style="display:block" onerror="this.style.display='none'">`:''}
+    <div class="counts" style="margin:0 12px"><span>👍 ${likeCount} Likes</span><span>${pc.length} Comments</span></div>
+    <div class="actions">
+    <button onclick="toggleLike(${p.id},this)" class="${liked[p.id]?'liked':''}">👍 ${liked[p.id]?'Liked':'Like'}</button>
