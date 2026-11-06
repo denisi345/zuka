@@ -158,3 +158,60 @@ async function loadFeed(){
     <div class="post-text" style="padding:0 12px">${p.content||''}</div>
     ${p.image_url?`<img src="${p.image_url}" class="post-img" style="display:block" onerror="this.style.display='none'">`:''}
     <div class="counts" style="margin:0 12px"><span>👍 ${likeCount} Likes</span><span>${pc.length} Comments</span></div>
+    <div class="actions">
+    <button onclick="toggleLike(${p.id},this)" class="${liked[p.id]?'liked':''}">👍 ${liked[p.id]?'Liked':'Like'}</button>
+    <button onclick="toggleComments(${p.id})">💬 Comment</button>
+    <button onclick="sharePost(${p.id})">↗️ Share</button>
+    </div>
+    <div id="c-${p.id}" class="comments" style="padding:0 12px 12px">
+    ${pc.map(c=>`<div class="comment"><div class="avatar">U</div><div class="comment-box">${c.content}</div></div>`).join('')}
+    <div class="comment-input"><input id="ci-${p.id}" placeholder="Write a comment..."><button class="btn" onclick="addComment(${p.id})">Send</button></div>
+    </div>
+    </div>`;
+  }).join('');
+}
+function toggleLike(id,btn){
+  liked[id]=!liked[id];
+  localStorage.setItem('zuka_likes',JSON.stringify(liked));
+  loadFeed();
+}
+function toggleComments(id){
+  const el=document.getElementById('c-'+id);
+  el.style.display = el.style.display=='block'?'none':'block';
+}
+async function addComment(post_id){
+  const input=document.getElementById('ci-'+post_id);
+  const content=input.value.trim();
+  if(!content) return;
+  if(!currentUser) return alert("Please log in first");
+  const {error}=await sb.from('comments').insert([{post_id, content, user_id: currentUser.id}]);
+  if(error) alert(error.message);
+  else { input.value=''; loadFeed(); }
+}
+function sharePost(id){
+  const p=allPosts.find(x=>x.id==id);
+  navigator.clipboard.writeText(p.content||'ZUKA Post');
+  alert('Link copied!');
+}
+function showTab(tab, btn){
+  ['home','reels','groups','market','notif','search','chat','menu'].forEach(t=>{
+    const el=document.getElementById(t+'Section');
+    if(el) el.classList.add('hidden');
+  });
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const map={home:'homeSection',reels:'reelsSection',groups:'groupsSection',market:'marketSection',notif:'notifSection',search:'searchSection',chat:'chatSection',menu:'menuSection'};
+  const show = map[tab]||'homeSection';
+  document.getElementById(show).classList.remove('hidden');
+  if(tab=='home' && currentUser) loadFeed();
+}
+function doSearch(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const res = allPosts.filter(p=>(p.content||'').toLowerCase().includes(q));
+  document.getElementById('searchResult').innerHTML = res.map(p=>`<div style="padding:8px;border-bottom:1px solid #eee">${p.content}</div>`).join('') || 'No results';
+}
+checkUser();
+</script>
+</body>
+</html>
+
