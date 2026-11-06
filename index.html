@@ -92,7 +92,7 @@ body{background:#f0f2f5;padding-bottom:70px}
 <button onclick="showTab('menu')">☰<br>Menu</button>
 </div>
 <script>
-const SUPABASE_URL = "https://fgocnybpjweezxwvycdt.supabase.co";
+const SUPABASE_URL = "https://supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
@@ -150,12 +150,11 @@ async function loadFeed(){
   feed.innerHTML = allPosts.map(p=>{
     const pc = (comments||[]).filter(c=>c.post_id==p.id);
     const letter = (currentUser && currentUser.email ? currentUser.email[0].toUpperCase() : 'Z');
-    const username = (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'ZUKA User');
+    const displayUsername = (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'ZUKA User');
     const time = new Date(p.created_at).toLocaleString('en-US',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
     const likeCount = (liked[p.id]?1:0) + (p.likes||0);
     return `<div class="card" style="padding:0;overflow:hidden">
-    <div style="display:flex;gap:10px;padding:12px;align-items:center"><div class="avatar">${letter}</div><div><b>${username}</b><br><small>${time} • Public</small></div></div>
+    <div style="display:flex;gap:10px;padding:12px;align-items:center"><div class="avatar">${letter}</div><div><b>${displayUsername}</b><br><small>${time} • Public</small></div></div>
     <div class="post-text" style="padding:0 12px">${p.content||''}</div>
     ${p.image_url?`<img src="${p.image_url}" class="post-img" style="display:block" onerror="this.style.display='none'">`:''}
     <div class="counts" style="margin:0 12px"><span>👍 ${likeCount} Likes</span><span>${pc.length} Comments</span></div>
-    <div class="actions">
