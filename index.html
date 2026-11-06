@@ -1,58 +1,94 @@
-html
 <!DOCTYPE html>
-<html>
+<html lang="sw">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZUKA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
-body{background:#f0f2f5}
-header{background:#1877f2;color:white;padding:15px;text-align:center;font-weight:bold;font-size:22px;position:sticky;top:0}
-.container{max-width:600px;margin:15px auto;padding:10px}
-.box{background:white;padding:15px;border-radius:12px;margin-bottom:15px;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
-.box textarea{width:100%;border:none;background:#f0f2f5;padding:12px;border-radius:20px;outline:none;resize:none;font-size:16px}
-.box button{background:#1877f2;color:white;border:none;padding:12px;border-radius:20px;width:100%;margin-top:10px;font-weight:bold;cursor:pointer}
-.post{background:white;padding:15px;border-radius:10px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
-#status{text-align:center;color:gray;padding:10px;font-size:14px}
+body{font-family:sans-serif;background:#f2f2f2;margin:0;padding:20px}
+.box{max-width:420px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+input{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
+button{width:100%;padding:12px;margin:6px 0;border:0;border-radius:8px;background:#000;color:#fff;font-weight:bold;cursor:pointer}
+button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
+.post{border:1px solid #eee;padding:12px;border-radius:10px;margin:10px 0;background:#fafafa}
+#msg{color:red;font-size:14px}
 </style>
 </head>
 <body>
-<header>ZUKA</header>
-<p id="status">Connecting...</p>
-<div class="container">
+
 <div class="box">
-<textarea id="input" rows="3" placeholder="What's on your mind?"></textarea>
-<button id="btn">Post</button>
+<h2 style="text-align:center">ZUKA</h2>
+
+<div id="authBox">
+<input id="emailInput" type="email" placeholder="Email">
+<input id="passInput" type="password" placeholder="Password">
+<button onclick="doSignup()">SIGNUP</button>
+<button onclick="doLogin()" style="background:#1a73e8">LOGIN</button>
+<p id="msg"></p>
 </div>
-<div id="feed"></div>
+
+<div id="feedBox" style="display:none">
+<p id="userEmail" style="font-weight:bold"></p>
+<button class="small" onclick="doLogout()">Logout</button>
+<hr>
+<input id="postInput" placeholder="Andika kitu hapa...">
+<button onclick="doPost()">POST</button>
+<div id="feedList"></div>
 </div>
-<script type="module">
-import { createClient } from SUPABASE_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const supabase = createClient( SUPABASE_ANON_KEY = 'https://fgocnybpjweezxwvycdt.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo');
-const status=document.getElementById('status');
-const feed=document.getElementById('feed');
-const input=document.getElementById('input');
-const btn=document.getElementById('btn');
-async function load(){
- const {data,error}=await supabase.from('posts').select('*').order('created_at',{ascending:false});
- if(error){status.textContent=error.message;return;}
- status.textContent='Live';
- feed.innerHTML='';
- data.forEach(p=>{
-  feed.innerHTML+=`<div class="post">${p.content}</div>`;
- });
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://fgocnybpjweezxwvycdt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const msg = document.getElementById("msg");
+const authBox = document.getElementById("authBox");
+const feedBox = document.getElementById("feedBox");
+
+async function doSignup(){
+  const email = document.getElementById("emailInput").value.trim();
+  const password = document.getElementById("passInput").value;
+  const { error } = await sb.auth.signUp({ email, password });
+  msg.innerText = error ? error.message : "Signup imefanikiwa! Sasa bonyeza LOGIN";
 }
-btn.onclick=async()=>{
- if(!input.value.trim())return;
- btn.textContent='Posting...';
- const {error}=await supabase.from('posts').insert([{content:input.value}]);
- if(error){alert(error.message);btn.textContent='Post';return;}
- input.value='';
- load();
- btn.textContent='Post';
-};
-load();
+async function doLogin(){
+  const email = document.getElementById("emailInput").value.trim();
+  const password = document.getElementById("passInput").value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ msg.innerText = error.message; return; }
+  checkUser();
+}
+async function doLogout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+async function checkUser(){
+  const { data } = await sb.auth.getUser();
+  if(data.user){
+    authBox.style.display = "none";
+    feedBox.style.display = "block";
+    document.getElementById("userEmail").innerText = data.user.email;
+    loadFeed();
+  }
+}
+async function doPost(){
+  const text = document.getElementById("postInput").value.trim();
+  if(!text) return;
+  const { data: userData } = await sb.auth.getUser();
+  const { error } = await sb.from("posts").insert([{ content: text, user_id: userData.user.id }]);
+  if(error){ alert(error.message); return; }
+  document.getElementById("postInput").value = "";
+  loadFeed();
+}
+async function loadFeed(){
+  const { data, error } = await sb.from("posts").select("*").order("created_at", { ascending: false }).limit(20);
+  if(error){ document.getElementById("feedList").innerHTML = "Error: " + error.message; return; }
+  document.getElementById("feedList").innerHTML = data.map(p => `<div class="post">${p.content}</div>`).join("");
+}
+checkUser();
 </script>
 </body>
 </html>
