@@ -9,11 +9,10 @@
 body{font-family:sans-serif;background:#f2f2f2;margin:0;padding:20px}
 .box{max-width:420px;margin:auto;background:#fff;padding:20px;border-radius:12px}
 input{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
-button{width:100%;padding:12px;margin:6px 0;border:0;border-radius:8px;background:#000;color:#fff;font-weight:bold;cursor:pointer}
+button{width:100%;padding:12px;margin:6px 0;border:0;border-radius:8px;background:#000;color:#fff;font-weight:bold;cursor:pointer;text-transform:lowercase}
 button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
 .post{border:1px solid #eee;padding:12px;border-radius:10px;margin:10px 0;background:#fafafa}
 #msg{color:red;font-size:14px}
-#msg a{color:#1a73e8;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
@@ -31,10 +30,10 @@ button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
 
 <div id="feedBox" style="display:none">
 <p id="userEmail" style="font-weight:bold"></p>
-<button class="small" onclick="doLogout()">Logout</button>
+<button class="small" onclick="doLogout()">logout</button>
 <hr>
-<input id="postInput" placeholder="Write something...">
-<button onclick="doPost()">POST</button>
+<input id="postInput" placeholder="Write something here...">
+<button onclick="doPost()">post</button>
 <div id="feedList"></div>
 </div>
 
@@ -53,9 +52,7 @@ async function doSignup(){
   const email = document.getElementById("emailInput").value.trim();
   const password = document.getElementById("passInput").value;
   const { error } = await sb.auth.signUp({ email, password });
-  if(error){ msg.style.color="red"; msg.innerText = error.message; return; }
-  msg.style.color="green";
-  msg.innerHTML = `Registration successful! <a onclick="document.getElementById('msg').innerText=''">Click here to log in</a>`;
+  msg.innerText = error ? error.message : "Signup successful! Now press login";
 }
 async function doLogin(){
   const email = document.getElementById("emailInput").value.trim();
@@ -81,7 +78,6 @@ async function doPost(){
   const text = document.getElementById("postInput").value.trim();
   if(!text) return;
   const { data: userData } = await sb.auth.getUser();
-  if(!userData.user){ alert("Please log in first"); return; }
   const { error } = await sb.from("posts").insert([{ content: text, user_id: userData.user.id }]);
   if(error){ alert(error.message); return; }
   document.getElementById("postInput").value = "";
