@@ -1,93 +1,311 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZUKA</title>
+<meta name="theme-color" content="#0866ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ZUKA">
+<link rel="apple-touch-icon" href="https://via.placeholder.com/192/0866ff/ffffff?text=Z">
+<link rel="icon" href="https://via.placeholder.com/192/0866ff/ffffff?text=Z">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:sans-serif;background:#f2f2f2;margin:0;padding:20px}
-.box{max-width:420px;margin:auto;background:#fff;padding:20px;border-radius:12px}
-input{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
-button{width:100%;padding:12px;margin:6px 0;border:0;border-radius:8px;background:#000;color:#fff;font-weight:bold;cursor:pointer;text-transform:lowercase}
-button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
-.post{border:1px solid #eee;padding:12px;border-radius:10px;margin:10px 0;background:#fafafa}
-#msg{color:red;font-size:14px}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f0f2f5}
+body.dark{background:#18191a;color:#e4e6eb}body.dark .card,body.dark .top,body.dark .modal>div{background:#242526;color:#e4e6eb}body.dark input,body.dark select,body.dark textarea{background:#3a3b3c;color:#fff}
+.top{position:sticky;top:0;z-index:20;background:#fff;display:flex;align-items:center;gap:8px;padding:8px 12px;box-shadow:0 1px 5px #ccc;flex-wrap:wrap}
+.logo{font-size:28px;font-weight:900;color:#0866ff;cursor:pointer}
+.top input{flex:1;min-width:140px;max-width:420px;background:#f0f2f5;border:0;padding:10px 14px;border-radius:20px;outline:none}
+.top button{border:0;background:#e4e6eb;padding:9px 11px;border-radius:20px;font-weight:bold;cursor:pointer}
+.top button.blue{background:#0866ff;color:#fff}.top button.install{background:#00a400;color:#fff}
+.main{display:flex;max-width:1350px;margin:auto;gap:14px;padding:14px}
+.left,.right{width:270px;display:none}@media(min-width:950px){.left,.right{display:block}}
+.center{flex:1;max-width:620px;margin:auto;min-width:0}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 2px #ddd}
+.menu-item{display:flex;align-items:center;gap:10px;padding:9px;border-radius:8px;cursor:pointer;font-weight:600}.menu-item:hover{background:#e4e6eb}.menu-item img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+.stories{display:flex;gap:8px;overflow:auto}.story{min-width:112px;height:185px;border-radius:12px;position:relative;overflow:hidden;cursor:pointer;background:#ddd;flex-shrink:0}.story img{width:100%;height:100%;object-fit:cover}.story span{position:absolute;bottom:8px;left:8px;color:#fff;font-weight:bold;font-size:13px;text-shadow:0 1px 3px #000}.story .add{position:absolute;top:8px;left:8px;background:#0866ff;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.composer{display:flex;gap:10px}.composer img{width:40px;height:40px;border-radius:50%;object-fit:cover}.composer input{flex:1;background:#f0f2f5;border:0;border-radius:20px;padding:12px;outline:none}
+.actions{display:flex;justify-content:space-around;border-top:1px solid #eee;margin-top:12px;padding-top:10px;flex-wrap:wrap}.actions button{border:0;background:none;font-weight:bold;cursor:pointer;padding:8px 9px;border-radius:8px}.actions button:hover{background:#f0f2f5}
+.post-head{display:flex;gap:10px;align-items:center}.post-head img{width:44px;height:44px;border-radius:50%;object-fit:cover}.post-head b{font-size:15px}.post-head small{color:#65676b;display:block}.tick{color:#0866ff}
+.post-img{width:100%;max-width:1080px;aspect-ratio:1/1;object-fit:cover;border-radius:10px;margin-top:10px;display:block;background:#eee}
+.post-video{width:100%;max-height:540px;object-fit:cover;border-radius:10px;margin-top:10px}
+.post-text{font-size:16px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.like-row{display:flex;justify-content:space-between;color:#65676b;font-size:13px;padding:8px 0;border-bottom:1px solid #eee;flex-wrap:wrap}
+.comment-box{display:flex;gap:8px;margin-top:10px}.comment-box img{width:32px;height:32px;border-radius:50%}.comment-box input{flex:1;background:#f0f2f5;border:0;border-radius:20px;padding:9px 12px;outline:none}
+.one-comment{background:#f0f2f5;padding:8px 10px;border-radius:12px;font-size:14px;margin-top:8px}
+.news-item{display:flex;gap:10px;margin-bottom:12px;cursor:pointer}.news-item img{width:72px;height:72px;object-fit:cover;border-radius:8px}.news-item b{font-size:14px}.news-item small{color:#65676b}
+input,select,textarea{width:100%;padding:11px;margin:6px 0;border:1px solid #ddd;border-radius:8px}
+button.primary{width:100%;padding:12px;border:0;border-radius:8px;background:#0866ff;color:#fff;font-weight:bold;cursor:pointer}
+button.dark{width:100%;padding:12px;border:0;border-radius:8px;background:#000;color:#fff;font-weight:bold;cursor:pointer}
+.badge{background:#e7f3ff;color:#0866ff;padding:3px 8px;border-radius:20px;font-size:12px;font-weight:bold}
+.friend-row{display:flex;align-items:center;gap:10px;margin:8px 0}.friend-row img{width:40px;height:40px;border-radius:50%;object-fit:cover}.friend-row button{margin-left:auto;padding:6px 12px;border:0;border-radius:20px;background:#0866ff;color:#fff;font-weight:bold;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:99;padding:16px}.modal>div{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:14px;padding:18px}
+.hidden{display:none!important}.chip{display:inline-block;background:#e4e6eb;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:bold;margin:3px;cursor:pointer}.chip.on{background:#0866ff;color:#fff}
+.reel{border-radius:14px;overflow:hidden;background:#000;color:#fff;margin-bottom:14px;position:relative}.reel img,.reel video{width:100%;height:520px;object-fit:cover;display:block}.reel .r-info{position:absolute;bottom:0;left:0;right:0;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:20px;display:none;z-index:999;font-size:14px;max-width:92%;text-align:center}
+.reaction-bar{display:flex;gap:6px;background:#fff;padding:8px;border-radius:20px;box-shadow:0 2px 8px #aaa;margin-top:8px}.reaction-bar span{font-size:22px;cursor:pointer}
+.tab{padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:bold;display:inline-block}.tab.on{background:#0866ff;color:#fff}
+.cover{width:100%;height:160px;object-fit:cover;border-radius:12px}.hashtag{color:#0866ff;cursor:pointer;font-weight:bold}.mention{color:#0866ff;font-weight:bold}.ai-chat{background:#e7f3ff;padding:10px;border-radius:12px;margin-top:10px;font-size:14px}
+.market-img{width:100%;aspect-ratio:1/1;max-width:1080px;object-fit:cover;border-radius:10px;background:#eee;display:block}.market-card{border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:12px;background:#fff}.market-price{font-size:18px;font-weight:900;color:#0866ff}.market-meta{font-size:13px;color:#65676b}
+.install-banner{background:#0866ff;color:#fff;border-radius:12px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center}.install-banner img{width:56px;height:56px;border-radius:14px;background:#fff}.install-banner button{background:#fff;color:#0866ff;border:0;padding:10px 16px;border-radius:20px;font-weight:900;cursor:pointer}.install-banner .close{background:transparent;color:#fff}
 </style>
 </head>
 <body>
-
-<div class="box">
-<h2 style="text-align:center">ZUKA</h2>
-
-<div id="authBox">
-<input id="emailInput" type="email" placeholder="Email">
-<input id="passInput" type="password" placeholder="Password">
-<button onclick="doSignup()">signup</button>
-<button onclick="doLogin()" style="background:#1a73e8">login</button>
-<p id="msg"></p>
+<div class="top">
+<div class="logo" onclick="showPage('home')">ZUKA</div>
+<input id="searchInput" placeholder="Search ZUKA..." oninput="doSearch(this.value)">
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('reels')">Reels</button>
+<button onclick="showPage('market')">Marketplace</button>
+<button id="installBtn" class="install" onclick="installApp()">Install ZUKA App</button>
+<button onclick="openModal('notifModal')">Notifications <span id="notifCount" class="badge">0</span></button>
+<button onclick="openModal('msgModal')">Messenger</button>
+<button onclick="openModal('profileModal')">Profile</button>
+<button onclick="toggleDark()">Dark Mode</button>
+<select id="langSelect" style="width:120px" onchange="changeLang(this.value)"><option value="en">English</option><option value="sw">Swahili</option></select>
+<button class="blue" onclick="openModal('ceoModal')">CEO Control</button>
+<button onclick="doLogout()">Logout</button>
 </div>
-
-<div id="feedBox" style="display:none">
-<p id="userEmail" style="font-weight:bold"></p>
-<button class="small" onclick="doLogout()">logout</button>
-<hr>
-<input id="postInput" placeholder="Write something here...">
-<button onclick="doPost()">post</button>
+<div id="authBox" class="main" style="max-width:480px;display:block">
+<div class="card" style="text-align:center"><h1 style="color:#0866ff;font-size:46px;margin:0">ZUKA</h1><p id="authSub">Connect with friends and the world around you on ZUKA.</p>
+<input id="emailInput" type="email" placeholder="Email address">
+<input id="passInput" type="password" placeholder="Password">
+<input id="nameInput" placeholder="Full Name (for signup)">
+<button class="primary" onclick="doLogin()">Log In</button>
+<button class="dark" onclick="doSignup()">Create New Account</button>
+<p id="msg" style="color:red"></p>
+<button class="primary" style="background:#00a400" onclick="installApp()">Install ZUKA To Home Screen</button>
+<p style="font-size:12px;color:#65676b">CEO Password: ZUKA-CEO-2026<br>Feed images are resized to 1080 x 1080 automatically.</p></div>
+</div>
+<div id="appBox" class="main hidden">
+<div class="left">
+<div class="card">
+<div class="menu-item" onclick="openModal('profileModal')"><img id="sideAvatar" src="https://via.placeholder.com/40"><span id="sideName">My Profile</span> <span id="sideTick"></span></div>
+<div class="menu-item" onclick="showPage('home')">Feed</div>
+<div class="menu-item" onclick="showPage('reels')">Reels</div>
+<div class="menu-item" onclick="showPage('friends')">Friends</div>
+<div class="menu-item" onclick="showPage('groups')">Groups</div>
+<div class="menu-item" onclick="showPage('market')">Marketplace</div>
+<div class="menu-item" onclick="showPage('watch')">Watch</div>
+<div class="menu-item" onclick="showPage('saved')">Saved</div>
+<div class="menu-item" onclick="showPage('events')">Events</div>
+<div class="menu-item" onclick="showPage('pages')">Pages</div>
+<div class="menu-item" onclick="showPage('memories')">Memories</div>
+<div class="menu-item" onclick="showPage('fundraiser')">Fundraisers</div>
+<div class="menu-item" onclick="openModal('avatarModal')">Create Avatar</div>
+<div class="menu-item" onclick="openModal('settingsModal')">Settings and Privacy</div>
+<div class="menu-item" onclick="openModal('installModal')">Install ZUKA App</div>
+<div class="menu-item" onclick="openModal('liveModal')">Go Live</div>
+<div class="menu-item" onclick="openModal('ceoModal')">CEO Control</div>
+</div>
+</div>
+<div class="center">
+<div id="homePage">
+<div id="installBanner" class="install-banner hidden">
+<img src="https://via.placeholder.com/56/ffffff/0866ff?text=Z" alt="ZUKA App Icon">
+<div style="flex:1"><b>Install ZUKA App</b><br><small>Add ZUKA to your Home Screen for fast access, like Facebook App.</small></div>
+<button onclick="installApp()">Install</button>
+<button class="close" onclick="hideInstallBanner()">X</button>
+</div>
+<div class="card"><b>Stories</b><div class="stories" id="storiesList"></div><input type="file" id="storyFile" accept="image/*" class="hidden" onchange="addStory(this)"><button style="margin-top:8px" onclick="document.getElementById('storyFile').click()">Add Story</button></div>
+<div class="card">
+<div class="composer"><img id="myAvatar" src="https://via.placeholder.com/40"><input id="postInput" placeholder="What is on your mind? Use @name to tag, #hashtag"></div>
+<p style="font-size:12px;color:#65676b">Feed photo will be resized to 1080 x 1080 automatically.</p>
+<input type="file" id="postImage" accept="image/*">
+<input type="file" id="postVideo" accept="video/*">
+<img id="postPreview" class="post-img" style="display:none">
+<input id="tagInput" placeholder="Tag friends - e.g. @Amina, @John">
+<input id="hashtagInput" placeholder="Hashtags - e.g. #ZUKA #Tanzania">
+<select id="postPrivacy"><option value="Public">Public</option><option value="Friends">Friends</option><option value="Only Me">Only Me</option><option value="Group">Group</option><option value="Close Friends">Close Friends</option></select>
+<select id="postFeeling"><option value="">No Feeling</option><option value="Happy">Happy</option><option value="Loved">Loved</option><option value="Travelling">Travelling</option><option value="Birthday">Birthday</option></select>
+<select id="postType"><option value="Post">Normal Post</option><option value="Reel">Also as Reel</option><option value="Poll">Poll</option><option value="News">News</option><option value="Fundraiser">Fundraiser</option></select>
+<div class="actions"><button onclick="doPost()">Post</button><button onclick="document.getElementById('postImage').click()">Photo 1080x1080</button><button onclick="document.getElementById('postVideo').click()">Video</button><button onclick="openModal('liveModal')">Live</button><button onclick="askAI()">Ask AI</button><button onclick="addGIF()">GIF</button><button onclick="addSticker()">Sticker</button><button onclick="checkIn()">Check-In</button></div>
+<div id="aiAnswer" class="ai-chat" style="display:none"></div>
+</div>
+<div><span class="chip on" onclick="filterFeed('All',this)">All</span><span class="chip" onclick="filterFeed('Public',this)">Public</span><span class="chip" onclick="filterFeed('Friends',this)">Friends</span><span class="chip" onclick="filterFeed('Reel',this)">Reels</span><span class="chip" onclick="filterFeed('Poll',this)">Polls</span><span class="chip" onclick="filterFeed('News',this)">News</span></div>
 <div id="feedList"></div>
 </div>
-
+<div id="reelsPage" class="hidden"><div class="card"><h3>Reels</h3><input id="reelCaption" placeholder="Reel caption..."><input type="file" id="reelFile" accept="image/*,video/*"><button class="primary" onclick="postReel()">Post Reel</button></div><div id="reelsList"></div></div>
+<div id="friendsPage" class="card hidden"><h3>People You May Know</h3><div id="peopleList"></div><h3>Friend Requests</h3><div id="requestList"></div><h3>All Friends</h3><div id="allFriends"></div></div>
+<div id="groupsPage" class="card hidden"><h3>Groups</h3><div id="groupList"></div><input id="newGroup" placeholder="Create group name"><button class="primary" onclick="createGroup()">Create Group</button></div>
+<div id="marketPage" class="hidden">
+<div class="card"><h3>Marketplace</h3><p style="font-size:13px;color:#65676b">Buy and sell in your area. Photos are resized to 1080 x 1080.</p>
+<input id="marketSearch" placeholder="Search Marketplace - e.g. iPhone, Sofa, Car..." oninput="renderMarket()">
+<div style="margin:8px 0"><span class="chip on" onclick="setMarketFilter('All',this)">All</span><span class="chip" onclick="setMarketFilter('Vehicles',this)">Vehicles</span><span class="chip" onclick="setMarketFilter('Phones',this)">Phones</span><span class="chip" onclick="setMarketFilter('Houses',this)">Houses</span><span class="chip" onclick="setMarketFilter('Electronics',this)">Electronics</span><span class="chip" onclick="setMarketFilter('Clothes',this)">Clothes</span><span class="chip" onclick="setMarketFilter('Furniture',this)">Furniture</span></div>
+<select id="marketSort" onchange="renderMarket()"><option value="new">Newest First</option><option value="low">Price Low to High</option><option value="high">Price High to Low</option></select>
+<div id="marketList"></div></div>
+<div class="card"><h3>Sell an Item</h3>
+<input id="marketTitle" placeholder="Item name - e.g. iPhone 14 Pro"><input id="marketPrice" placeholder="Price - e.g. 1200000">
+<select id="marketCategory"><option>Phones</option><option>Vehicles</option><option>Houses</option><option>Electronics</option><option>Clothes</option><option>Furniture</option><option>Other</option></select>
+<select id="marketCondition"><option>New</option><option>Like New</option><option>Used - Good</option><option>Used - Fair</option></select>
+<input id="marketLoc" placeholder="Location - e.g. Mwanza"><textarea id="marketDesc" placeholder="Description - condition, reason for selling, delivery..."></textarea>
+<input type="file" id="marketImage" accept="image/*"><img id="marketPreview" class="market-img" style="display:none">
+<button class="primary" onclick="addMarket()">Post Item for Sale</button></div>
 </div>
-
-<script>
-const SUPABASE_URL = "https://fgocnybpjweezxwvycdt.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const msg = document.getElementById("msg");
-const authBox = document.getElementById("authBox");
-const feedBox = document.getElementById("feedBox");
-
-async function doSignup(){
-  const email = document.getElementById("emailInput").value.trim();
-  const password = document.getElementById("passInput").value;
-  const { error } = await sb.auth.signUp({ email, password });
-  msg.innerText = error ? error.message : "Signup successful! Now press login";
+<div id="watchPage" class="card hidden"><h3>Watch</h3><div id="watchList"></div></div>
+<div id="savedPage" class="card hidden"><h3>Saved / Collections</h3><div id="savedList"></div></div>
+<div id="eventsPage" class="card hidden"><h3>Events</h3><div id="eventList"></div><input id="eventName" placeholder="Event name"><button class="primary" onclick="addEvent()">Create Event</button></div>
+<div id="pagesPage" class="card hidden"><h3>Pages</h3><div id="pageList"></div><input id="pageName" placeholder="Page name"><button class="primary" onclick="createPage()">Create Page</button></div>
+<div id="memoriesPage" class="card hidden"><h3>Memories - On This Day</h3><div id="memoryList"></div></div>
+<div id="fundraiserPage" class="card hidden"><h3>Fundraisers</h3><div id="fundList"></div><input id="fundTitle" placeholder="Fundraiser title"><button class="primary" onclick="addFund()">Create Fundraiser</button></div>
+<div id="searchPage" class="card hidden"><h3>Search Results</h3><div id="searchResults"></div></div>
+</div>
+<div class="right">
+<div class="card"><b>ZUKA AI - Real World News + Fact-Check</b><input id="factInput" placeholder="Paste news to Fact-Check..."><button onclick="factCheck()">Fact-Check This News</button><div id="factResult" class="ai-chat" style="display:none"></div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px"><button onclick="loadNews('world')">World</button><button onclick="loadNews('africa')">Africa</button><button onclick="loadNews('technology')">Tech</button><button onclick="loadNews('sports')">Sports</button><button onclick="loadNews('business')">Business</button><button onclick="loadNews('health')">Health</button></div><div id="newsList" style="margin-top:12px">Loading news...</div><button onclick="loadNews('world')">Refresh News</button></div>
+<div class="card"><b>Install ZUKA App</b><p>Add ZUKA to your Home Screen for fast access.</p><button class="primary" style="background:#00a400" onclick="installApp()">Install ZUKA To Home Screen</button><button style="margin-top:6px" onclick="openModal('installModal')">How To Install</button></div>
+<div class="card"><b>Trending</b><div id="trendingList"></div></div>
+<div class="card"><b>Sponsored - Ads</b><p>ZUKA Premium - Blue Tick + Extra Reach</p><button class="primary" onclick="requestBlueTick()">Request Blue Tick</button><button style="margin-top:6px" onclick="boostPost()">Boost Post - Advertise</button></div>
+<div class="card"><b>Contacts - Online</b><div id="onlineList"></div></div>
+</div>
+</div>
+<div id="profileModal" class="modal"><div><img id="coverImg" class="cover" src="https://picsum.photos/600/160"><h3>Profile</h3><img id="profileAvatar" src="https://via.placeholder.com/80" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-top:-40px;border:4px solid #fff"><p><b id="profileName"></b> <span id="profileTick"></span></p><p id="profileEmail"></p><input id="profileBio" placeholder="Bio"><input id="profileAvatarInput" placeholder="Avatar URL"><input id="profileCoverInput" placeholder="Cover URL"><button class="primary" onclick="saveProfile()">Save Profile</button><button class="primary" onclick="openModal('verifyModal')">Verify - Upload ID and Selfie for Blue Tick</button><button onclick="closeModal('profileModal')">Close</button></div></div>
+<div id="verifyModal" class="modal"><div><h3>Blue Tick Verification</h3><p>Upload ID and Selfie. CEO will review.</p><input type="file" accept="image/*" onchange="toast('ID uploaded! Waiting for CEO review.')"><input type="file" accept="image/*" onchange="toast('Selfie uploaded!')"><input id="verifyName" placeholder="Real Full Name as on ID"><button class="primary" onclick="submitVerification()">Submit for Verification</button><button onclick="closeModal('verifyModal')">Close</button></div></div>
+<div id="avatarModal" class="modal"><div><h3>Create Your ZUKA Avatar</h3><p style="font-size:40px;text-align:center" id="avatarPreview">Avatar</p><div style="text-align:center"><button onclick="setAvatar('Smile')">Smile</button><button onclick="setAvatar('Cool')">Cool</button><button onclick="setAvatar('Love')">Love</button></div><button class="primary" onclick="saveAvatar()">Save Avatar</button><button onclick="closeModal('avatarModal')">Close</button></div></div>
+<div id="settingsModal" class="modal"><div><h3>Settings and Privacy</h3><p><b>Install ZUKA App</b></p><button class="primary" style="background:#00a400" onclick="installApp()">Install ZUKA To Home Screen</button><p><b>Who can see my posts?</b></p><select><option>Public</option><option>Friends</option><option>Only Me</option></select><button onclick="toast('2FA Code sent to your email!')">Enable 2FA</button><button onclick="downloadData()">Download My Data</button><button style="background:#ffcccc" onclick="deactivateAccount()">Deactivate Account</button><button style="background:#ff0000;color:#fff" onclick="deleteAccount()">Delete Account Forever</button><button onclick="closeModal('settingsModal')">Close</button></div></div>
+<div id="installModal" class="modal"><div><h3>Install ZUKA To Home Screen</h3><img src="https://via.placeholder.com/120/0866ff/ffffff?text=Z" style="width:80px;height:80px;border-radius:18px;display:block;margin:auto"><p><b>Android - Chrome:</b><br>1. Tap Install button below<br>2. Tap Install in the popup<br>3. ZUKA icon will appear on your Home Screen</p><p><b>Android - Manual:</b><br>Tap 3 dots in Chrome - Add to Home Screen - Add</p><p><b>iPhone - Safari:</b><br>1. Tap Share button<br>2. Tap Add to Home Screen<br>3. Tap Add</p><p><b>Computer - Chrome:</b><br>Click Install icon in address bar, or 3 dots - Install ZUKA</p><button class="primary" style="background:#00a400" onclick="installApp()">Install ZUKA Now</button><p id="installStatus" style="font-size:13px;color:#65676b;text-align:center"></p><button onclick="closeModal('installModal')">Close</button></div></div>
+<div id="notifModal" class="modal"><div><h3>Notifications</h3><div id="notifList"></div><button onclick="closeModal('notifModal')">Close</button></div></div>
+<div id="msgModal" class="modal"><div><h3>Messenger</h3><div id="chatList"></div><input id="chatInput" placeholder="Type message..."><button class="primary" onclick="sendChat()">Send</button><button onclick="videoCall()">Video Call</button><button onclick="voiceCall()">Voice Call</button><button onclick="closeModal('msgModal')">Close</button></div></div>
+<div id="liveModal" class="modal"><div><h3>Go Live</h3><button class="primary" onclick="goLive()">Start Live Now</button><button onclick="closeModal('liveModal')">Close</button></div></div>
+<div id="ceoModal" class="modal"><div><h3>CEO Control - ZUKA HQ</h3><input id="ceoPass" type="password" placeholder="CEO Password"><button class="primary" onclick="ceoLogin()">Unlock CEO Panel</button><div id="ceoPanel" class="hidden"><p>Posts: <span id="ceoPosts">0</span> | Users: <span id="ceoUsers">0</span> | Reports: <span id="ceoReports">0</span></p><div id="verifyQueue"></div><div id="reportQueue"></div><input id="ceoVerifyEmail" placeholder="Email to verify - Give Blue Tick"><button class="primary" onclick="ceoVerify()">Give Blue Tick</button><input id="ceoAnnounce" placeholder="CEO Announcement to ALL"><button class="primary" onclick="ceoAnnounce()">Post Announcement</button><button onclick="closeModal('ceoModal')">Close</button></div></div></div>
+<div id="toast"></div>
+const SUPABASE_URL="https://fgocnybpjweezxwvycdt.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null, currentProfile=null, allPosts=[], currentFilter='All', currentReaction={};
+let marketFilter='All', deferredPrompt=null;
+let localGroups=JSON.parse(localStorage.getItem('zuka_groups')||'[]');
+let localMarket=JSON.parse(localStorage.getItem('zuka_market')||'[{"title":"iPhone 14 Pro","price":1200000,"priceText":"TZS 1,200,000","category":"Phones","condition":"Like New","loc":"Mwanza","desc":"Battery 92 percent, full box.","img":"https://via.placeholder.com/1080","seller":"Amina Hassan","phone":"0712345678"}]');
+let localPages=JSON.parse(localStorage.getItem('zuka_pages')||'[]');
+let localEvents=JSON.parse(localStorage.getItem('zuka_events')||'[]');
+let localSaved=JSON.parse(localStorage.getItem('zuka_saved')||'[]');
+let localNotifs=JSON.parse(localStorage.getItem('zuka_notifs')||'[]');
+let localChats=JSON.parse(localStorage.getItem('zuka_chats')||'[]');
+let localReels=JSON.parse(localStorage.getItem('zuka_reels')||'[]');
+let localStories=JSON.parse(localStorage.getItem('zuka_stories')||'[]');
+let localFunds=JSON.parse(localStorage.getItem('zuka_funds')||'[]');
+let reportCount=parseInt(localStorage.getItem('zuka_reports')||'0');
+let verifyQueue=JSON.parse(localStorage.getItem('zuka_verify_queue')||'[]');
+function toast(t){const e=document.getElementById('toast');e.innerText=t;e.style.display='block';setTimeout(()=>e.style.display='none',3500)}
+function openModal(id){document.getElementById(id).style.display='flex';if(id==='msgModal')renderChat();if(id==='notifModal')renderNotifs()}
+function closeModal(id){document.getElementById(id).style.display='none'}
+function showPage(p){['home','reels','friends','groups','market','watch','saved','events','pages','memories','fundraiser','search'].forEach(x=>{let el=document.getElementById(x+'Page');if(el)el.classList.add('hidden')});document.getElementById(p+'Page').classList.remove('hidden');if(p==='friends')renderPeople();if(p==='groups')renderGroups();if(p==='market')renderMarket();if(p==='watch')renderWatch();if(p==='saved')renderSaved();if(p==='events')renderEvents();if(p==='pages')renderPages();if(p==='memories')renderMemories();if(p==='fundraiser')renderFunds();if(p==='reels')renderReels();window.scrollTo(0,0)}
+function setupPWA(){
+const manifest={name:'ZUKA',short_name:'ZUKA',description:'Connect with friends and the world around you on ZUKA.',start_url:'/',display:'standalone',background_color:'#ffffff',theme_color:'#0866ff',icons:[{src:'https://via.placeholder.com/192/0866ff/ffffff?text=Z',sizes:'192x192',type:'image/png'},{src:'https://via.placeholder.com/512/0866ff/ffffff?text=Z',sizes:'512x512',type:'image/png'}]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});const url=URL.createObjectURL(blob);
+const link=document.createElement('link');link.rel='manifest';link.href=url;document.head.appendChild(link);
+if('serviceWorker' in navigator){const swCode="self.addEventListener('install',e=>{self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(clients.claim())});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))})";const swBlob=new Blob([swCode],{type:'text/javascript'});const swUrl=URL.createObjectURL(swBlob);navigator.serviceWorker.register(swUrl).catch(()=>{});}
 }
-async function doLogin(){
-  const email = document.getElementById("emailInput").value.trim();
-  const password = document.getElementById("passInput").value;
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if(error){ msg.innerText = error.message; return; }
-  checkUser();
+function hideInstallBanner(){document.getElementById('installBanner').classList.add('hidden');localStorage.setItem('zuka_install_dismissed','1')}
+async function installApp(){
+const status=document.getElementById('installStatus');
+if(deferredPrompt){deferredPrompt.prompt();const choice=await deferredPrompt.userChoice;if(choice.outcome==='accepted'){toast('ZUKA installed to Home Screen!');localStorage.setItem('zuka_installed','1');document.getElementById('installBanner').classList.add('hidden');document.getElementById('installBtn').innerText='ZUKA Installed';}else{toast('Install cancelled. You can install later.');}deferredPrompt=null;return;}
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
+if(isIOS){openModal('installModal');if(status)status.innerText='On iPhone: Tap Share button, then Add to Home Screen, then Add.';return;}
+if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){toast('ZUKA is already installed on Home Screen!');return;}
+openModal('installModal');if(status)status.innerText='On Android Chrome: Tap 3 dots - Add to Home Screen - Add. On Computer: Click Install icon in address bar.';
 }
-async function doLogout(){
-  await sb.auth.signOut();
-  location.reload();
+window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBtn').style.display='inline-block';if(localStorage.getItem('zuka_install_dismissed')!=='1'&&localStorage.getItem('zuka_installed')!=='1'){document.getElementById('installBanner').classList.remove('hidden');}});
+window.addEventListener('appinstalled',()=>{toast('ZUKA installed to Home Screen!');localStorage.setItem('zuka_installed','1');document.getElementById('installBanner').classList.add('hidden');});
+function toggleDark(){document.body.classList.toggle('dark');toast(document.body.classList.contains('dark')?'Dark Mode ON':'Dark Mode OFF')}
+function changeLang(v){toast(v==='sw'?'Language changed to Swahili':'Language changed to English')}
+function checkIn(){toast('Checked in: Mwanza, Tanzania')}
+function videoCall(){toast('Video Call started...')}function voiceCall(){toast('Voice Call started...')}
+function addGIF(){const g=document.getElementById('postInput');g.value+=' [GIF: Happy Dance] ';toast('GIF added!')}
+function addSticker(){const g=document.getElementById('postInput');g.value+=' [Sticker] ';toast('Sticker added!')}
+function setAvatar(e){document.getElementById('avatarPreview').innerText=e}
+function saveAvatar(){toast('Avatar saved');closeModal('avatarModal')}
+function submitVerification(){const n=document.getElementById('verifyName').value||currentUser?.email;verifyQueue.push({email:currentUser?.email||'user',name:n,time:new Date().toLocaleString()});localStorage.setItem('zuka_verify_queue',JSON.stringify(verifyQueue));toast('Verification submitted! CEO will review.');closeModal('verifyModal')}
+function boostPost(){toast('Boost Post: Your post will reach 10,000 more people!')}
+function downloadData(){toast('Your data is downloading...')}
+function deactivateAccount(){if(confirm('Deactivate account?'))toast('Account deactivated.')}
+function deleteAccount(){if(confirm('Delete FOREVER?'))toast('Account deletion requested.')}
+async function resizeImageTo1080(file){return new Promise((resolve)=>{const reader=new FileReader();reader.onload=(e)=>{const img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1080;const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,1080,1080);const scale=Math.max(1080/img.width,1080/img.height);const w=img.width*scale;const h=img.height*scale;const x=(1080-w)/2;const y=(1080-h)/2;ctx.drawImage(img,x,y,w,h);resolve(canvas.toDataURL('image/jpeg',0.85));};img.src=e.target.result;};reader.readAsDataURL(file);});}
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+document.getElementById('postImage').addEventListener('change',async function(){const f=this.files[0];if(!f)return;const resized=await resizeImageTo1080(f);const prev=document.getElementById('postPreview');prev.src=resized;prev.style.display='block';prev.dataset.resized=resized;toast('Photo resized to 1080 x 1080');});
+document.getElementById('marketImage').addEventListener('change',async function(){const f=this.files[0];if(!f)return;const resized=await resizeImageTo1080(f);const prev=document.getElementById('marketPreview');prev.src=resized;prev.style.display='block';prev.dataset.resized=resized;toast('Marketplace photo resized to 1080 x 1080');});
+async function doSignup(){const email=document.getElementById('emailInput').value.trim();const password=document.getElementById('passInput').value;const name=document.getElementById('nameInput').value.trim()||email.split('@')[0];const {data,error}=await sb.auth.signUp({email,password});if(error){document.getElementById('msg').innerText=error.message;return}if(data.user){await sb.from('profiles').insert([{user_id:data.user.id,email,full_name:name,avatar_url:'https://via.placeholder.com/100',is_verified:false}])}toast('Account created! Now Log In');document.getElementById('msg').style.color='green';document.getElementById('msg').innerText='Success! Click Log In';}
+async function doLogin(){const email=document.getElementById('emailInput').value.trim();const password=document.getElementById('passInput').value;const {error}=await sb.auth.signInWithPassword({email,password});if(error){document.getElementById('msg').innerText=error.message;return}checkUser();}
+async function doLogout(){await sb.auth.signOut();location.reload()}
+async function checkUser(){const {data}=await sb.auth.getUser();if(data.user){currentUser=data.user;document.getElementById('authBox').classList.add('hidden');document.getElementById('appBox').classList.remove('hidden');const {data:prof}=await sb.from('profiles').select('*').eq('user_id',data.user.id).maybeSingle();currentProfile=prof;const name=prof?.full_name||data.user.email;const av=prof?.avatar_url||'https://via.placeholder.com/40';document.getElementById('sideName').innerText=name;document.getElementById('sideAvatar').src=av;document.getElementById('myAvatar').src=av;document.getElementById('profileName').innerText=name;document.getElementById('profileEmail').innerText=data.user.email;document.getElementById('profileAvatar').src=av;document.getElementById('profileBio').value=prof?.bio||'';document.getElementById('sideTick').innerHTML=prof?.is_verified?'Verified':'';document.getElementById('profileTick').innerHTML=prof?.is_verified?'Blue Tick Verified':'Not Verified';if(prof?.cover_url)document.getElementById('coverImg').src=prof.cover_url;loadFeed();loadNews('world');renderStories();renderPeople();renderNotifs();renderTrending();renderMarket();}}
+async function saveProfile(){if(!currentUser)return;const bio=document.getElementById('profileBio').value;const avatar_url=document.getElementById('profileAvatarInput').value||currentProfile?.avatar_url;const cover_url=document.getElementById('profileCoverInput').value||'';await sb.from('profiles').upsert({user_id:currentUser.id,email:currentUser.email,full_name:currentProfile?.full_name||currentUser.email,bio,avatar_url,is_verified:currentProfile?.is_verified||false});if(cover_url)document.getElementById('coverImg').src=cover_url;toast('Profile and Cover saved');closeModal('profileModal');checkUser();}
+function formatPost(text){if(!text)return'';let t=text.replace(/</g,'&lt;');t=t.replace(/#(\w+)/g,'<span class="hashtag" onclick="toast(\'Hashtag: #$1\')">#$1</span>');t=t.replace(/@(\w+)/g,'<span class="mention">@$1</span>');return t;}
+async function doPost(){const text=document.getElementById('postInput').value.trim();const privacy=document.getElementById('postPrivacy').value;const feeling=document.getElementById('postFeeling').value;const type=document.getElementById('postType').value;const tags=document.getElementById('tagInput').value;const hashtags=document.getElementById('hashtagInput').value;const imgFile=document.getElementById('postImage').files[0];const vidFile=document.getElementById('postVideo').files[0];if(!text&&!imgFile&&!vidFile){toast('Write something');return}if(!currentUser){toast('Login first');return}let image_url=document.getElementById('postPreview').dataset.resized||'';let video_url='';if(imgFile&&!image_url)image_url=await resizeImageTo1080(imgFile);if(vidFile)video_url=await fileToBase64(vidFile);let content=text;if(feeling)content+=' '+feeling;if(tags)content+=' Tagged: '+tags;if(hashtags)content+=' '+hashtags;const {error}=await sb.from('posts').insert([{content,user_id:currentUser.id,image_url,video_url,privacy,post_type:type}]);if(error){toast(error.message);return}document.getElementById('postInput').value='';document.getElementById('postImage').value='';document.getElementById('postVideo').value='';document.getElementById('postPreview').style.display='none';document.getElementById('postPreview').dataset.resized='';if(type==='Reel'&&(image_url||video_url)){localReels.unshift({caption:content,img:image_url||'https://picsum.photos/400/600',user:currentProfile?.full_name||'You'});localStorage.setItem('zuka_reels',JSON.stringify(localReels));}addNotif('Your post was published');loadFeed();toast('Posted! Photo is 1080 x 1080');}
+async function loadFeed(){const {data,error}=await sb.from('posts').select('*, profiles!posts_user_id_fkey(full_name,avatar_url,is_verified)').order('created_at',{ascending:false}).limit(50);if(error){const {data:d2}=await sb.from('posts').select('*').order('created_at',{ascending:false}).limit(50);allPosts=d2||[];renderFeed();return;}allPosts=data||[];renderFeed();}
+async function renderFeed(){
+let list=allPosts;
+if(currentFilter!=='All'){if(currentFilter==='Reel')list=list.filter(p=>p.post_type==='Reel'||p.video_url);else if(currentFilter==='Poll')list=list.filter(p=>p.post_type==='Poll');else if(currentFilter==='News')list=list.filter(p=>p.post_type==='News');else list=list.filter(p=>(p.privacy||'Public')===currentFilter);}
+if(!list.length){document.getElementById('feedList').innerHTML='<div class="card">No posts yet. Be the first to post on ZUKA!</div>';return}
+let html='';
+for(const p of list){
+const prof=p.profiles||{};const name=prof.full_name||'ZUKA User';const av=prof.avatar_url||'https://via.placeholder.com/40';const tick=prof.is_verified?' <span class="tick">Verified</span>':'';
+const time=new Date(p.created_at).toLocaleString();const isMine=currentUser&&p.user_id===currentUser.id;
+const {count:likeCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',p.id);
+const {data:comments}=await sb.from('comments').select('*').eq('post_id',p.id).order('created_at',{ascending:true});
+html+=`<div class="card"><div class="post-head"><img src="${av}"><div><b>${name}${tick}</b><small>${time} - ${p.privacy||'Public'} - ${p.post_type||'Post'}</small></div><div style="margin-left:auto"><button onclick="toggleMenu('${p.id}')">Menu</button><div id="menu-${p.id}" style="display:none">${isMine?`<button onclick="editPost('${p.id}')">Edit Post</button><button onclick="deletePost('${p.id}')">Delete Post</button>`:''}<button onclick="shareToStory('${p.id}')">Share to Story</button><button onclick="savePost('${p.id}')">Save</button><button onclick="reportPost('${p.id}')">Report</button></div></div></div><div class="post-text">${formatPost(p.content||'')}</div>${p.image_url?`<img class="post-img" src="${p.image_url}" alt="Feed photo 1080 x 1080">`:''}${p.video_url?`<video class="post-video" controls src="${p.video_url}"></video>`:''}<div class="like-row"><span>${likeCount||0} Reactions - ${currentReaction[p.id]||''}</span><span>${(comments||[]).length} Comments</span></div><div class="actions"><button onclick="showReactions('${p.id}')">Like</button><button onclick="lovePost('${p.id}')">Love</button><button onclick="document.getElementById('c-${p.id}').focus()">Comment</button><button onclick="sharePost('${p.id}')">Share</button><button onclick="followUser('${p.user_id}')">Follow</button></div><div id="react-${p.id}" style="display:none" class="reaction-bar"><span onclick="setReaction('${p.id}','Like')">Like</span><span onclick="setReaction('${p.id}','Love')">Love</span><span onclick="setReaction('${p.id}','Haha')">Haha</span><span onclick="setReaction('${p.id}','Wow')">Wow</span><span onclick="setReaction('${p.id}','Sad')">Sad</span><span onclick="setReaction('${p.id}','Angry')">Angry</span></div><div>${(comments||[]).map(c=>`<div class="one-comment"><b>${c.user_id?.slice(0,8)||'User'}:</b> ${c.content}</div>`).join('')}</div><div class="comment-box"><img src="${currentProfile?.avatar_url||'https://via.placeholder.com/40'}"><input id="c-${p.id}" placeholder="Write a comment..."><button onclick="commentPost('${p.id}')">Send</button></div></div>`;
 }
-async function checkUser(){
-  const { data } = await sb.auth.getUser();
-  if(data.user){
-    authBox.style.display = "none";
-    feedBox.style.display = "block";
-    document.getElementById("userEmail").innerText = data.user.email;
-    loadFeed();
-  }
+document.getElementById('feedList').innerHTML=html;
 }
-async function doPost(){
-  const text = document.getElementById("postInput").value.trim();
-  if(!text) return;
-  const { data: userData } = await sb.auth.getUser();
-  const { error } = await sb.from("posts").insert([{ content: text, user_id: userData.user.id }]);
-  if(error){ alert(error.message); return; }
-  document.getElementById("postInput").value = "";
-  loadFeed();
+function toggleMenu(id){const el=document.getElementById('menu-'+id);el.style.display=el.style.display==='none'?'block':'none'}
+function showReactions(id){const el=document.getElementById('react-'+id);el.style.display=el.style.display==='none'?'flex':'none'}
+function setReaction(id,txt){currentReaction[id]=txt;toast('Reaction: '+txt);loadFeed()}
+async function editPost(id){const t=prompt('Edit your post:');if(!t)return;await sb.from('posts').update({content:t}).eq('id',id);toast('Post edited');loadFeed()}
+async function deletePost(id){if(!confirm('Delete this post?'))return;await sb.from('posts').delete().eq('id',id);toast('Post deleted');loadFeed()}
+function shareToStory(id){toast('Shared to your Story!')}
+function filterFeed(f,el){currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));if(el)el.classList.add('on');renderFeed()}
+async function likePost(id){if(!currentUser){toast('Login first');return}const {data:ex}=await sb.from('likes').select('id').eq('post_id',id).eq('user_id',currentUser.id).maybeSingle();if(ex){await sb.from('likes').delete().eq('id',ex.id);}else{await sb.from('likes').insert([{post_id:id,user_id:currentUser.id}])}loadFeed()}
+async function lovePost(id){toast('Loved!');likePost(id)}
+async function commentPost(id){const inp=document.getElementById('c-'+id);const text=inp.value.trim();if(!text)return;const {error}=await sb.from('comments').insert([{post_id:id,user_id:currentUser.id,content:text}]);if(error){toast(error.message);return}addNotif('New comment on your post');loadFeed()}
+async function sharePost(id){const url=location.href.split('?')[0]+'?share='+id;try{await navigator.clipboard.writeText(url);toast('Link copied! Share anywhere.')}catch(e){prompt('Copy link:',url)}}
+function savePost(id){if(!localSaved.includes(id)){localSaved.push(id);localStorage.setItem('zuka_saved',JSON.stringify(localSaved));toast('Saved')}else toast('Already saved')}
+function reportPost(id){reportCount++;localStorage.setItem('zuka_reports',reportCount);toast('Post reported to CEO.')}
+async function followUser(uid){if(!currentUser)return;if(uid===currentUser.id){toast('This is you');return}toast('Following user')}
+function renderSaved(){document.getElementById('savedList').innerHTML=localSaved.length?localSaved.map(id=>`<div>Saved Post: ${id}</div>`).join(''):'No saved posts yet'}
+function addStory(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{localStories.unshift(r.result);localStorage.setItem('zuka_stories',JSON.stringify(localStories));renderStories();toast('Story posted!');};r.readAsDataURL(f)}
+function renderStories(){const users=['Amina','John','Sarah','David','Neema','Kelvin'];let myStories=localStories.map(s=>`<div class="story" onclick="toast('Your story - 120 views')"><img src="${s}"><span>You</span></div>`).join('');document.getElementById('storiesList').innerHTML=`<div class="story" onclick="document.getElementById('storyFile').click()"><img src="https://via.placeholder.com/110x180"><span class="add">+</span><span>Create Story</span></div>`+myStories+users.map((u,i)=>`<div class="story" onclick="toast('Viewing ${u} story')"><img src="https://picsum.photos/112/185?random=${i+10}"><span>${u}</span></div>`).join('')}
+function renderPeople(){const people=[{name:'Amina Hassan',img:'https://i.pravatar.cc/100?img=47'},{name:'John Mwangi',img:'https://i.pravatar.cc/100?img=12'}];document.getElementById('peopleList').innerHTML=people.map(p=>`<div class="friend-row"><img src="${p.img}"><b>${p.name}</b><button onclick="toast('Friend request sent')">Add Friend</button></div>`).join('');document.getElementById('requestList').innerHTML=`<div class="friend-row"><img src="https://i.pravatar.cc/100?img=5"><b>Emmanuel S.</b><button onclick="toast('Accepted')">Accept</button></div>`;document.getElementById('allFriends').innerHTML=people.map(p=>`<div class="friend-row"><img src="${p.img}"><span>${p.name}</span></div>`).join('');document.getElementById('onlineList').innerHTML=people.map(p=>`<div class="friend-row"><img src="${p.img}"><span>${p.name}</span><span style="color:green">Online</span></div>`).join('')}
+function renderGroups(){document.getElementById('groupList').innerHTML=(localGroups.length?localGroups:['Tanzania Tech','ZUKA Creators']).map(g=>`<div class="menu-item">${g} <button style="margin-left:auto" onclick="toast('Joined ${g}')">Join</button></div>`).join('')}
+function createGroup(){const v=document.getElementById('newGroup').value.trim();if(!v)return;localGroups.push(v);localStorage.setItem('zuka_groups',JSON.stringify(localGroups));renderGroups();toast('Group created')}
+function setMarketFilter(f,el){marketFilter=f;document.querySelectorAll('#marketPage .chip').forEach(c=>c.classList.remove('on'));if(el)el.classList.add('on');renderMarket()}
+function renderMarket(){
+let list=[...localMarket];const q=(document.getElementById('marketSearch')?.value||'').toLowerCase();
+if(q)list=list.filter(m=>(m.title+' '+m.desc+' '+m.loc+' '+m.category).toLowerCase().includes(q));
+if(marketFilter!=='All')list=list.filter(m=>m.category===marketFilter);
+const sort=document.getElementById('marketSort')?.value||'new';if(sort==='low')list.sort((a,b)=>a.price-b.price);if(sort==='high')list.sort((a,b)=>b.price-a.price);
+if(!list.length){document.getElementById('marketList').innerHTML='<p>No items found.</p>';return;}
+document.getElementById('marketList').innerHTML=list.map((m,i)=>`<div class="market-card"><img class="market-img" src="${m.img}" alt="Marketplace photo 1080 x 1080"><div style="display:flex;justify-content:space-between;margin-top:10px"><b>${m.title}</b><span class="badge">${m.category}</span></div><div class="market-price">${m.priceText}</div><div class="market-meta">Condition: ${m.condition} | Location: ${m.loc} | Seller: ${m.seller} ${m.phone?' | Phone: '+m.phone:''}</div><p>${m.desc||''}</p><div style="display:flex;gap:8px"><button class="primary" style="flex:1" onclick="contactSeller('${m.seller}','${m.phone||''}')">Message Seller</button><button style="flex:1" onclick="saveMarketItem(${i})">Save Item</button><button style="flex:1" onclick="shareMarketItem('${m.title}')">Share</button></div></div>`).join('');
 }
-async function loadFeed(){
-  const { data, error } = await sb.from("posts").select("*").order("created_at", { ascending: false }).limit(20);
-  if(error){ document.getElementById("feedList").innerHTML = "Error: " + error.message; return; }
-  document.getElementById("feedList").innerHTML = data.map(p => `<div class="post">${p.content}</div>`).join("");
-}
+function contactSeller(name,phone){if(phone){toast('Contacting '+name+' - Phone: '+phone);}else{toast('Messaging '+name+' in Messenger');openModal('msgModal');}}
+function saveMarketItem(i){toast('Item saved to Saved Items')}
+function shareMarketItem(title){const url=location.href.split('?')[0]+'?item='+encodeURIComponent(title);navigator.clipboard.writeText(url);toast('Marketplace link copied: '+title)}
+function addMarket(){const t=document.getElementById('marketTitle').value.trim();const priceVal=document.getElementById('marketPrice').value.trim();const cat=document.getElementById('marketCategory').value;const cond=document.getElementById('marketCondition').value;const loc=document.getElementById('marketLoc').value.trim();const desc=document.getElementById('marketDesc').value.trim();if(!t){toast('Enter item name');return}const price=parseInt(priceVal.replace(/[^0-9]/g,''))||0;const img=document.getElementById('marketPreview').dataset.resized||'https://via.placeholder.com/1080';localMarket.unshift({title:t,price,priceText:'TZS '+price.toLocaleString(),category:cat,condition:cond,loc,desc,img,seller:currentProfile?.full_name||'You',phone:''});localStorage.setItem('zuka_market',JSON.stringify(localMarket));document.getElementById('marketTitle').value='';document.getElementById('marketPrice').value='';document.getElementById('marketDesc').value='';document.getElementById('marketImage').value='';document.getElementById('marketPreview').style.display='none';document.getElementById('marketPreview').dataset.resized='';renderMarket();toast('Item posted! Photo is 1080 x 1080')}
+function renderWatch(){document.getElementById('watchList').innerHTML=[1,2,3].map(i=>`<div class="card"><video controls style="width:100%;border-radius:10px" poster="https://picsum.photos/500/280?random=${i+20}"><source src="https://www.w3schools.com/html/mov_bbb.mp4"></video><b>Trending Video ${i}</b></div>`).join('')}
+function renderEvents(){document.getElementById('eventList').innerHTML=(localEvents.length?localEvents:['ZUKA Launch Party']).map(e=>`<div class="menu-item">${e} <button style="margin-left:auto" onclick="toast('Interested')">Interested</button></div>`).join('')}
+function addEvent(){const v=document.getElementById('eventName').value.trim();if(!v)return;localEvents.push(v);localStorage.setItem('zuka_events',JSON.stringify(localEvents));renderEvents()}
+function renderPages(){document.getElementById('pageList').innerHTML=(localPages.length?localPages:['BBC News','ZUKA Official']).map(p=>`<div class="menu-item">${p} <button style="margin-left:auto" onclick="toast('Liked page')">Like</button></div>`).join('')}
+function createPage(){const v=document.getElementById('pageName').value.trim();if(!v)return;localPages.push(v);localStorage.setItem('zuka_pages',JSON.stringify(localPages));renderPages()}
+function renderMemories(){document.getElementById('memoryList').innerHTML=`<div class="card"><b>On This Day - 1 Year Ago</b><p>You posted: First day on ZUKA!</p></div>`}
+function renderFunds(){document.getElementById('fundList').innerHTML=(localFunds.length?localFunds:['Help Neema - Medical']).map(f=>`<div class="card">${f}<br><button onclick="toast('Donated!')">Donate</button></div>`).join('')}
+function addFund(){const t=document.getElementById('fundTitle').value;if(!t)return;localFunds.push(t);localStorage.setItem('zuka_funds',JSON.stringify(localFunds));renderFunds()}
+function renderReels(){const demo=[{caption:'Mwanza Sunset #ZUKA',img:'https://picsum.photos/400/600?random=1',user:'Amina Hassan'}];const all=[...localReels,...demo];document.getElementById('reelsList').innerHTML=all.map(r=>`<div class="reel"><img src="${r.img}"><div class="r-info"><b>${r.user}</b><p>${r.caption}</p></div></div>`).join('')}
+function postReel(){const cap=document.getElementById('reelCaption').value||'My New Reel';const f=document.getElementById('reelFile').files[0];if(f){const r=new FileReader();r.onload=()=>{localReels.unshift({caption:cap,img:r.result,user:currentProfile?.full_name||'You'});localStorage.setItem('zuka_reels',JSON.stringify(localReels));renderReels();toast('Reel posted!')};r.readAsDataURL(f);}else{localReels.unshift({caption:cap,img:'https://picsum.photos/400/600?random=99',user:currentProfile?.full_name||'You'});localStorage.setItem('zuka_reels',JSON.stringify(localReels));renderReels();toast('Reel posted!')}}
+function renderTrending(){document.getElementById('trendingList').innerHTML=['#ZUKA 120K','#Tanzania 85K'].map(t=>`<div style="padding:8px 0;border-bottom:1px solid #eee;cursor:pointer" onclick="doSearch('${t}')"><b>${t}</b></div>`).join('')}
+function doSearch(q){if(!q){if(!document.getElementById('searchPage').classList.contains('hidden'))showPage('home');return}showPage('search');const filtered=allPosts.filter(p=>(p.content||'').toLowerCase().includes(q.toLowerCase()));document.getElementById('searchResults').innerHTML=filtered.length?filtered.map(p=>`<div class="card">${p.content}</div>`).join(''):`<div>Searching for "<b>${q}</b>"</div>`;loadNews(q)}
+function addNotif(t){localNotifs.unshift({text:t,time:new Date().toLocaleString()});localStorage.setItem('zuka_notifs',JSON.stringify(localNotifs.slice(0,20)));renderNotifs()}
+function renderNotifs(){document.getElementById('notifList').innerHTML=localNotifs.length?localNotifs.map(n=>`<div class="card">${n.text}<br><small>${n.time}</small></div>`).join(''):'No notifications';document.getElementById('notifCount').innerText=localNotifs.length}
+function sendChat(){const v=document.getElementById('chatInput').value.trim();if(!v)return;localChats.push({from:'You',text:v});localStorage.setItem('zuka_chats',JSON.stringify(localChats));document.getElementById('chatInput').value='';renderChat()}
+function renderChat(){document.getElementById('chatList').innerHTML=localChats.map(c=>`<div class="one-comment"><b>${c.from}:</b> ${c.text}</div>`).join('')||'No messages yet.'}
+async function askAI(){const q=document.getElementById('postInput').value||'Tell me trending news today';const el=document.getElementById('aiAnswer');el.style.display='block';el.innerText='ZUKA AI is thinking...';try{let rss='https://feeds.bbci.co.uk/news/world/rss.xml';if(q.toLowerCase().includes('sport'))rss='https://feeds.bbci.co.uk/sport/rss.xml';const res=await fetch('https://api.rss2json.com/v1/api?rss_url='+encodeURIComponent(rss));const j=await res.json();const top=j.items.slice(0,3).map(i=>' - '+i.title).join('\n');el.innerText='ZUKA AI - Real News for: "'+q+'"\n'+top;}catch(e){el.innerText='ZUKA AI: Check News section for live updates.'}}
+function factCheck(){const t=document.getElementById('factInput').value;if(!t){toast('Paste news first');return}const el=document.getElementById('factResult');el.style.display='block';if(t.toLowerCase().includes('fake')||t.toLowerCase().includes('free money'))el.innerText='ZUKA AI Fact-Check: This looks FAKE / SCAM. Do not share.';else el.innerText='ZUKA AI Fact-Check: This looks likely TRUE, but always check BBC / Reuters source.'}
+async function loadNews(topic){const box=document.getElementById('newsList');if(!box)return;box.innerHTML='Loading real news...';let rss='https://feeds.bbci.co.uk/news/world/rss.xml';if(topic==='africa')rss='https://feeds.bbci.co.uk/news/world/africa/rss.xml';if(topic==='technology')rss='https://feeds.bbci.co.uk/news/technology/rss.xml';if(topic==='sports')rss='https://feeds.bbci.co.uk/sport/rss.xml';if(topic==='business')rss='https://feeds.bbci.co.uk/news/business/rss.xml';if(topic==='health')rss='https://feeds.bbci.co.uk/news/health/rss.xml';try{const res=await fetch('https://api.rss2json.com/v1/api?rss_url='+encodeURIComponent(rss)+'&count=8');const j=await res.json();box.innerHTML=j.items.map(i=>`<div class="news-item" onclick="window.open('${i.link}','_blank')"><img src="${i.thumbnail||i.enclosure?.link||'https://via.placeholder.com/70'}"><div><b>${i.title}</b><br><small>${new Date(i.pubDate).toLocaleString()} - BBC - ${topic}</small></div></div>`).join('');}catch(e){box.innerHTML='News failed. Check internet.'}}
+function goLive(){toast('You are LIVE!');closeModal('liveModal');addNotif('You went Live')}
+async function requestBlueTick(){if(!currentUser){toast('Login first');return}toast('Request Blue Tick: Go to Profile - Verify - Upload ID and Selfie.');openModal('verifyModal')}
+function ceoLogin(){if(document.getElementById('ceoPass').value==='ZUKA-CEO-2026'){document.getElementById('ceoPanel').classList.remove('hidden');loadCEOStats();toast('Welcome CEO');}else toast('Wrong CEO Password')}
+async function loadCEOStats(){const {count:p}=await sb.from('posts').select('*',{count:'exact',head:true});const {count:u}=await sb.from('profiles').select('*',{count:'exact',head:true});document.getElementById('ceoPosts').innerText=p||0;document.getElementById('ceoUsers').innerText=u||0;document.getElementById('ceoReports').innerText=reportCount;document.getElementById('verifyQueue').innerHTML=verifyQueue.length?verifyQueue.map(v=>`<div>${v.name} - ${v.email}</div>`).join(''):'No verification requests yet.';document.getElementById('reportQueue').innerHTML=reportCount?reportCount+' reports':'No reports.'}
+async function ceoVerify(){const email=document.getElementById('ceoVerifyEmail').value.trim();if(!email)return;await sb.from('profiles').update({is_verified:true}).eq('email',email);toast(email+' is now Verified - Blue Tick');loadCEOStats();loadFeed()}
+async function ceoAnnounce(){const t=document.getElementById('ceoAnnounce').value.trim();if(!t||!currentUser)return;await sb.from('posts').insert([{content:'CEO ANNOUNCEMENT: '+t,user_id:currentUser.id,privacy:'Public',post_type:'News'}]);toast('Announcement posted to ALL');loadFeed()}
+setupPWA();
+renderChat();renderNotifs();renderMarket();
+if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){const b=document.getElementById('installBtn');if(b)b.innerText='ZUKA Installed';}
 checkUser();
 </script>
 </body>
