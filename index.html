@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sw">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,6 +13,7 @@ button{width:100%;padding:12px;margin:6px 0;border:0;border-radius:8px;backgroun
 button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
 .post{border:1px solid #eee;padding:12px;border-radius:10px;margin:10px 0;background:#fafafa}
 #msg{color:red;font-size:14px}
+#msg a{color:#1a73e8;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
@@ -23,8 +24,8 @@ button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
 <div id="authBox">
 <input id="emailInput" type="email" placeholder="Email">
 <input id="passInput" type="password" placeholder="Password">
-<button onclick="doSignup()">SIGNUP</button>
-<button onclick="doLogin()" style="background:#1a73e8">LOGIN</button>
+<button onclick="doSignup()">signup</button>
+<button onclick="doLogin()" style="background:#1a73e8">login</button>
 <p id="msg"></p>
 </div>
 
@@ -32,7 +33,7 @@ button.small{width:auto;padding:8px 14px;background:#eee;color:#000}
 <p id="userEmail" style="font-weight:bold"></p>
 <button class="small" onclick="doLogout()">Logout</button>
 <hr>
-<input id="postInput" placeholder="Write Something...">
+<input id="postInput" placeholder="Write something...">
 <button onclick="doPost()">POST</button>
 <div id="feedList"></div>
 </div>
@@ -52,7 +53,9 @@ async function doSignup(){
   const email = document.getElementById("emailInput").value.trim();
   const password = document.getElementById("passInput").value;
   const { error } = await sb.auth.signUp({ email, password });
-  msg.innerText = error ? error.message : "Registration Successfully Click here to log in";
+  if(error){ msg.style.color="red"; msg.innerText = error.message; return; }
+  msg.style.color="green";
+  msg.innerHTML = `Registration successful! <a onclick="document.getElementById('msg').innerText=''">Click here to log in</a>`;
 }
 async function doLogin(){
   const email = document.getElementById("emailInput").value.trim();
@@ -78,6 +81,7 @@ async function doPost(){
   const text = document.getElementById("postInput").value.trim();
   if(!text) return;
   const { data: userData } = await sb.auth.getUser();
+  if(!userData.user){ alert("Please log in first"); return; }
   const { error } = await sb.from("posts").insert([{ content: text, user_id: userData.user.id }]);
   if(error){ alert(error.message); return; }
   document.getElementById("postInput").value = "";
