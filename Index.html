@@ -36,8 +36,8 @@
 <div class="profile-page" id="profilePage"><div class="profile-topbar"><button onclick="closeProfile()">←</button><b id="profileTopName">Profile</b><button onclick="openProfileSearch()">🔍</button><button onclick="closeProfile()">✕</button></div><div id="profileContent"></div></div>
 <div class="story-viewer" id="storyViewer"><div class="story-progress" id="storyProgress"></div><div class="story-view-head"><div class="avatar avatar-small" id="storyViewAvatar" onclick="closeStoryViewer();openProfile(storyCurrentEmail)">A</div><b id="storyViewName">Name</b><small id="storyViewTime" style="color:#ddd"></small><button class="story-view-close" onclick="closeStoryViewer()">✕</button></div><div class="story-view-body" id="storyViewBody"></div><div class="story-view-foot"><input id="storyReplyInput" placeholder="Reply to story..." onkeydown="if(event.key==='Enter')sendStoryReply()"><button id="storyLikeBtn" onclick="likeStoryView()">♡</button><button onclick="sendStoryReply()">➤</button></div></div>
 <script>
-const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
-const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL= 'https://fgocnybpjweezxwvycdt.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
 function getSupabaseConfig(){let u=localStorage.getItem('zuka_supabase_url')||SUPABASE_URL,k=localStorage.getItem('zuka_supabase_key')||SUPABASE_ANON_KEY;if(u.indexOf('PASTE_')===0)u='';if(k.indexOf('PASTE_')===0)k='';return{url:u,key:k}}
 function saveSupabaseConfig(u,k){localStorage.setItem('zuka_supabase_url',u||'');localStorage.setItem('zuka_supabase_key',k||'')}
 let d=document.getElementById('day'),mo=document.getElementById('month'),y=document.getElementById('year');d.innerHTML='<option>Day</option>';for(let i=1;i<=31;i++)d.innerHTML+='<option>'+i+'</option>';let mns=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];mo.innerHTML='<option>Month</option>';mns.forEach(x=>mo.innerHTML+='<option>'+x+'</option>');y.innerHTML='<option>Year</option>';for(let i=2026;i>=1905;i--)y.innerHTML+='<option>'+i+'</option>';
@@ -134,11 +134,8 @@ document.addEventListener('click',function(e){if(!e.target.closest('.topbar')&&!
 document.addEventListener('visibilitychange',function(){if(document.hidden)pauseAllReels()});
 let current=JSON.parse(localStorage.getItem('zuka_current')||'null');if(current){showApp(current)}else{applySettings()}
 <button onclick="openVerifyModal()">Request Verification</button>
-</script>
-Sawa, hii ni Part 3 yako, nimeipanga vizuri tu, sijaunganisha, sijaifunga chini, sijabadilisha logic. Kosa moja tu nililoliona: button ya Request Verification tayari iko kwenye Part 2 niliyokutumia, kwa hiyo ukiunganisha, tumia button moja tu ili isijirudie mara 2.
-<!-- USER BUTTON - VISIBLE -->
 <button onclick="openVerifyModal()">Request Verification</button>
-
+<script>
 <!-- VERIFY MODAL -->
 <div id="verifyModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center;">
   <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px;">
