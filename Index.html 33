@@ -252,3 +252,5 @@ function loadPosts() {
 }
 window.addEventListener("load", checkSecretAdmin);
 </script>
+</body>
+</html>
