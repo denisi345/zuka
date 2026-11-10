@@ -5,15 +5,15 @@
  * 100% English - No Hardcoded Credentials, No Seeded Owner Account
  */
 
-const DEFAULT_SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('ZUKA_SUPABASE_URL') || '';
-const DEFAULT_SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || localStorage.getItem('ZUKA_SUPABASE_ANON_KEY') || '';
+const DEFAULT_VITE_SUPABASE_URL = window.VITE_SUPABASE_URL || localStorage.getItem('ZUKA_SUPABASE_URL') || '';
+const DEFAULT_VITE_SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY') || '';
 
 let supabaseClient = null;
 
 function initSupabase() {
-    if (typeof window.supabase !== 'undefined' && window.supabase.createClient && DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_ANON_KEY) {
+    if (typeof window.supabase !== 'undefined' && window.supabase.createClient && DEFAULT_VITE_SUPABASE_URL && DEFAULT_VITE_SUPABASE_ANON_KEY) {
         try {
-            supabaseClient = window.supabase.createClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY, {
+            supabaseClient = window.supabase.createClient(DEFAULT_VITE_SUPABASE_URL, DEFAULT_VITE_SUPABASE_ANON_KEY, {
                 auth: { persistSession: true },
                 realtime: { params: { eventsPerSecond: 10 } }
             });
@@ -116,8 +116,8 @@ window.ZukaSupabase = {
     },
 
     setCredentials(url, key) {
-        localStorage.setItem('ZUKA_SUPABASE_URL;https://fgocnybpjweezxwvycdt.supabase.co.";
-        localStorage.setItem('ZUKA_SUPABASE_ANON_KEY;'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo": 
+        localStorage.setItem('VITE_SUPABASE_URL;https://fgocnybpjweezxwvycdt.supabase.co.";
+        localStorage.setItem('VITE_SUPABASE_ANON_KEY;'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo": 
                             
         window.location.reload();
     },
