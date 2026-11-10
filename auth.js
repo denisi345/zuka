@@ -1,7 +1,6 @@
 /**
- * ZUKA Super App - Authentication & Account Management (auth.js)
- * Signup, Login, Logout, 2FA, Profile Lock, Professional Mode, Close Friends, Block/Mute/Report.
- * DEFAULT Language: English (US)
+ * ZUKA - Authentication & Account Management (auth.js)
+ * 100% English - No Demo User, No Fake Data
  */
 
 class ZukaAuthService {
@@ -10,45 +9,8 @@ class ZukaAuthService {
     }
 
     initDefaultUser() {
-        let user = this.getCurrentUser();
-        if (!user) {
-            // Seed a high quality default profile in English (US)
-            user = {
-                id: 'usr_juma_01',
-                full_name: 'John Miller',
-                username: 'johnmiller',
-                email: 'john@zuka.com',
-                phone: '+1 415 555 0198',
-                avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-                cover_url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200',
-                bio: 'Digital creator & tech enthusiast 🚀 | Living life to the fullest ✨',
-                location: 'San Francisco, CA',
-                work: 'Software Engineer & Creator',
-                education: 'Stanford University',
-                relationship: 'Single',
-                is_verified: true,
-                is_professional_mode: true,
-                is_locked: false,
-                two_factor_enabled: false,
-                stars_balance: 450,
-                followers_count: 1240,
-                following_count: 380,
-                close_friends: [],
-                favorites: [],
-                blocked_users: [],
-                muted_users: [],
-                language: 'en',
-                created_at: new Date().toISOString()
-            };
-            this.setCurrentUser(user);
-
-            // Ensure it is in users DB
-            const allUsers = window.ZukaDB.get('users');
-            if (!allUsers.some(u => u.id === user.id)) {
-                allUsers.push(user);
-                window.ZukaDB.set('users', allUsers);
-            }
-        }
+        // Do NOT create a fake user. User must sign up / log in.
+        // If no user is logged in, stay logged out.
     }
 
     getCurrentUser() {
@@ -68,15 +30,14 @@ class ZukaAuthService {
     }
 
     async signup({ full_name, username, email, phone, password }) {
-        const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
         if (!full_name || !username || !password) {
-            throw new Error(isSwahili ? 'Tafadhali jaza taarifa zote muhimu.' : 'Please fill in all required fields.');
+            throw new Error('Please fill in all required fields.');
         }
 
         const cleanUsername = username.replace('@', '').toLowerCase();
-        const users = window.ZukaDB.get('users');
+        const users = window.ZukaDB.get('users') || [];
         if (users.some(u => u.username === cleanUsername)) {
-            throw new Error(isSwahili ? 'Jina hili la mtumiaji (username) limeshatumika tayari.' : 'This username is already taken. Please choose another.');
+            throw new Error('This username is already taken. Please choose another.');
         }
 
         const newUser = {
@@ -86,25 +47,25 @@ class ZukaAuthService {
             email: email || '',
             phone: phone || '',
             password_hash: password,
-            avatar_url: `https://api.dicebear.com/7.x/micah/svg?seed=${cleanUsername}`,
-            cover_url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200',
-            bio: isSwahili ? 'Nimejiunga na ZUKA hivi punde!' : 'Just joined ZUKA! Excited to connect.',
-            location: 'United States',
-            work: 'ZUKA Member',
+            avatar_url: '',
+            cover_url: '',
+            bio: '',
+            location: '',
+            work: '',
             education: '',
-            relationship: 'Single',
+            relationship: '',
             is_verified: false,
             is_professional_mode: false,
             is_locked: false,
             two_factor_enabled: false,
-            stars_balance: 50,
+            stars_balance: 0,
             followers_count: 0,
             following_count: 0,
             close_friends: [],
             favorites: [],
             blocked_users: [],
             muted_users: [],
-            language: window.ZukaI18n ? window.ZukaI18n.getLanguage() : 'en',
+            language: 'en',
             created_at: new Date().toISOString()
         };
 
@@ -117,9 +78,8 @@ class ZukaAuthService {
         return newUser;
     }
 
-    async login(identifier, password) {
-        const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
-        const users = window.ZukaDB.get('users');
+    async login(identifier, password, twoFactorCode) {
+        const users = window.ZukaDB.get('users') || [];
         const cleanId = identifier.trim().toLowerCase();
 
         const user = users.find(u => 
@@ -129,18 +89,20 @@ class ZukaAuthService {
         );
 
         if (!user) {
-            throw new Error(isSwahili ? 'Akaunti haijapatikana kwa taarifa hizo.' : 'The email or phone number you entered isn’t connected to an account.');
+            throw new Error('The email or phone number you entered is not connected to an account.');
         }
 
         if (user.is_banned) {
-            throw new Error(isSwahili ? 'Akaunti hii imesimamishwa na Mmiliki wa ZUKA.' : 'This account has been suspended by the ZUKA Owner for violating Community Standards.');
+            throw new Error('This account has been suspended by the ZUKA Owner for violating Community Standards.');
         }
 
         if (user.two_factor_enabled) {
-            const promptMsg = isSwahili ? 'Weka nambari ya uthibitisho ya 2FA (Demo: 1974):' : 'Enter 2FA Security Code (Demo: 1974):';
-            const code = prompt(promptMsg);
-            if (code !== '1974') {
-                throw new Error(isSwahili ? 'Nambari ya 2FA si sahihi.' : 'Invalid 2FA security code.');
+            const code = twoFactorCode || prompt('Enter 2FA Security Code:');
+            if (!code) {
+                throw new Error('2FA security code is required.');
+            }
+            if (user.two_factor_code && code !== user.two_factor_code) {
+                throw new Error('Invalid 2FA security code.');
             }
         }
 
