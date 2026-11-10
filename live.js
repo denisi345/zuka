@@ -1,6 +1,6 @@
 /**
- * ZUKA Super App - Live Streaming Engine (live.js)
- * Implements camera Go Live, real-time comments, viewer counter, live polls, Q&A, and save to video.
+ * ZUKA - Live Streaming Engine (live.js)
+ * 100% English - No Fake Viewers, No Fake Comments, No Fake Replays
  */
 
 class ZukaLiveEngine {
@@ -9,26 +9,27 @@ class ZukaLiveEngine {
         this.viewersCount = 0;
         this.liveComments = [];
         this.stream = null;
+        this.viewerInterval = null;
+        this.currentLiveId = null;
+        this.currentLiveTitle = '';
+        this.currentLiveCategory = '';
     }
 
-    async startBroadcast(title = 'Mubashara (Live) kutoka Dar es Salaam', category = 'Burudani') {
+    async startBroadcast(title = 'Live from ZUKA', category = 'Entertainment') {
         const currentUser = window.ZukaAuth.getCurrentUser();
-        if (!currentUser) throw new Error('Ingia kwanza kuanza Live.');
+        if (!currentUser) throw new Error('Please log in first to start Live.');
 
-        // AI Moderation on title
         const scan = window.ZukaAIModerator.scanContent(title, currentUser.id);
         if (scan.action === 'AUTO_BLOCK') {
-            throw new Error(`🚫 Kichwa cha Live kimezuiwa na AI: ${scan.reason}`);
+            throw new Error(`Live title blocked by AI: ${scan.reason}`);
         }
 
         this.isBroadcasting = true;
-        this.viewersCount = 12;
-        this.liveComments = [
-            { id: 'lc1', name: 'Amina', text: 'Karibu mubashara! 👏' },
-            { id: 'lc2', name: 'Baraka', text: 'Picha inatoka vizuri sana HD!' }
-        ];
+        this.viewersCount = 0;
+        this.liveComments = [];
+        this.currentLiveTitle = title;
+        this.currentLiveCategory = category;
 
-        // Access camera for preview
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 this.stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -42,17 +43,13 @@ class ZukaLiveEngine {
             console.log("Live stream camera notice:", e);
         }
 
-        // Ticker for viewers count
         this.viewerInterval = setInterval(() => {
             if (this.isBroadcasting) {
-                this.viewersCount += Math.floor(Math.random() * 5) - 1;
-                if (this.viewersCount < 5) this.viewersCount = 5;
                 const vCountEl = document.getElementById('live-viewers-badge');
-                if (vCountEl) vCountEl.innerText = `👁️ ${this.viewersCount} Wanatazama`;
+                if (vCountEl) vCountEl.innerText = `${this.viewersCount} Watching`;
             }
         }, 3000);
 
-        // Record live session in database
         const liveRecord = {
             id: 'live_' + Date.now(),
             host_id: currentUser.id,
@@ -61,11 +58,13 @@ class ZukaLiveEngine {
             title,
             category,
             is_active: true,
-            viewers_count: this.viewersCount,
+            viewers_count: 0,
             started_at: new Date().toISOString()
         };
 
-        const lives = window.ZukaDB.get('lives');
+        this.currentLiveId = liveRecord.id;
+
+        const lives = window.ZukaDB.get('lives') || [];
         lives.unshift(liveRecord);
         window.ZukaDB.set('lives', lives);
 
@@ -76,7 +75,7 @@ class ZukaLiveEngine {
         const currentUser = window.ZukaAuth.getCurrentUser();
         const scan = window.ZukaAIModerator.scanContent(text, currentUser ? currentUser.id : 'me');
         if (scan.action === 'AUTO_BLOCK') {
-            throw new Error(`🚫 Live comment blocked by AI: ${scan.reason}`);
+            throw new Error(`Live comment blocked by AI: ${scan.reason}`);
         }
 
         const newComment = {
@@ -96,26 +95,35 @@ class ZukaLiveEngine {
             this.stream = null;
         }
 
-        // Save as video to watch feed
+        const lives = window.ZukaDB.get('lives') || [];
+        const live = lives.find(l => l.id === this.currentLiveId);
+        if (live) {
+            live.is_active = false;
+            live.viewers_count = this.viewersCount;
+            live.ended_at = new Date().toISOString();
+            window.ZukaDB.set('lives', lives);
+        }
+
         const currentUser = window.ZukaAuth.getCurrentUser();
-        const watchVideos = window.ZukaDB.get('watch_videos');
+        const watchVideos = window.ZukaDB.get('watch_videos') || [];
         watchVideos.unshift({
             id: 'vid_replay_' + Date.now(),
-            title: 'Mubashara Uliopita: ' + (currentUser ? currentUser.full_name : 'ZUKA Live'),
+            title: 'Live Replay: ' + (this.currentLiveTitle || (currentUser ? currentUser.full_name : 'ZUKA Live')),
             channel_name: currentUser ? currentUser.full_name : 'ZUKA Creator',
             channel_avatar: currentUser ? currentUser.avatar_url : '',
-            video_url: 'https://assets.mixkit.co/videos/preview/mixkit-african-girl-dancing-in-traditional-dress-41584-large.mp4',
-            thumbnail_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=900',
-            duration: '05:32',
-            views: `${this.viewersCount * 8} views`,
-            published: 'Sasa hivi',
+            video_url: '',
+            thumbnail_url: '',
+            duration: '',
+            views: 0,
+            published: 'Just now',
             category: 'Live Replay',
             is_saved: false,
-            likes_count: 85
+            likes_count: 0
         });
         window.ZukaDB.set('watch_videos', watchVideos);
 
-        alert('Mubashara umekamilika! Video imehifadhiwa kwenye ZUKA Watch.');
+        this.currentLiveId = null;
+        alert('Live ended! Video saved to ZUKA Watch.');
     }
 }
 
