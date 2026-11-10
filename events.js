@@ -1,6 +1,7 @@
 /**
- * ZUKA Super App - Events Engine (events.js)
- * Implements Facebook-style Events: Create event, Going/Interested RSVP, Location/Date, Invites.
+ * ZUKA - Events Engine (events.js)
+ * 100% Real Data Only - No Demo, No Fake Events
+ * 100% English
  */
 
 class ZukaEventsEngine {
@@ -10,39 +11,14 @@ class ZukaEventsEngine {
 
     initEvents() {
         let events = window.ZukaDB.get('events');
-        if (events.length === 0) {
-            events = [
-                {
-                    id: 'evt_01',
-                    title: 'Tamasha la Teknolojia na Ubunifu Tanzania (TechFest 2026)',
-                    description: 'Kukutana kwa wabunifu, waanzilishi wa startups, na makampuni makubwa ya teknolojia.',
-                    date: 'Jumamosi, 15 Machi 2026 saa 3:00 Asubuhi',
-                    location: 'Mlimani City Conference Centre, Dar es Salaam',
-                    cover_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=900',
-                    creator_name: 'ZUKA Community Team',
-                    going_count: 640,
-                    interested_count: 1200,
-                    user_status: null
-                },
-                {
-                    id: 'evt_02',
-                    title: 'Mkutano wa Wajasiriamali na Uwekezaji wa Kibiashara',
-                    description: 'Jifunze namna ya kupata mitaji na kukuza biashara yako Afrika Mashariki.',
-                    date: 'Ijumaa ijayo saa 8:00 Mchana',
-                    location: 'Serena Hotel, Dar es Salaam',
-                    cover_url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=900',
-                    creator_name: 'Wafanyabiashara TZ',
-                    going_count: 310,
-                    interested_count: 850,
-                    user_status: null
-                }
-            ];
+        if (!events) {
+            events = [];
             window.ZukaDB.set('events', events);
         }
     }
 
     getEvents() {
-        return window.ZukaDB.get('events');
+        return window.ZukaDB.get('events') || [];
     }
 
     rsvp(eventId, status = 'going') {
@@ -64,17 +40,18 @@ class ZukaEventsEngine {
 
     async createEvent({ title, description, date, location, coverUrl }) {
         const currentUser = window.ZukaAuth.getCurrentUser();
+        if (!currentUser) throw new Error('Please log in first to create an event.');
         const newEvt = {
             id: 'evt_' + Date.now().toString(36),
             title,
             description,
             date,
             location,
-            cover_url: coverUrl || 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=900',
-            creator_name: currentUser ? currentUser.full_name : 'Mwanachama',
-            going_count: 1,
+            cover_url: coverUrl || '',
+            creator_name: currentUser ? currentUser.full_name : 'Member',
+            going_count: 0,
             interested_count: 0,
-            user_status: 'going',
+            user_status: null,
             created_at: new Date().toISOString()
         };
         const events = this.getEvents();
