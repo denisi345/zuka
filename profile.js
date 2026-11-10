@@ -1,7 +1,6 @@
 /**
- * ZUKA Super App - User Profile Engine (profile.js)
- * Implements full Facebook-style user profile: Cover photo, Avatar, Bio, Details,
- * My Posts, Photos, Videos, and Blue Tick Verification submission.
+ * ZUKA - User Profile Engine (profile.js)
+ * 100% English - No Fake Data
  */
 
 class ZukaProfileEngine {
@@ -9,10 +8,10 @@ class ZukaProfileEngine {
 
     getProfileData(userId) {
         const currentUser = window.ZukaAuth.getCurrentUser();
-        const users = window.ZukaDB.get('users');
+        const users = window.ZukaDB.get('users') || [];
         const target = userId ? (users.find(u => u.id === userId) || currentUser) : currentUser;
 
-        const posts = window.ZukaDB.get('posts').filter(p => p.user_id === (target ? target.id : ''));
+        const posts = (window.ZukaDB.get('posts') || []).filter(p => p.user_id === (target ? target.id : ''));
         const photos = posts.filter(p => p.media_url && p.media_type === 'image');
         const videos = posts.filter(p => p.media_url && p.media_type === 'video');
 
@@ -42,7 +41,7 @@ class ZukaProfileEngine {
 
     requestVerification(category, reason, documentUrl) {
         const currentUser = window.ZukaAuth.getCurrentUser();
-        if (!currentUser) throw new Error('Ingia kwanza kutuma maombi ya Blue Tick.');
+        if (!currentUser) throw new Error('Please log in first to submit a Blue Tick verification request.');
 
         const reqs = window.ZukaDB.get('verification_requests') || [];
         const newReq = {
@@ -51,7 +50,7 @@ class ZukaProfileEngine {
             user_name: currentUser.full_name,
             category,
             reason,
-            document_url: documentUrl || 'Kitambulisho_cha_NIDA.jpg',
+            document_url: documentUrl || '',
             status: 'pending',
             created_at: new Date().toISOString()
         };
