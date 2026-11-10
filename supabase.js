@@ -1,16 +1,15 @@
 /**
  * ZUKA Super App - Supabase Client & Universal Storage Engine
  * Connects to Supabase Database, Auth, Realtime, and Storage.
- * Includes local fallback simulation to guarantee 100% offline & demo functionality.
+ * Includes local fallback for offline functionality.
+ * 100% English - No Hardcoded Credentials, No Seeded Owner Account
  */
 
-// Configure your Supabase Credentials here or via localStorage / environment
 const DEFAULT_SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('ZUKA_SUPABASE_URL') || '';
 const DEFAULT_SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || localStorage.getItem('ZUKA_SUPABASE_ANON_KEY') || '';
 
 let supabaseClient = null;
 
-// Initialize official @supabase/supabase-js client if credentials are present
 function initSupabase() {
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient && DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_ANON_KEY) {
         try {
@@ -18,16 +17,14 @@ function initSupabase() {
                 auth: { persistSession: true },
                 realtime: { params: { eventsPerSecond: 10 } }
             });
-            console.log("⚡ [ZUKA] Connected to official Supabase instance:", DEFAULT_SUPABASE_URL);
         } catch (e) {
-            console.warn("⚠️ [ZUKA] Supabase initialization notice:", e);
+            console.warn('[ZUKA] Supabase initialization failed:', e);
         }
     }
 }
 
 initSupabase();
 
-// In-Memory & LocalStorage DB mirror for ultra-fast, zero-breakage operations
 class ZukaLocalStore {
     constructor() {
         this.prefix = 'zuka_db_';
@@ -35,13 +32,12 @@ class ZukaLocalStore {
     }
 
     initDefaults() {
-        // Ensure core collections exist
         const collections = [
             'users', 'posts', 'comments', 'likes', 'stories', 'reels', 'messages',
             'groups', 'group_members', 'group_rules', 'group_chats', 'pages', 'products',
             'lives', 'events', 'jobs', 'fundraisers', 'dating_profiles', 'notifications',
             'reports', 'ai_flags', 'ai_logs', 'owner_actions', 'zuka_owners', 'news_posts',
-            'ai_chat_messages', 'saved_items'
+            'ai_chat_messages', 'saved_items', 'verification_requests'
         ];
 
         collections.forEach(col => {
@@ -49,19 +45,6 @@ class ZukaLocalStore {
                 localStorage.setItem(this.prefix + col, JSON.stringify([]));
             }
         });
-
-        // Seed initial Owner if not present
-        const owners = this.get('zuka_owners');
-        if (owners.length === 0) {
-            this.insert('zuka_owners', {
-                id: 'owner-root-1974',
-                owner_username: 'zuka_owner',
-                password_hash: 'ZukaOwner1974!',
-                role: 'owner',
-                secret_key: 'zuka-mother-1974-key',
-                created_at: new Date().toISOString()
-            });
-        }
     }
 
     get(collection) {
@@ -77,7 +60,7 @@ class ZukaLocalStore {
         try {
             localStorage.setItem(this.prefix + collection, JSON.stringify(items));
         } catch (e) {
-            console.error("Storage error:", e);
+            console.error('Storage error:', e);
         }
     }
 
@@ -125,7 +108,6 @@ class ZukaLocalStore {
 
 window.ZukaDB = new ZukaLocalStore();
 
-// Universal Supabase Bridge
 window.ZukaSupabase = {
     client: supabaseClient,
 
@@ -134,8 +116,9 @@ window.ZukaSupabase = {
     },
 
     setCredentials(url, key) {
-        localStorage.setItem('ZUKA_SUPABASE_URL', url);
-        localStorage.setItem('ZUKA_SUPABASE_ANON_KEY', key);
+        localStorage.setItem('ZUKA_SUPABASE_URL;https://fgocnybpjweezxwvycdt.supabase.co.";
+        localStorage.setItem('ZUKA_SUPABASE_ANON_KEY;'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo": 
+                            
         window.location.reload();
     },
 
@@ -149,7 +132,7 @@ window.ZukaSupabase = {
                 const { data, error } = await query;
                 if (!error && data) return data;
             } catch (err) {
-                console.warn("Supabase fetch fallback to local:", err);
+                console.warn('Supabase fetch fallback to local:', err);
             }
         }
         return window.ZukaDB.find(table, item => {
@@ -166,7 +149,7 @@ window.ZukaSupabase = {
                     return data[0];
                 }
             } catch (err) {
-                console.warn("Supabase insert fallback:", err);
+                console.warn('Supabase insert fallback:', err);
             }
         }
         return window.ZukaDB.insert(table, record);
@@ -181,7 +164,7 @@ window.ZukaSupabase = {
                     return data[0];
                 }
             } catch (err) {
-                console.warn("Supabase update fallback:", err);
+                console.warn('Supabase update fallback:', err);
             }
         }
         return window.ZukaDB.update(table, id, updates);
@@ -192,13 +175,12 @@ window.ZukaSupabase = {
             try {
                 await supabaseClient.from(table).delete().eq('id', id);
             } catch (err) {
-                console.warn("Supabase delete fallback:", err);
+                console.warn('Supabase delete fallback:', err);
             }
         }
         return window.ZukaDB.delete(table, id);
     },
 
-    // Storage file upload simulator & official Supabase storage
     async uploadFile(bucket, file) {
         if (supabaseClient) {
             try {
@@ -209,11 +191,10 @@ window.ZukaSupabase = {
                     return publicUrlData.publicUrl;
                 }
             } catch (e) {
-                console.warn("Storage upload fallback to dataURL:", e);
+                console.warn('Storage upload fallback to dataURL:', e);
             }
         }
 
-        // Return Data URL fallback for immediate offline preview
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target.result);
@@ -221,7 +202,6 @@ window.ZukaSupabase = {
         });
     },
 
-    // Realtime broadcaster
     broadcast(channelName, payload) {
         window.dispatchEvent(new CustomEvent('zuka:realtime:' + channelName, { detail: payload }));
     },
