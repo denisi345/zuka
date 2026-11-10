@@ -1,6 +1,6 @@
 /**
- * ZUKA Super App - Fundraiser Engine (fundraiser.js)
- * Implements fundraising campaigns, goal progress bar, donation with mobile money, and donors list.
+ * ZUKA - Fundraiser Engine (fundraiser.js)
+ * 100% English - No Fake Campaigns, No Fake Donors
  */
 
 class ZukaFundraiserEngine {
@@ -10,45 +10,35 @@ class ZukaFundraiserEngine {
 
     initFundraisers() {
         let funds = window.ZukaDB.get('fundraisers');
-        if (funds.length === 0) {
-            funds = [
-                {
-                    id: 'fund_01',
-                    title: 'Ujenzi wa Maktaba ya Kidijitali kwa Shule za Msingi Vijijini',
-                    organizer: 'Elimu Kwanza Foundation',
-                    target_amount: 15000000,
-                    raised_amount: 9450000,
-                    currency: 'TZS',
-                    description: 'Mchango wa kununua kompyuta 20 na vitabu vya ziada kwa wanafunzi wa wilaya ya Kisarawe.',
-                    cover_url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=900',
-                    donors_count: 148,
-                    donors_list: [
-                        { name: 'Juma Salum', amount: 50000, method: 'M-Pesa', time: 'Masaa 2 yaliyopita' },
-                        { name: 'Sarah Kimaro', amount: 100000, method: 'Tigo Pesa', time: 'Jana' }
-                    ]
-                }
-            ];
+        if (!funds) {
+            funds = [];
             window.ZukaDB.set('fundraisers', funds);
         }
     }
 
     getFundraisers() {
-        return window.ZukaDB.get('fundraisers');
+        return window.ZukaDB.get('fundraisers') || [];
     }
 
-    donate(fundId, amount, donorName = 'Msamaria Mwema', method = 'M-Pesa') {
+    donate(fundId, amount, donorName, method = 'M-Pesa') {
         const funds = this.getFundraisers();
         const f = funds.find(item => item.id === fundId);
-        if (!f) return;
+        if (!f) return null;
+
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        const finalDonorName = donorName || (currentUser ? currentUser.full_name : 'Anonymous Donor');
 
         const numAmount = Number(amount);
-        f.raised_amount += numAmount;
-        f.donors_count += 1;
+        if (!numAmount || numAmount <= 0) throw new Error('Please enter a valid donation amount.');
+
+        f.raised_amount = (f.raised_amount || 0) + numAmount;
+        f.donors_count = (f.donors_count || 0) + 1;
+        if (!f.donors_list) f.donors_list = [];
         f.donors_list.unshift({
-            name: donorName,
+            name: finalDonorName,
             amount: numAmount,
             method,
-            time: 'Sasa hivi'
+            time: 'Just now'
         });
 
         window.ZukaDB.set('fundraisers', funds);
@@ -64,7 +54,7 @@ class ZukaFundraiserEngine {
             raised_amount: 0,
             currency: 'TZS',
             description: data.description,
-            cover_url: data.coverUrl || 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb4?w=900',
+            cover_url: data.coverUrl || '',
             donors_count: 0,
             donors_list: [],
             created_at: new Date().toISOString()
