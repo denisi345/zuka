@@ -1,21 +1,20 @@
 /**
- * ZUKA Super App - Monetization Engine (monetization.js)
- * Implements Creator Mode earnings, sending Stars, and subscriptions.
+ * ZUKA - Monetization Engine (monetization.js)
+ * 100% English - No Fake Balances
  */
 
 window.ZukaMonetization = {
     sendStars(postId, recipientId, amount = 50) {
         const currentUser = window.ZukaAuth.getCurrentUser();
-        if (!currentUser) throw new Error('Ingia kwanza kutuma Stars.');
+        if (!currentUser) throw new Error('Please log in first to send Stars.');
 
         if ((currentUser.stars_balance || 0) < amount) {
-            throw new Error(`Salio lako la Stars halitoshi (Una Stars ${currentUser.stars_balance || 0}). Nunua Stars zaidi.`);
+            throw new Error(`Your Stars balance is not enough (You have ${currentUser.stars_balance || 0} Stars). Buy more Stars.`);
         }
 
         currentUser.stars_balance -= amount;
         window.ZukaAuth.setCurrentUser(currentUser);
 
-        // Record star transaction
         const starsLog = window.ZukaDB.get('stars') || [];
         starsLog.push({
             id: 'star_' + Date.now(),
@@ -27,7 +26,7 @@ window.ZukaMonetization = {
         });
         window.ZukaDB.set('stars', starsLog);
 
-        alert(`⭐ Umefanikiwa kumtumia muumbaji Stars ${amount}!`);
+        alert(`You successfully sent ${amount} Stars to the creator!`);
         return true;
     },
 
@@ -36,7 +35,7 @@ window.ZukaMonetization = {
         if (!currentUser) return;
         currentUser.stars_balance = (currentUser.stars_balance || 0) + packageAmount;
         window.ZukaAuth.setCurrentUser(currentUser);
-        alert(`⭐ Umefanikiwa kununua Stars ${packageAmount} kupitia ${method} (TZS ${costTzs.toLocaleString()})!`);
+        alert(`You successfully bought ${packageAmount} Stars via ${method} (TZS ${costTzs.toLocaleString()})!`);
         return currentUser.stars_balance;
     }
 };
