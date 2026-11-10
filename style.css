@@ -1,6 +1,7 @@
 /* ==========================================================================
    ZUKA SOCIAL SUPER APP - FACEBOOK DESIGN SYSTEM (#1877F2)
    Mobile-First, Responsive, Authentically Branded ZUKA
+   100% English - Cleaned, Dark Mode Fixed
    ========================================================================== */
 
 :root {
@@ -39,12 +40,10 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Guaranteed hidden state across all elements & modals */
 .hidden {
     display: none !important;
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -229,41 +228,40 @@ body {
     background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
 }
 
-/* Feed Cards & Post Text Styling */
+/* Feed Cards & Post Text */
 .zuka-card {
-    background: #FFFFFF !important;
-    width: 100% !important;
+    background: var(--zuka-card-bg);
+    width: 100%;
     border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ced0d4;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--zuka-border);
     margin-bottom: 16px;
     overflow: hidden;
 }
 
 .zuka-post-body-text {
-    color: #050505 !important;
-    font-size: 16px !important;
-    line-height: 1.5 !important;
-    font-weight: 400 !important;
+    color: var(--zuka-text-main);
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 400;
     white-space: pre-line;
     word-break: break-word;
 }
 
 .zuka-post-author-name {
-    color: #050505 !important;
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
+    color: var(--zuka-text-main);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 .zuka-post-meta {
-    color: #65676B !important;
-    font-size: 13px !important;
+    color: var(--zuka-text-sub);
+    font-size: 13px;
 }
 
-/* Post Media: Fills full width */
 .zuka-post-media-container {
-    width: 100% !important;
+    width: 100%;
     background: #000000;
     display: flex;
     align-items: center;
@@ -272,20 +270,19 @@ body {
 
 .zuka-post-media-container img,
 .zuka-post-media-container video {
-    width: 100% !important;
+    width: 100%;
     max-height: 560px;
     object-fit: cover;
     display: block;
 }
 
-/* Action Buttons: Like, Comment, Share in one centered row in grey #65676B */
 .zuka-post-actions-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 4px 8px;
-    border-top: 1px solid #ced0d4;
-    background: #FFFFFF !important;
+    border-top: 1px solid var(--zuka-border);
+    background: var(--zuka-card-bg);
 }
 
 .zuka-post-action-btn {
@@ -296,9 +293,9 @@ body {
     gap: 8px;
     padding: 8px 4px;
     border-radius: 6px;
-    color: #65676B !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    color: var(--zuka-text-sub);
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.15s ease, color 0.15s ease;
     user-select: none;
@@ -307,14 +304,14 @@ body {
 }
 
 .zuka-post-action-btn:hover {
-    background-color: #F0F2F5 !important;
+    background-color: var(--zuka-bg-gray);
 }
 
 .zuka-post-action-btn.active {
-    color: #1877F2 !important;
+    color: var(--zuka-blue);
 }
 
-/* Reaction Flyout Popup */
+/* Reaction Flyout */
 .reaction-popover {
     display: none;
     position: absolute;
@@ -350,7 +347,7 @@ body {
     transform: scale(1.35) translateY(-4px);
 }
 
-/* Left & Right Sidebar Navigation Links */
+/* Sidebar Links */
 .zuka-sidebar-link {
     display: flex;
     align-items: center;
@@ -378,7 +375,7 @@ body {
     font-size: 18px;
 }
 
-/* Mobile Bottom Navigation Bar: Icons only, No words under icons */
+/* Mobile Bottom Navigation */
 .zuka-mobile-bottom-bar {
     display: none;
     position: fixed;
@@ -386,8 +383,8 @@ body {
     left: 0;
     right: 0;
     height: 52px;
-    background: #FFFFFF;
-    border-top: 1px solid #ced0d4;
+    background: var(--zuka-card-bg);
+    border-top: 1px solid var(--zuka-border);
     z-index: 50;
     justify-content: space-around;
     align-items: center;
@@ -400,14 +397,14 @@ body {
     justify-content: center;
     height: 100%;
     flex: 1;
-    color: #65676B;
+    color: var(--zuka-text-sub);
     cursor: pointer;
     transition: color 0.15s ease;
     user-select: none;
 }
 
 .mob-nav-item.active {
-    color: #1877F2 !important;
+    color: var(--zuka-blue);
 }
 
 .mob-nav-item svg {
@@ -427,7 +424,7 @@ body {
     }
 }
 
-/* Messenger & ZUKA AI Chat Popup (Strict 350px x 500px, bottom-right, NOT full screen) */
+/* Messenger & ZUKA AI Chat Popup */
 .chat-window, .zuka-ai-popup {
     width: 350px;
     max-width: calc(100vw - 32px);
@@ -462,7 +459,6 @@ body {
     }
 }
 
-/* Floating round ZUKA AI trigger button bottom-right */
 .zuka-floating-ai-btn {
     position: fixed;
     bottom: 20px;
@@ -502,7 +498,6 @@ body {
     }
 }
 
-/* Blue Tick Badge */
 .blue-tick-badge {
     display: inline-flex;
     align-items: center;
@@ -518,7 +513,6 @@ body {
     vertical-align: middle;
 }
 
-/* Pulsing Online Dot */
 .online-indicator {
     width: 10px;
     height: 10px;
@@ -530,10 +524,7 @@ body {
     right: 0;
 }
 
-/* ==========================================================================
-   FACEBOOK VIDEO & REELS VERTICAL FEED STYLES
-   ========================================================================== */
-
+/* Video & Reels Vertical Feed */
 .zuka-video-feed-wrapper {
     position: relative;
     width: 100%;
@@ -566,7 +557,6 @@ body {
     user-select: none;
 }
 
-/* Double-tap Big Heart Pop Animation */
 @keyframes heartPopAnimation {
     0% {
         opacity: 0;
@@ -599,7 +589,6 @@ body {
     filter: drop-shadow(0 6px 20px rgba(228, 30, 63, 0.6));
 }
 
-/* Play/Pause indicator flash */
 @keyframes playPauseFlashAnim {
     0% {
         opacity: 0;
@@ -636,7 +625,6 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-/* Scrolling Music Name Marquee */
 .music-marquee-container {
     width: 200px;
     overflow: hidden;
@@ -660,7 +648,6 @@ body {
     }
 }
 
-/* Right-side Action Icon Buttons */
 .video-action-btn {
     display: flex;
     flex-direction: column;
@@ -699,4 +686,3 @@ body {
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
     margin-top: 3px;
 }
-
