@@ -9,30 +9,26 @@
     <meta property="og:description" content="ZUKA helps you connect, buy, watch, and share with the people in your life.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <!-- Tailwind CSS Browser Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body class="bg-[#f0f2f5] min-h-screen flex flex-col justify-between font-sans">
 
-    <!-- HERO / LOGIN CONTAINER -->
     <div class="flex-1 flex items-center justify-center px-4 py-8 lg:py-16">
         <div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
 
-            <!-- LEFT: ZUKA BRANDING -->
             <div class="text-center lg:text-left space-y-3">
                 <h1 class="text-5xl sm:text-6xl font-black text-[#1877F2] tracking-tight">zuka</h1>
                 <p data-i18n="login_header_tagline" class="text-xl sm:text-2xl text-gray-800 leading-snug font-normal max-w-md mx-auto lg:mx-0">
                     ZUKA helps you connect, buy, watch, and share with the people in your life.
                 </p>
                 <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs text-gray-500">
-                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">🛡️ AI Moderation Protected</span>
-                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">⚡ Real-time News Feeds</span>
-                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">🤖 ZUKA AI Assistant</span>
+                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">AI Moderation Protected</span>
+                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">Real-time News Feeds</span>
+                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">ZUKA AI Assistant</span>
                 </div>
             </div>
 
-            <!-- RIGHT: LOGIN CARD -->
             <div class="w-full max-w-md mx-auto">
                 <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-200 space-y-4">
                     <form id="zuka-login-form" class="space-y-3.5">
@@ -50,18 +46,14 @@
                     </form>
 
                     <div class="text-center">
-                        <a href="javascript:void(0)" onclick="alert('Password reset verification link has been dispatched to your email/phone!')" data-i18n="link_forgot_password" class="text-xs text-[#1877F2] hover:underline">
+                        <a href="javascript:void(0)" data-i18n="link_forgot_password" class="text-xs text-[#1877F2] hover:underline">
                             Forgot password?
                         </a>
                     </div>
 
                     <hr class="border-gray-200 my-2">
 
-                    <!-- Direct Instant Demo Login -->
                     <div class="space-y-2">
-                        <button onclick="enterAsDemo()" data-i18n="btn_demo_entry" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg text-sm shadow-sm transition cursor-pointer">
-                            Enter ZUKA Directly (Demo Mode)
-                        </button>
                         <button onclick="openSignupModal()" data-i18n="btn_create_account" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-lg text-xs transition border border-gray-300 cursor-pointer">
                             Create new account
                         </button>
@@ -75,7 +67,6 @@
         </div>
     </div>
 
-    <!-- SIGNUP MODAL -->
     <div id="signup-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl border border-gray-200 space-y-4">
             <div class="flex items-center justify-between border-b pb-3 border-gray-200">
@@ -83,7 +74,7 @@
                     <h2 class="text-2xl font-black text-gray-900" data-i18n="signup_modal_title">Sign Up</h2>
                     <p class="text-xs text-gray-500" data-i18n="signup_modal_subtitle">It's quick and easy.</p>
                 </div>
-                <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+                <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">X</button>
             </div>
 
             <form id="zuka-signup-form" class="space-y-3">
@@ -114,19 +105,10 @@
         </div>
     </div>
 
-    <!-- FOOTER WITH REAL LANGUAGE SELECTOR -->
     <footer class="bg-white border-t border-gray-200 py-6 px-4 text-xs text-gray-500">
         <div class="max-w-5xl mx-auto space-y-3">
-            <!-- Language Bar with Instant Switchers & Modal Popup Button -->
             <div class="flex flex-wrap items-center gap-3">
-                <span id="footer-lang-en" onclick="window.ZukaI18n.setLanguage('en')" class="cursor-pointer hover:underline font-semibold text-gray-900">English (US)</span>
-                <span id="footer-lang-sw" onclick="window.ZukaI18n.setLanguage('sw')" class="cursor-pointer hover:underline text-gray-600">Kiswahili</span>
-                <span id="footer-lang-fr" onclick="window.ZukaI18n.setLanguage('fr')" class="cursor-pointer hover:underline text-gray-600">Français (France)</span>
-                <span id="footer-lang-es" onclick="window.ZukaI18n.setLanguage('es')" class="cursor-pointer hover:underline text-gray-600">Español</span>
-                <span id="footer-lang-ar" onclick="window.ZukaI18n.setLanguage('ar')" class="cursor-pointer hover:underline text-gray-600">العربية</span>
-                <button onclick="window.ZukaI18n.openLanguageModal()" class="w-7 h-7 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded flex items-center justify-center font-bold text-gray-700 text-sm cursor-pointer shadow-xs ml-1" title="More Languages">
-                    +
-                </button>
+                <span class="cursor-pointer hover:underline font-semibold text-gray-900">English (US)</span>
             </div>
 
             <hr class="border-gray-200">
@@ -139,43 +121,17 @@
                 <a href="javascript:void(0)" class="hover:underline">Cookies</a>
                 <a href="javascript:void(0)" class="hover:underline">Help Center</a>
                 <button onclick="window.ZukaI18n.openLanguageModal()" class="text-[#1877F2] font-semibold hover:underline flex items-center gap-1">
-                    <span>🌐</span>
                     <span data-i18n="menu_language">Language</span>
                 </button>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="/i18n.js"></script>
     <script src="/supabase.js"></script>
     <script src="/ai_moderation.js"></script>
     <script src="/auth.js"></script>
     <script>
-        function updateFooterActiveLanguage(lang) {
-            const langs = ['en', 'sw', 'fr', 'es', 'ar'];
-            langs.forEach(code => {
-                const el = document.getElementById('footer-lang-' + code);
-                if (el) {
-                    if (code === lang) {
-                        el.className = 'font-bold text-gray-900 border-b-2 border-[#1877F2] pb-0.5 cursor-pointer';
-                    } else {
-                        el.className = 'hover:underline text-gray-600 cursor-pointer';
-                    }
-                }
-            });
-        }
-
-        window.addEventListener('zuka:language_changed', (e) => {
-            updateFooterActiveLanguage(e.detail.lang);
-        });
-
-        // Initialize active footer indicator
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentLang = window.ZukaI18n ? window.ZukaI18n.getLanguage() : 'en';
-            updateFooterActiveLanguage(currentLang);
-        });
-
         const loginForm = document.getElementById('zuka-login-form');
         const errorAlert = document.getElementById('login-error-alert');
 
@@ -193,10 +149,6 @@
                 errorAlert.classList.remove('hidden');
             }
         });
-
-        function enterAsDemo() {
-            window.location.href = '/home.html';
-        }
 
         function openSignupModal() {
             document.getElementById('signup-modal').classList.remove('hidden');
@@ -216,10 +168,7 @@
 
             try {
                 await window.ZukaAuth.signup({ full_name, username, email, phone, password });
-                const successMsg = window.ZukaI18n.getLanguage() === 'sw'
-                    ? 'Hongera! Akaunti yako ya ZUKA imetengenezwa kikamilifu.'
-                    : 'Success! Your ZUKA account has been created.';
-                alert(successMsg);
+                alert('Success! Your ZUKA account has been created.');
                 window.location.href = '/home.html';
             } catch (err) {
                 alert(err.message);
