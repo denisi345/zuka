@@ -1,31 +1,28 @@
 /**
- * ZUKA Super App - Gaming Engine (gaming.js)
- * Implements instant mini-games: Zuka Snake, Speed Runner, and Gaming livestreams.
+ * ZUKA - Gaming Engine (gaming.js)
+ * 100% English - No Fake Streams, No Fake Viewers
  */
 
 window.ZukaGaming = {
-    streams: [
-        {
-            id: 'g_str_1',
-            title: 'FIFA 26 Championship: Simba vs Yanga Virtual Derby',
-            streamer: 'Juma Gamer TZ',
-            viewers: '1.2K',
-            game: 'EA Sports FC 26',
-            avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=120',
-            thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800'
-        },
-        {
-            id: 'g_str_2',
-            title: 'PUBG Mobile Squad Push to Conqueror Rank!',
-            streamer: 'Queen Mwangi',
-            viewers: '850',
-            game: 'PUBG Mobile',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120',
-            thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800'
-        }
-    ],
+    streams: [],
 
     getStreams() {
-        return this.streams;
+        return this.streams || [];
+    },
+
+    addStream(stream) {
+        if (!stream || !stream.title || !stream.streamer) return null;
+        const newStream = {
+            id: 'g_str_' + Date.now().toString(36),
+            title: stream.title,
+            streamer: stream.streamer,
+            viewers: 0,
+            game: stream.game || '',
+            avatar: stream.avatar || '',
+            thumbnail: stream.thumbnail || '',
+            created_at: new Date().toISOString()
+        };
+        this.streams.unshift(newStream);
+        return newStream;
     }
 };
