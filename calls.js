@@ -1,33 +1,32 @@
 /**
- * ZUKA Super App - Audio & Video Calls Engine (calls.js)
- * Implements WebRTC audio & video calling modal, camera preview, ringtone, and mute toggles.
+ * ZUKA - Audio & Video Calls Engine (calls.js)
+ * 100% English - No Demo Contact
  */
 
 class ZukaCallsEngine {
     constructor() {
         this.activeStream = null;
-        this.callType = 'video'; // 'voice' or 'video'
-        this.callState = 'idle'; // 'calling', 'connected', 'ended'
-        this.contactName = 'Sarah Kimaro';
+        this.callType = 'video';
+        this.callState = 'idle';
+        this.contactName = '';
         this.audioCtx = null;
     }
 
-    async startCall(contactName = 'Sarah Kimaro', type = 'video') {
+    async startCall(contactName = '', type = 'video') {
+        if (!contactName) throw new Error('Please select a contact to call.');
         this.contactName = contactName;
         this.callType = type;
         this.callState = 'calling';
 
-        // Play synthetic ringtone
         this.playRingTone();
 
         const modal = document.getElementById('zuka-call-modal');
         if (modal) {
             modal.classList.remove('hidden');
             document.getElementById('call-contact-name').innerText = contactName;
-            document.getElementById('call-type-label').innerText = type === 'video' ? 'Simu ya Video ya ZUKA...' : 'Simu ya Sauti ya ZUKA...';
+            document.getElementById('call-type-label').innerText = type === 'video' ? 'ZUKA Video Call...' : 'ZUKA Voice Call...';
         }
 
-        // Try getting local camera/mic stream
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -42,19 +41,18 @@ class ZukaCallsEngine {
                 }
             }
         } catch (err) {
-            console.log("Camera/Mic stream notice (normal if in sandbox or no permission):", err);
+            console.log("Camera/Mic permission denied:", err);
         }
+    }
 
-        // Simulate contact answering after 3.5 seconds
-        setTimeout(() => {
-            if (this.callState === 'calling') {
-                this.callState = 'connected';
-                this.stopRingTone();
-                const typeLabel = document.getElementById('call-type-label');
-                if (typeLabel) typeLabel.innerText = '00:01 • Imeunganishwa (HD Voice)';
-                this.startTimer();
-            }
-        }, 3500);
+    onCallAnswered() {
+        if (this.callState === 'calling') {
+            this.callState = 'connected';
+            this.stopRingTone();
+            const typeLabel = document.getElementById('call-type-label');
+            if (typeLabel) typeLabel.innerText = '00:01 - Connected';
+            this.startTimer();
+        }
     }
 
     startTimer() {
@@ -65,7 +63,7 @@ class ZukaCallsEngine {
             const secs = String(seconds % 60).padStart(2, '0');
             const typeLabel = document.getElementById('call-type-label');
             if (typeLabel && this.callState === 'connected') {
-                typeLabel.innerText = `${mins}:${secs} • Imeunganishwa (HD Voice)`;
+                typeLabel.innerText = `${mins}:${secs} - Connected`;
             }
         }, 1000);
     }
@@ -112,9 +110,7 @@ class ZukaCallsEngine {
                 osc.start();
                 this.currentOsc = osc;
             }
-        } catch (e) {
-            // Audio context disabled
-        }
+        } catch (e) {}
     }
 
     stopRingTone() {
