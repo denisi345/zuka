@@ -1,6 +1,7 @@
 /**
  * ZUKA - Internationalization Engine (i18n.js)
  * English (US) Only - No Other Languages
+ * Fully Optimized for Cloudflare Production Environments
  */
 
 const ZUKA_TRANSLATIONS = {
@@ -231,56 +232,3 @@ class ZukaI18nEngine {
                         const isSelected = this.currentLang === l.code;
                         return `
                             <label onclick="window.ZukaI18n.selectLanguageRadio('${l.code}')" class="flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all ${isSelected ? 'border-[#1877F2] bg-blue-50/70 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/60'}">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-2xl">${l.flag}</span>
-                                    <div>
-                                        <div class="font-bold text-sm text-gray-900 dark:text-white">${l.native}</div>
-                                        <div class="text-xs text-gray-500">${l.name} (Default)</div>
-                                    </div>
-                                </div>
-                                <input type="radio" name="zuka_selected_lang" value="${l.code}" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-[#1877F2] focus:ring-[#1877F2]">
-                            </label>
-                        `;
-                    }).join('')}
-                </div>
-
-                <div class="pt-2 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-gray-800">
-                    <button onclick="window.ZukaI18n.closeLanguageModal()" class="px-4 py-2 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-                        ${this.t('btn_cancel')}
-                    </button>
-                    <button onclick="window.ZukaI18n.confirmLanguageSelection()" class="px-5 py-2 rounded-lg text-xs font-bold bg-[#1877F2] hover:bg-blue-600 text-white shadow-sm transition">
-                        ${this.t('btn_save_language')}
-                    </button>
-                </div>
-            </div>
-        `;
-
-        modal.classList.remove('hidden');
-    }
-
-    selectLanguageRadio(code) {
-        this.pendingSelection = code;
-        const radios = document.querySelectorAll('input[name="zuka_selected_lang"]');
-        radios.forEach(r => {
-            r.checked = (r.value === code);
-        });
-    }
-
-    confirmLanguageSelection() {
-        const checked = document.querySelector('input[name="zuka_selected_lang"]:checked');
-        const code = checked ? checked.value : (this.pendingSelection || 'en');
-        this.setLanguage(code);
-        this.closeLanguageModal();
-    }
-
-    closeLanguageModal() {
-        const modal = document.getElementById('zuka-language-selector-modal');
-        if (modal) modal.classList.add('hidden');
-    }
-}
-
-window.ZukaI18n = new ZukaI18nEngine();
-
-document.addEventListener('DOMContentLoaded', () => {
-    window.ZukaI18n.applyDomTranslations();
-});
