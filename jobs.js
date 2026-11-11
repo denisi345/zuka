@@ -1,6 +1,8 @@
 /**
  * ZUKA - Jobs Engine (jobs.js)
  * 100% English - No Fake Jobs, No Fake Salaries
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaJobsEngine {
@@ -9,33 +11,70 @@ class ZukaJobsEngine {
     }
 
     initJobs() {
-        let jobs = window.ZukaDB.get('jobs');
-        if (!jobs) {
-            jobs = [];
-            window.ZukaDB.set('jobs', jobs);
+        // Initialization handled remotely by Postgres schema constraints on Supabase
+    }
+
+    async getJobs() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
-    }
 
-    getJobs() {
-        return window.ZukaDB.get('jobs') || [];
-    }
+        const { data: jobs, error } = await window.supabase
+            .from('jobs')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    apply(jobId, cvNote) {
-        const jobs = this.getJobs();
-        const job = jobs.find(j => j.id === jobId);
-        if (job) {
-            job.applied = true;
-            job.cv_note = cvNote || '';
-            job.applied_at = new Date().toISOString();
-            window.ZukaDB.set('jobs', jobs);
-            return true;
+        if (error) {
+            console.error("Error fetching jobs from Supabase:", error);
+            return [];
         }
-        return false;
+
+        return jobs || [];
     }
 
-    postJob(jobData) {
+    async apply(jobId, cvNote) {
+        if (!window.supabase) return false;
+
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        if (!currentUser) throw new Error('Please log in first to apply for a job.');
+
+        const applicationData = {
+            job_id: jobId,
+            user_id: currentUser.id,
+            cv_note: cvNote || '',
+            applied_at: new Date().toISOString()
+        };
+
+        // 1. Log the application submission directly into the relational 'job_applications' table
+        const { error: applicationError } = await window.supabase
+            .from('job_applications')
+            .insert([applicationData]);
+
+        if (applicationError) {
+            console.error("Error submitting job application:", applicationError);
+            return false;
+        }
+
+        // 2. Perform an atomic update flag check to toggle applicant metrics state
+        const { error: updateError } = await window.supabase
+            .from('jobs')
+            .update({ applied: true })
+            .eq('id', jobId);
+
+        if (updateError) {
+            console.error("Error updating target job listing state:", updateError);
+            return false;
+        }
+
+        return true;
+    }
+
+    async postJob(jobData) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
         const newJob = {
-            id: 'job_' + Date.now(),
             title: jobData.title || '',
             company: jobData.company || '',
             location: jobData.location || '',
@@ -45,10 +84,15 @@ class ZukaJobsEngine {
             applied: false,
             created_at: new Date().toISOString()
         };
-        const jobs = this.getJobs();
-        jobs.unshift(newJob);
-        window.ZukaDB.set('jobs', jobs);
-        return newJob;
+
+        const { data, error } = await window.supabase
+            .from('jobs')
+            .insert([newJob])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 }
 
