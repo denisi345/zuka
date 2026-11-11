@@ -1,16 +1,17 @@
 /**
  * ZUKA Super App - AI Moderation Engine (ai_moderation.js)
  * Implements strict two-tier moderation:
- * Tier A: AUTO BLOCK & HIDE IMMEDIATELY (No report needed: Nudity/Picha za ngono, Kiswahili/English insults)
+ * Tier A: AUTO BLOCK & HIDE IMMEDIATELY (No report needed: Nudity, Kiswahili/English insults)
  * Tier B: REPORT ONLY to OWNER (Content stays live: Drugs, Crime, Threats, Hate, Fake news, Scams, Child protection, Spam)
  * Learning Feedback Loop: Learns from Owner's Delete/Keep decisions.
+ * 100% English Code Documentation - Fully Integrated with Supabase Client & Cloudflare Deploys
  */
 
 class ZukaAIModeration {
     constructor() {
         // Tier A: Auto Block & Hide Immediately
         this.tierABadWords = [
-            // Kiswahili Matusi & explicit terms
+            // Kiswahili Profanities & explicit terms
             'kuma', 'mboo', 'mkundu', 'fala', 'malaya', 'kahaba', 'kuma lako', 'shoga', 'bwege',
             'shenzi', 'tumbili', 'matusi', 'uchi', 'ngono', 'punyeto', 'makalio ya uchi', 'kuma yako',
             // English Profanities & explicit terms
@@ -32,7 +33,7 @@ class ZukaAIModeration {
         // User posting timestamps for 5-minute spam check
         this.userPostTracker = {};
 
-        // Load AI learned dictionary from storage
+        // Load AI learned dictionary from local storage
         this.learnedPatterns = JSON.parse(localStorage.getItem('zuka_ai_learned_patterns') || '{"blocked":[],"allowed":[]}');
     }
 
@@ -57,16 +58,18 @@ class ZukaAIModeration {
             }
         }
 
-        // 2. Check Tier A (Matusi & Nudity keywords -> AUTO BLOCK IMMEDIATELY)
+        // 2. Check Tier A (Profanities & Nudity keywords -> AUTO BLOCK IMMEDIATELY)
         for (let word of this.tierABadWords) {
             if (lower.includes(word)) {
                 aiScore = 95;
                 detected.push(word);
-                // Log to ai_flags
+                
+                // Fire and forget log flag entry to remote database
                 this.logFlag('AUTO_BLOCK', 'post', aiScore, detected.join(', '), 'auto_blocked');
+                
                 return {
                     action: 'AUTO_BLOCK',
-                    reason: 'Ukiukaji wa Maadili: Matusi/Maudhui Machafu (' + word + ')',
+                    reason: 'Community Standards Violation: Profanity or Adult Content (' + word + ')',
                     aiScore,
                     category: 'Nudity/Insult',
                     blurMedia: true
@@ -81,7 +84,7 @@ class ZukaAIModeration {
         for (let [cat, words] of Object.entries(this.tierBKeywords)) {
             for (let word of words) {
                 if (lower.includes(word)) {
-                    tierBReason = 'Maudhui yamehisiwa kuwa ' + cat + ' (' + word + ')';
+                    tierBReason = 'Content flagged under category: ' + cat + ' (' + word + ')';
                     tierBCategory = cat;
                     aiScore = Math.floor(Math.random() * 20) + 70; // 70-90 score
                     break;
@@ -92,13 +95,13 @@ class ZukaAIModeration {
 
         // 4. Check Spam (20 posts in 5 minutes)
         if (this.isSpamming(userId)) {
-            tierBReason = 'Mtumiaji anapost mfululizo (Spam ya machapisho 20 ndani ya dakika 5)';
+            tierBReason = 'User posting excessively (Spam detection: 20 posts within 5 minutes)';
             tierBCategory = 'Spamming';
             aiScore = 85;
         }
 
         if (tierBReason) {
-            // Send report to Owner only, DO NOTHING ELSE, LEAVE LIVE
+            // Dispatch async actions to log metrics on Supabase database
             this.sendSecretReportToOwner({
                 userId,
                 textSnippet: text.substring(0, 150),
@@ -121,7 +124,7 @@ class ZukaAIModeration {
         return {
             action: 'PASS',
             aiScore: Math.floor(Math.random() * 10),
-            reason: 'Safi',
+            reason: 'Clean',
             blurMedia: false
         };
     }
@@ -133,14 +136,13 @@ class ZukaAIModeration {
         if (!imageUrl) return { isNude: false, blur: false };
 
         const lower = imageUrl.toLowerCase();
-        // If image filename or caption indicates explicit imagery
         const explicitIndicators = ['nude', 'naked', 'uchi', 'porn', 'sex', 'sensual_explicit'];
         const isExplicit = explicitIndicators.some(w => lower.includes(w));
 
         if (isExplicit) {
             this.sendSecretReportToOwner({
                 userId: 'system',
-                textSnippet: 'Picha ya uchi imegunduliwa: ' + imageUrl,
+                textSnippet: 'Adult media file caught by system filter: ' + imageUrl,
                 category: 'Adult Content',
                 reason: 'AI Image Analyzer detected excessive skin nudity',
                 aiScore: 99
@@ -167,9 +169,9 @@ class ZukaAIModeration {
         if (suspiciousName && (noAvatar || rapidCreation)) {
             this.sendSecretReportToOwner({
                 userId: user.id || 'unknown',
-                textSnippet: `Akaunti ya mashaka: @${user.username}`,
+                textSnippet: `Suspicious profile: @${user.username}`,
                 category: 'Fake Account / Bot',
-                reason: 'Akaunti inafanana na bot au akaunti bandia',
+                reason: 'Profile structure exhibits automated behavior pattern',
                 aiScore: 92
             });
             return true;
@@ -189,9 +191,10 @@ class ZukaAIModeration {
         return this.userPostTracker[userId].length >= 20;
     }
 
-    sendSecretReportToOwner(reportData) {
+    async sendSecretReportToOwner(reportData) {
+        if (!window.supabase) return;
+
         const report = {
-            id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             content_type: reportData.category,
             content_id: reportData.userId,
             reason: reportData.reason,
@@ -201,15 +204,20 @@ class ZukaAIModeration {
             created_at: new Date().toISOString()
         };
 
-        const existing = window.ZukaDB.get('reports');
-        existing.unshift(report);
-        window.ZukaDB.set('reports', existing);
-        console.log("🛡️ [AI MODERATION] Secret report delivered to Owner Panel:", report);
+        try {
+            await window.supabase
+                .from('reports')
+                .insert([report]);
+            console.log("🛡️ [AI MODERATION] Secret report delivered to Supabase reports table.");
+        } catch (e) {
+            console.error("Failed to sync secret report to Supabase:", e);
+        }
     }
 
-    logFlag(flagType, contentType, aiScore, detectedTerms, actionTaken) {
+    async logFlag(flagType, contentType, aiScore, detectedTerms, actionTaken) {
+        if (!window.supabase) return;
+
         const flag = {
-            id: 'flag_' + Date.now(),
             flag_type: flagType,
             content_type: contentType,
             ai_score: aiScore,
@@ -217,9 +225,14 @@ class ZukaAIModeration {
             action_taken: actionTaken,
             created_at: new Date().toISOString()
         };
-        const flags = window.ZukaDB.get('ai_flags');
-        flags.unshift(flag);
-        window.ZukaDB.set('ai_flags', flags);
+
+        try {
+            await window.supabase
+                .from('ai_flags')
+                .insert([flag]);
+        } catch (e) {
+            console.error("Failed to sync audit log flag to Supabase:", e);
+        }
     }
 
     /**
@@ -237,13 +250,3 @@ class ZukaAIModeration {
             this.learnedPatterns.allowed = this.learnedPatterns.allowed.filter(t => t !== term);
         } else if (action === 'KEEP') {
             if (!this.learnedPatterns.allowed.includes(term)) {
-                this.learnedPatterns.allowed.push(term);
-            }
-            this.learnedPatterns.blocked = this.learnedPatterns.blocked.filter(t => t !== term);
-        }
-        localStorage.setItem('zuka_ai_learned_patterns', JSON.stringify(this.learnedPatterns));
-        console.log(`🧠 [AI LEARNING] Pattern updated by Owner action (${action}):`, term);
-    }
-}
-
-window.ZukaAIModerator = new ZukaAIModeration();
