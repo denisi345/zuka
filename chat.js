@@ -1,6 +1,8 @@
 /**
  * ZUKA - Messenger & Chat Engine (chat.js)
  * 100% English - No Fake Contacts, No Fake Messages, No Auto-Reply
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaChatEngine {
@@ -11,39 +13,50 @@ class ZukaChatEngine {
     }
 
     initContacts() {
-        let contacts = window.ZukaDB.get('chat_contacts');
-        if (!contacts) {
-            contacts = [
-                {
-                    id: 'zuka_ai_contact',
-                    name: 'ZUKA AI',
-                    avatar: '',
-                    is_ai: true,
-                    is_online: true,
-                    last_msg: '',
-                    last_time: '',
-                    unread: 0,
-                    theme: '#1877F2'
-                }
-            ];
-            window.ZukaDB.set('chat_contacts', contacts);
-        }
+        // Initialization handled remotely by Postgres schema constraints on Supabase
     }
 
     initMessages() {
-        let messages = window.ZukaDB.get('messages');
-        if (!messages) {
-            messages = [];
-            window.ZukaDB.set('messages', messages);
+        // Initialization handled remotely by Postgres schema constraints on Supabase
+    }
+
+    async getContacts() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
+
+        // Fetch dynamic chat contacts row data from the remote database
+        const { data: contacts, error } = await window.supabase
+            .from('chat_contacts')
+            .select('*')
+            .order('last_time', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching chat contacts from Supabase:", error);
+            return [];
+        }
+
+        // Always ensure ZUKA AI sits as a citable runtime baseline fallback contact
+        const cleanContacts = contacts || [];
+        if (!cleanContacts.some(c => c.id === 'zuka_ai_contact')) {
+            cleanContacts.unshift({
+                id: 'zuka_ai_contact',
+                name: 'ZUKA AI',
+                avatar: '',
+                is_ai: true,
+                is_online: true,
+                last_msg: '',
+                last_time: '',
+                unread: 0,
+                theme: '#1877F2'
+            });
+        }
+
+        return cleanContacts;
     }
 
-    getContacts() {
-        return window.ZukaDB.get('chat_contacts') || [];
-    }
-
-    getMessages(contactId) {
-        if (contactId === 'zuka_ai_contact') {
+    async getMessages(contactId) {
+        if (contactId === 'zuka_ai_contact' && window.ZukaAIChat) {
             return window.ZukaAIChat.getMessages().map(m => ({
                 id: m.id,
                 sender_id: m.sender === 'user' ? 'me' : 'zuka_ai_contact',
@@ -53,29 +66,44 @@ class ZukaChatEngine {
             }));
         }
 
-        const messages = window.ZukaDB.get('messages') || [];
-        return messages.filter(m => m.chat_id === contactId);
+        if (!window.supabase) return [];
+
+        const { data: messages, error } = await window.supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_id', contactId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error("Error fetching message history from Supabase:", error);
+            return [];
+        }
+
+        return messages || [];
     }
 
     async sendMessage({ contactId, text, mediaUrl, voiceUrl, isPay = false, payAmount = 0 }) {
-        const currentUser = window.ZukaAuth.getCurrentUser();
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
 
-        if (text) {
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+
+        if (text && window.ZukaAIModerator) {
             const scan = window.ZukaAIModerator.scanContent(text, currentUser ? currentUser.id : 'me');
-            if (scan.action === 'AUTO_BLOCK') {
+            if (scan && scan.action === 'AUTO_BLOCK') {
                 throw new Error(`Message blocked by AI Moderation: ${scan.reason}`);
             }
         }
 
-        if (contactId === 'zuka_ai_contact') {
+        if (contactId === 'zuka_ai_contact' && window.ZukaAIChat) {
             await window.ZukaAIChat.reply(text);
             return;
         }
 
         const newMsg = {
-            id: 'm_' + Date.now(),
             chat_id: contactId,
-            sender_id: 'me',
+            sender_id: currentUser ? currentUser.id : 'me',
             text: text || '',
             media_url: mediaUrl || null,
             voice_url: voiceUrl || null,
@@ -86,27 +114,44 @@ class ZukaChatEngine {
             created_at: new Date().toISOString()
         };
 
-        const messages = window.ZukaDB.get('messages') || [];
-        messages.push(newMsg);
-        window.ZukaDB.set('messages', messages);
+        // 1. Insert message record directly into the live remote database table
+        const { data: savedMsg, error: msgError } = await window.supabase
+            .from('messages')
+            .insert([newMsg])
+            .select()
+            .single();
 
-        const contacts = window.ZukaDB.get('chat_contacts') || [];
-        const contact = contacts.find(c => c.id === contactId);
-        if (contact) {
-            contact.last_msg = isPay ? `Sent TZS ${Number(payAmount).toLocaleString()}` : (text || 'File / Photo');
-            contact.last_time = 'Now';
-            window.ZukaDB.set('chat_contacts', contacts);
+        if (msgError) throw msgError;
+
+        // 2. Perform an atomic update on the contact summary tracking entry row cells
+        const lastMessageSnippet = isPay ? `Sent TZS ${Number(payAmount).toLocaleString()}` : (text || 'File / Photo');
+        
+        await window.supabase
+            .from('chat_contacts')
+            .update({
+                last_msg: lastMessageSnippet,
+                last_time: new Date().toISOString()
+            })
+            .eq('id', contactId);
+
+        if (window.ZukaSupabase && window.ZukaSupabase.broadcast) {
+            window.ZukaSupabase.broadcast('new_chat_message', savedMsg);
         }
 
-        window.ZukaSupabase.broadcast('new_chat_message', newMsg);
-
-        return newMsg;
+        return savedMsg;
     }
 
-    deleteMessage(msgId) {
-        let messages = window.ZukaDB.get('messages') || [];
-        messages = messages.filter(m => m.id !== msgId);
-        window.ZukaDB.set('messages', messages);
+    async deleteMessage(msgId) {
+        if (!window.supabase) return;
+
+        const { error } = await window.supabase
+            .from('messages')
+            .delete()
+            .eq('id', msgId);
+
+        if (error) {
+            console.error("Error performing database row deletion for message:", error);
+        }
     }
 }
 
