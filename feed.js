@@ -1,6 +1,8 @@
 /**
  * ZUKA - Feed & Posts Engine (feed.js)
  * 100% English - No Fake Posts, No Fake Likes
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaFeedEngine {
@@ -9,24 +11,39 @@ class ZukaFeedEngine {
     }
 
     initPosts() {
-        let posts = window.ZukaDB.get('posts');
-        if (!posts) {
-            posts = [];
-            window.ZukaDB.set('posts', posts);
-        }
+        // Initialization handled remotely by Postgres schema constraints on Supabase
     }
 
-    getFeedPosts() {
-        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
-        let posts = window.ZukaDB.get('posts') || [];
-
-        posts = posts.filter(p => !p.is_hidden);
-
-        if (currentUser && currentUser.blocked_users && currentUser.blocked_users.length) {
-            posts = posts.filter(p => !currentUser.blocked_users.includes(p.user_id));
+    async getFeedPosts() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
 
-        posts.sort((a, b) => {
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+
+        // 1. Fetch active posts from Supabase that are not hidden
+        let query = window.supabase
+            .from('posts')
+            .select('*')
+            .eq('is_hidden', false);
+
+        const { data: posts, error } = await query;
+        if (error) {
+            console.error("Error fetching feed posts:", error);
+            return [];
+        }
+
+        let cleanPosts = posts || [];
+
+        // 2. Client-side relationship filters based on current user account state
+        if (currentUser) {
+            if (currentUser.blocked_users && currentUser.blocked_users.length) {
+                cleanPosts = cleanPosts.filter(p => !currentUser.blocked_users.includes(p.user_id));
+            }
+        }
+
+        // 3. Global sorting algorithm (Prioritizing Close Friends, then trending scores)
+        cleanPosts.sort((a, b) => {
             const isAFriend = currentUser && currentUser.close_friends && currentUser.close_friends.includes(a.user_id);
             const isBFriend = currentUser && currentUser.close_friends && currentUser.close_friends.includes(b.user_id);
 
@@ -38,28 +55,33 @@ class ZukaFeedEngine {
             return scoreB - scoreA;
         });
 
-        return posts;
+        return cleanPosts;
     }
 
     async createPost({ content, mediaUrl, mediaType, feeling, locationTag, musicTitle, privacy, isAnonymous, pollData, groupId }) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) throw new Error('Please log in first.');
 
-        const scanResult = window.ZukaAIModerator.scanContent(content, currentUser.id);
+        if (window.ZukaAIModerator) {
+            const scanResult = window.ZukaAIModerator.scanContent(content, currentUser.id);
 
-        if (scanResult.action === 'AUTO_BLOCK') {
-            throw new Error(`Post immediately blocked by ZUKA Community AI: ${scanResult.reason}`);
-        }
+            if (scanResult.action === 'AUTO_BLOCK') {
+                throw new Error(`Post immediately blocked by ZUKA Community AI: ${scanResult.reason}`);
+            }
 
-        if (mediaUrl) {
-            const imgCheck = window.ZukaAIModerator.checkImage(mediaUrl);
-            if (imgCheck.action === 'AUTO_BLOCK') {
-                throw new Error('Image blocked due to adult content or nudity violations.');
+            if (mediaUrl) {
+                const imgCheck = window.ZukaAIModerator.checkImage(mediaUrl);
+                if (imgCheck.action === 'AUTO_BLOCK') {
+                    throw new Error('Image blocked due to adult content or nudity violations.');
+                }
             }
         }
 
         const newPost = {
-            id: 'post_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
             user_id: currentUser.id,
             author_name: isAnonymous ? 'Anonymous Member' : currentUser.full_name,
             author_avatar: isAnonymous ? '' : currentUser.avatar_url,
@@ -74,59 +96,89 @@ class ZukaFeedEngine {
             is_anonymous: !!isAnonymous,
             group_id: groupId || null,
             poll_data: pollData || null,
-            ai_score: scanResult.aiScore,
-            ai_action: scanResult.action,
+            ai_score: window.ZukaAIModerator?.scanContent(content, currentUser.id)?.aiScore || 0,
+            ai_action: window.ZukaAIModerator?.scanContent(content, currentUser.id)?.action || 'ALLOW',
             likes_count: 0,
             comments_count: 0,
             shares_count: 0,
             user_reaction: null,
             comments_list: [],
+            is_hidden: false,
             created_at: new Date().toISOString()
         };
 
-        const posts = window.ZukaDB.get('posts') || [];
-        posts.unshift(newPost);
-        window.ZukaDB.set('posts', posts);
+        const { data, error } = await window.supabase
+            .from('posts')
+            .insert([newPost])
+            .select()
+            .single();
 
-        window.ZukaSupabase.broadcast('feed_new_post', newPost);
+        if (error) throw error;
 
-        return newPost;
-    }
-
-    reactToPost(postId, reactionType = 'like') {
-        const posts = window.ZukaDB.get('posts') || [];
-        const post = posts.find(p => p.id === postId);
-        if (!post) return;
-
-        if (post.user_reaction === reactionType) {
-            post.user_reaction = null;
-            post.likes_count = Math.max(0, (post.likes_count || 1) - 1);
-        } else {
-            if (!post.user_reaction) {
-                post.likes_count = (post.likes_count || 0) + 1;
-            }
-            post.user_reaction = reactionType;
+        if (window.ZukaSupabase && window.ZukaSupabase.broadcast) {
+            window.ZukaSupabase.broadcast('feed_new_post', data);
         }
 
-        window.ZukaDB.set('posts', posts);
-        return post;
+        return data;
     }
 
-    addComment(postId, commentText, mediaUrl = null) {
+    async reactToPost(postId, reactionType = 'like') {
+        if (!window.supabase) return;
+
+        const { data: post, error: fetchError } = await window.supabase
+            .from('posts')
+            .select('user_reaction, likes_count')
+            .eq('id', postId)
+            .maybeSingle();
+
+        if (fetchError || !post) return;
+
+        let nextReaction = reactionType;
+        let nextLikes = post.likes_count;
+
+        if (post.user_reaction === reactionType) {
+            nextReaction = null;
+            nextLikes = Math.max(0, (post.likes_count || 1) - 1);
+        } else {
+            if (!post.user_reaction) {
+                nextLikes = (post.likes_count || 0) + 1;
+            }
+            nextReaction = reactionType;
+        }
+
+        const { data: updatedPost, error: updateError } = await window.supabase
+            .from('posts')
+            .update({ user_reaction: nextReaction, likes_count: nextLikes })
+            .eq('id', postId)
+            .select()
+            .single();
+
+        if (updateError) throw updateError;
+        return updatedPost;
+    }
+
+    async addComment(postId, commentText, mediaUrl = null) {
+        if (!window.supabase) return;
+
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) return;
 
-        const scan = window.ZukaAIModerator.scanContent(commentText, currentUser.id);
-        if (scan.action === 'AUTO_BLOCK') {
-            throw new Error(`Comment blocked by AI: ${scan.reason}`);
+        if (window.ZukaAIModerator) {
+            const scan = window.ZukaAIModerator.scanContent(commentText, currentUser.id);
+            if (scan.action === 'AUTO_BLOCK') {
+                throw new Error(`Comment blocked by AI: ${scan.reason}`);
+            }
         }
 
-        const posts = window.ZukaDB.get('posts') || [];
-        const post = posts.find(p => p.id === postId);
-        if (!post) return;
+        const { data: post, error: postError } = await window.supabase
+            .from('posts')
+            .select('comments_list, comments_count, user_id')
+            .eq('id', postId)
+            .maybeSingle();
 
-        if (!post.comments_list) post.comments_list = [];
+        if (postError || !post) return;
 
+        const currentComments = post.comments_list || [];
         const comment = {
             id: 'c_' + Date.now(),
             user_id: currentUser.id,
@@ -134,13 +186,18 @@ class ZukaFeedEngine {
             user_avatar: currentUser.avatar_url,
             text: commentText,
             media_url: mediaUrl,
-            created_at: 'Just now'
+            created_at: new Date().toISOString()
         };
 
-        post.comments_list.push(comment);
-        post.comments_count = (post.comments_count || 0) + 1;
+        currentComments.push(comment);
+        const nextCommentsCount = (post.comments_count || 0) + 1;
 
-        window.ZukaDB.set('posts', posts);
+        const { error: updateError } = await window.supabase
+            .from('posts')
+            .update({ comments_list: currentComments, comments_count: nextCommentsCount })
+            .eq('id', postId);
+
+        if (updateError) throw updateError;
 
         if (post.user_id !== currentUser.id && window.ZukaNotifications) {
             window.ZukaNotifications.send({
@@ -155,73 +212,83 @@ class ZukaFeedEngine {
         return comment;
     }
 
-    votePoll(postId, optionIndex) {
-        const posts = window.ZukaDB.get('posts') || [];
-        const post = posts.find(p => p.id === postId);
-        if (!post || !post.poll_data) return;
+    async votePoll(postId, optionIndex) {
+        if (!window.supabase) return;
 
-        if (post.poll_data.user_voted !== undefined) return;
+        const { data: post, error: fetchError } = await window.supabase
+            .from('posts')
+            .select('poll_data')
+            .eq('id', postId)
+            .maybeSingle();
 
-        post.poll_data.options[optionIndex].votes += 1;
-        post.poll_data.total_votes += 1;
-        post.poll_data.user_voted = optionIndex;
+        if (fetchError || !post || !post.poll_data) return;
 
-        window.ZukaDB.set('posts', posts);
-        return post.poll_data;
+        const poll = post.poll_data;
+        if (poll.user_voted !== undefined) return;
+
+        poll.options[optionIndex].votes += 1;
+        poll.total_votes += 1;
+        poll.user_voted = optionIndex;
+
+        const { data: updatedPost, error: updateError } = await window.supabase
+            .from('posts')
+            .update({ poll_data: poll })
+            .eq('id', postId)
+            .select()
+            .single();
+
+        if (updateError) throw updateError;
+        return updatedPost.poll_data;
     }
 
-    deletePost(postId) {
+    async deletePost(postId) {
+        if (!window.supabase) return false;
+
         const currentUser = window.ZukaAuth.getCurrentUser();
-        let posts = window.ZukaDB.get('posts') || [];
-        const post = posts.find(p => p.id === postId);
-        if (!post) return false;
+        if (!currentUser) return false;
+
+        const { data: post, error: fetchError } = await window.supabase
+            .from('posts')
+            .select('user_id')
+            .eq('id', postId)
+            .maybeSingle();
+
+        if (fetchError || !post) return false;
 
         if (post.user_id !== currentUser.id) {
             throw new Error('You do not have permission to delete this post.');
         }
 
-        posts = posts.filter(p => p.id !== postId);
-        window.ZukaDB.set('posts', posts);
+        const { error: deleteError } = await window.supabase
+            .from('posts')
+            .delete()
+            .eq('id', postId);
+
+        if (deleteError) throw deleteError;
         return true;
     }
 
-    savePost(postId) {
+    async savePost(postId) {
+        if (!window.supabase) return false;
+
         const currentUser = window.ZukaAuth.getCurrentUser();
-        if (!currentUser) return;
-        const saved = window.ZukaDB.get('saved_items') || [];
-        if (!saved.some(s => s.item_id === postId && s.user_id === currentUser.id)) {
-            saved.unshift({
-                id: 'save_' + Date.now(),
+        if (!currentUser) return false;
+
+        const { data: existingSave, error: fetchError } = await window.supabase
+            .from('saved_items')
+            .select('id')
+            .eq('item_id', postId)
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+
+        if (fetchError) return false;
+
+        if (!existingSave) {
+            const newSave = {
                 user_id: currentUser.id,
                 item_type: 'post',
                 item_id: postId,
                 created_at: new Date().toISOString()
-            });
-            window.ZukaDB.set('saved_items', saved);
-            return true;
-        }
-        return false;
-    }
+            };
 
-    reportPost(postId, reason) {
-        const currentUser = window.ZukaAuth.getCurrentUser();
-        const posts = window.ZukaDB.get('posts') || [];
-        const post = posts.find(p => p.id === postId);
-
-        const reports = window.ZukaDB.get('reports') || [];
-        reports.unshift({
-            id: 'rep_' + Date.now(),
-            reporter_id: currentUser ? currentUser.id : 'anonymous',
-            content_type: 'post',
-            content_id: postId,
-            reason: reason || 'Inappropriate or harmful content',
-            snippet: post ? post.content : '',
-            status: 'pending',
-            created_at: new Date().toISOString()
-        });
-        window.ZukaDB.set('reports', reports);
-        return true;
-    }
-}
-
-window.ZukaFeed = new ZukaFeedEngine();
+            const { error: insertError } = await window.supabase
