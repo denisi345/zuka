@@ -1,6 +1,8 @@
 /**
  * ZUKA - Reels Engine (reels.js)
  * 100% English - No Fake Reels, No Fake Likes, No Fake Comments
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaReelsEngine {
@@ -9,78 +11,152 @@ class ZukaReelsEngine {
     }
 
     initReels() {
-        let reels = window.ZukaDB.get('reels');
-        if (!reels) {
-            reels = [];
-            window.ZukaDB.set('reels', reels);
+        // Initialization handled remotely by Postgres schema constraints on Supabase
+    }
+
+    async getReels() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
+
+        const { data: reels, error } = await window.supabase
+            .from('reels')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching reels from Supabase:", error);
+            return [];
+        }
+
+        return reels || [];
     }
 
-    getReels() {
-        return window.ZukaDB.get('reels') || [];
+    async toggleLikeReel(reelId) {
+        if (!window.supabase) return null;
+
+        const { data: reel, error: fetchError } = await window.supabase
+            .from('reels')
+            .select('is_liked, likes_count')
+            .eq('id', reelId)
+            .maybeSingle();
+
+        if (fetchError || !reel) return null;
+
+        const nextLikedStatus = !reel.is_liked;
+        const nextLikesCount = reel.likes_count + (nextLikedStatus ? 1 : -1);
+
+        const { data: updatedReel, error: updateError } = await window.supabase
+            .from('reels')
+            .update({ 
+                is_liked: nextLikedStatus, 
+                likes_count: Math.max(0, nextLikesCount) 
+            })
+            .eq('id', reelId)
+            .select()
+            .single();
+
+        if (updateError) throw updateError;
+        return updatedReel;
     }
 
-    toggleLikeReel(reelId) {
-        const reels = window.ZukaDB.get('reels') || [];
-        const reel = reels.find(r => r.id === reelId);
-        if (!reel) return null;
-        reel.is_liked = !reel.is_liked;
-        reel.likes_count += reel.is_liked ? 1 : -1;
-        window.ZukaDB.set('reels', reels);
-        return reel;
+    async toggleFollowCreator(reelId) {
+        if (!window.supabase) return false;
+
+        const { data: reel, error: fetchError } = await window.supabase
+            .from('reels')
+            .select('is_following')
+            .eq('id', reelId)
+            .maybeSingle();
+
+        if (fetchError || !reel) return false;
+
+        const nextFollowStatus = !reel.is_following;
+
+        const { error: updateError } = await window.supabase
+            .from('reels')
+            .update({ is_following: nextFollowStatus })
+            .eq('id', reelId);
+
+        if (updateError) throw updateError;
+        return nextFollowStatus;
     }
 
-    toggleFollowCreator(reelId) {
-        const reels = window.ZukaDB.get('reels') || [];
-        const reel = reels.find(r => r.id === reelId);
-        if (!reel) return false;
-        reel.is_following = !reel.is_following;
-        window.ZukaDB.set('reels', reels);
-        return reel.is_following;
+    async toggleSave(reelId) {
+        if (!window.supabase) return false;
+
+        const { data: reel, error: fetchError } = await window.supabase
+            .from('reels')
+            .select('is_saved')
+            .eq('id', reelId)
+            .maybeSingle();
+
+        if (fetchError || !reel) return false;
+
+        const nextSaveStatus = !reel.is_saved;
+
+        const { error: updateError } = await window.supabase
+            .from('reels')
+            .update({ is_saved: nextSaveStatus })
+            .eq('id', reelId);
+
+        if (updateError) throw updateError;
+        return nextSaveStatus;
     }
 
-    toggleSave(reelId) {
-        const reels = window.ZukaDB.get('reels') || [];
-        const reel = reels.find(r => r.id === reelId);
-        if (!reel) return false;
-        reel.is_saved = !reel.is_saved;
-        window.ZukaDB.set('reels', reels);
-        return reel.is_saved;
-    }
+    async addComment(reelId, commentText) {
+        if (!window.supabase) return null;
 
-    addComment(reelId, commentText) {
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
-        const reels = window.ZukaDB.get('reels') || [];
-        const reel = reels.find(r => r.id === reelId);
-        if (!reel) return null;
 
-        if (!reel.comments) reel.comments = [];
+        const { data: reel, error: fetchError } = await window.supabase
+            .from('reels')
+            .select('comments, comments_count')
+            .eq('id', reelId)
+            .maybeSingle();
+
+        if (fetchError || !reel) return null;
+
+        const currentComments = reel.comments || [];
         const newC = {
             id: 'cr_' + Date.now(),
             user_name: currentUser ? currentUser.full_name : 'You',
             user_avatar: currentUser ? currentUser.avatar_url : '',
             text: commentText,
-            time: 'Just now'
+            created_at: new Date().toISOString()
         };
-        reel.comments.push(newC);
-        reel.comments_count = (reel.comments_count || 0) + 1;
-        window.ZukaDB.set('reels', reels);
+
+        currentComments.push(newC);
+        const nextCommentsCount = (reel.comments_count || 0) + 1;
+
+        const { error: updateError } = await window.supabase
+            .from('reels')
+            .update({ 
+                comments: currentComments, 
+                comments_count: nextCommentsCount 
+            })
+            .eq('id', reelId);
+
+        if (updateError) throw updateError;
         return newC;
     }
 
     async createReel({ videoUrl, caption, audioTrack }) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) throw new Error('Please log in first to create a reel.');
 
-        if (caption) {
+        if (caption && window.ZukaAIModerator) {
             const scan = window.ZukaAIModerator.scanContent(caption, currentUser.id);
-            if (scan.action === 'AUTO_BLOCK') {
+            if (scan && scan.action === 'AUTO_BLOCK') {
                 throw new Error(`Reel blocked by AI: ${scan.reason}`);
             }
         }
 
         const newReel = {
-            id: 'reel_' + Date.now().toString(36),
             user_id: currentUser.id,
             creator_name: currentUser.full_name,
             creator_avatar: currentUser.avatar_url,
@@ -97,10 +173,14 @@ class ZukaReelsEngine {
             created_at: new Date().toISOString()
         };
 
-        const reels = window.ZukaDB.get('reels') || [];
-        reels.unshift(newReel);
-        window.ZukaDB.set('reels', reels);
-        return newReel;
+        const { data, error } = await window.supabase
+            .from('reels')
+            .insert([newReel])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 }
 
