@@ -1,6 +1,8 @@
 /**
  * ZUKA - Authentication & Account Management (auth.js)
  * 100% English - No Demo User, No Fake Data
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaAuthService {
@@ -22,31 +24,60 @@ class ZukaAuthService {
         }
     }
 
-    setCurrentUser(user) {
+    async setCurrentUser(user) {
         localStorage.setItem('zuka_current_user', JSON.stringify(user));
-        if (user && user.id) {
-            window.ZukaDB.update('users', user.id, user);
+        if (user && user.id && window.supabase) {
+            try {
+                // Sync user profile data to the Supabase 'users' table
+                await window.supabase
+                    .from('users')
+                    .update(user)
+                    .eq('id', user.id);
+            } catch (e) {
+                console.error("Failed to sync profile update to Supabase:", e);
+            }
         }
     }
 
     async signup({ full_name, username, email, phone, password }) {
-        if (!full_name || !username || !password) {
-            throw new Error('Please fill in all required fields.');
+        if (!full_name || !username || !password || !email) {
+            throw new Error('Please fill in all required fields. Email is mandatory for Supabase Auth.');
+        }
+
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
 
         const cleanUsername = username.replace('@', '').toLowerCase();
-        const users = window.ZukaDB.get('users') || [];
-        if (users.some(u => u.username === cleanUsername)) {
+
+        // 1. Check if username is already taken in the Supabase database
+        const { data: existingUser, error: checkError } = await window.supabase
+            .from('users')
+            .select('username')
+            .eq('username', cleanUsername)
+            .maybeSingle();
+
+        if (checkError) throw checkError;
+        if (existingUser) {
             throw new Error('This username is already taken. Please choose another.');
         }
 
+        // 2. Register the user via official Supabase Auth
+        const { data: authData, error: authError } = await window.supabase.auth.signUp({
+            email: email,
+            password: password
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('Signup failed. Please try again.');
+
+        // 3. Create the user profile record in the 'users' table
         const newUser = {
-            id: 'usr_' + Date.now().toString(36),
+            id: authData.user.id, // Using the unique UUID provided by Supabase Auth
             full_name,
             username: cleanUsername,
-            email: email || '',
+            email: email.toLowerCase(),
             phone: phone || '',
-            password_hash: password,
             avatar_url: '',
             cover_url: '',
             bio: '',
@@ -73,101 +104,149 @@ class ZukaAuthService {
             window.ZukaAIModerator.checkFakeAccount(newUser);
         }
 
-        await window.ZukaSupabase.insert('users', newUser);
-        this.setCurrentUser(newUser);
+        // Store profile data into the remote database
+        const { error: dbError } = await window.supabase
+            .from('users')
+            .insert([newUser]);
+
+        if (dbError) throw dbError;
+
+        await this.setCurrentUser(newUser);
         return newUser;
     }
 
     async login(identifier, password, twoFactorCode) {
-        const users = window.ZukaDB.get('users') || [];
-        const cleanId = identifier.trim().toLowerCase();
-
-        const user = users.find(u => 
-            (u.email && u.email.toLowerCase() === cleanId) || 
-            (u.phone && u.phone === identifier.trim()) || 
-            (u.username && u.username.toLowerCase() === cleanId)
-        );
-
-        if (!user) {
-            throw new Error('The email or phone number you entered is not connected to an account.');
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
 
-        if (user.is_banned) {
+        const cleanId = identifier.trim().toLowerCase();
+        let targetEmail = cleanId;
+
+        // 1. Resolve identifier to email if the user enters a username or phone
+        if (!cleanId.includes('@')) {
+            const { data: profile, error: searchError } = await window.supabase
+                .from('users')
+                .select('email')
+                .or(`username.eq.${cleanId},phone.eq.${cleanId}`)
+                .maybeSingle();
+
+            if (searchError) throw searchError;
+            if (!profile || !profile.email) {
+                throw new Error('The username, email, or phone number you entered is not connected to an account.');
+            }
+            targetEmail = profile.email;
+        }
+
+        // 2. Perform authentication using Supabase Auth
+        const { data: authData, error: authError } = await window.supabase.auth.signInWithPassword({
+            email: targetEmail,
+            password: password
+        });
+
+        if (authError) throw authError;
+
+        // 3. Retrieve full user profile records from the 'users' table
+        const { data: userProfile, error: profileError } = await window.supabase
+            .from('users')
+            .select('*')
+            .eq('id', authData.user.id)
+            .maybeSingle();
+
+        if (profileError) throw profileError;
+        if (!userProfile) throw new Error('User profile record not found.');
+
+        if (userProfile.is_banned) {
+            await window.supabase.auth.signOut();
             throw new Error('This account has been suspended by the ZUKA Owner for violating Community Standards.');
         }
 
-        if (user.two_factor_enabled) {
+        // 4. Handle 2FA verification if enabled on the user profile
+        if (userProfile.two_factor_enabled) {
             const code = twoFactorCode || prompt('Enter 2FA Security Code:');
             if (!code) {
+                await window.supabase.auth.signOut();
                 throw new Error('2FA security code is required.');
             }
-            if (user.two_factor_code && code !== user.two_factor_code) {
+            if (userProfile.two_factor_code && code !== userProfile.two_factor_code) {
+                await window.supabase.auth.signOut();
                 throw new Error('Invalid 2FA security code.');
             }
         }
 
-        this.setCurrentUser(user);
-        return user;
+        await this.setCurrentUser(userProfile);
+        return userProfile;
     }
 
-    logout() {
+    async logout() {
         localStorage.removeItem('zuka_current_user');
+        if (window.supabase) {
+            await window.supabase.auth.signOut();
+        }
         window.location.href = '/index.html';
     }
 
-    toggleProfileLock() {
+    async toggleProfileLock() {
         const user = this.getCurrentUser();
         if (!user) return;
         user.is_locked = !user.is_locked;
-        this.setCurrentUser(user);
+        await this.setCurrentUser(user);
         return user.is_locked;
     }
 
-    toggleProfessionalMode() {
+    async toggleProfessionalMode() {
         const user = this.getCurrentUser();
         if (!user) return;
         user.is_professional_mode = !user.is_professional_mode;
-        this.setCurrentUser(user);
+        await this.setCurrentUser(user);
         return user.is_professional_mode;
     }
 
-    toggle2FA() {
+    async toggle2FA() {
         const user = this.getCurrentUser();
         if (!user) return;
         user.two_factor_enabled = !user.two_factor_enabled;
-        this.setCurrentUser(user);
+        await this.setCurrentUser(user);
         return user.two_factor_enabled;
     }
 
-    updateProfile(updates) {
+    async updateProfile(updates) {
         const user = this.getCurrentUser();
         if (!user) return;
         const updated = { ...user, ...updates };
-        this.setCurrentUser(updated);
+        await this.setCurrentUser(updated);
         return updated;
     }
 
-    blockUser(userId) {
+    async blockUser(userId) {
         const user = this.getCurrentUser();
+        if (!user) return;
         if (!user.blocked_users) user.blocked_users = [];
         if (!user.blocked_users.includes(userId)) {
             user.blocked_users.push(userId);
-            this.setCurrentUser(user);
-            window.ZukaSupabase.insert('blocks', { blocker_id: user.id, blocked_id: userId });
+            await this.setCurrentUser(user);
+            
+            if (window.supabase) {
+                await window.supabase
+                    .from('blocks')
+                    .insert([{ blocker_id: user.id, blocked_id: userId }]);
+            }
         }
     }
 
-    muteUser(userId) {
+    async muteUser(userId) {
         const user = this.getCurrentUser();
+        if (!user) return;
         if (!user.muted_users) user.muted_users = [];
         if (!user.muted_users.includes(userId)) {
             user.muted_users.push(userId);
-            this.setCurrentUser(user);
+            await this.setCurrentUser(user);
         }
     }
 
-    toggleCloseFriend(userId) {
+    async toggleCloseFriend(userId) {
         const user = this.getCurrentUser();
+        if (!user) return false;
         if (!user.close_friends) user.close_friends = [];
         const idx = user.close_friends.indexOf(userId);
         if (idx === -1) {
@@ -175,7 +254,7 @@ class ZukaAuthService {
         } else {
             user.close_friends.splice(idx, 1);
         }
-        this.setCurrentUser(user);
+        await this.setCurrentUser(user);
         return user.close_friends.includes(userId);
     }
 }
