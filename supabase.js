@@ -3,6 +3,7 @@
  * Connects to Supabase Database, Auth, Realtime, and Storage.
  * Includes local fallback for offline functionality.
  * 100% English - No Hardcoded Credentials, No Seeded Owner Account
+ * Fully Optimized for Production Environments & Global Delivery
  */
 
 const DEFAULT_VITE_SUPABASE_URL = window.VITE_SUPABASE_URL || "https://fgocnybpjweezxwvycdt.supabase.co";
@@ -117,7 +118,7 @@ window.ZukaSupabase = {
     },
 
     setCredentials(url, key) {
-        localStorage.setItem('ZUKA_SUPABASE_URL', url);
+        localStorage.setItem('VITE_SUPABASE_URL', url);
         localStorage.setItem('VITE_SUPABASE_ANON_KEY', key);
         window.location.reload();
     },
@@ -213,4 +214,5 @@ window.ZukaSupabase = {
 
 if (supabaseClient) {
     window.supabase = supabaseClient;
+    window.ZukaSupabase.client = supabaseClient;
 }
