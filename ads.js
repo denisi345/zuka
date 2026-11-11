@@ -1,15 +1,23 @@
 /**
  * ZUKA - Ads Manager Engine (ads.js)
  * 100% English
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 window.ZukaAds = {
-    boostPost({ postId, budget, durationDays, targetLocation, ageMin, ageMax, paymentMethod }) {
-        const currentUser = window.ZukaAuth.getCurrentUser();
+    /**
+     * Boost an existing post by committing an ad tracking row document straight to Supabase
+     */
+    async boostPost({ postId, budget, durationDays, targetLocation, ageMin, ageMax, paymentMethod }) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) throw new Error('Please log in first to create an ad.');
 
         const newAd = {
-            id: 'ad_' + Date.now(),
             user_id: currentUser.id,
             post_id: postId,
             budget: Number(budget),
@@ -23,13 +31,34 @@ window.ZukaAds = {
             created_at: new Date().toISOString()
         };
 
-        const ads = window.ZukaDB.get('ads') || [];
-        ads.unshift(newAd);
-        window.ZukaDB.set('ads', ads);
-        return newAd;
+        const { data, error } = await window.supabase
+            .from('ads')
+            .insert([newAd])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     },
 
-    getAds() {
-        return window.ZukaDB.get('ads') || [];
+    /**
+     * Fetch active promotional campaigns across the network directly via Supabase select queries
+     */
+    async getAds() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
+        const { data: ads, error } = await window.supabase
+            .from('ads')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching advertisements from Supabase:", error);
+            return [];
+        }
+
+        return ads || [];
     }
 };
