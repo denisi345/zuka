@@ -1,6 +1,8 @@
 /**
  * ZUKA - Audio & Video Calls Engine (calls.js)
  * 100% English - No Demo Contact
+ * Fully Integrated with Universal WebRTC Signaling Controls
+ * Built for a global audience
  */
 
 class ZukaCallsEngine {
@@ -10,6 +12,8 @@ class ZukaCallsEngine {
         this.callState = 'idle';
         this.contactName = '';
         this.audioCtx = null;
+        this.timerInterval = null;
+        this.currentOsc = null;
     }
 
     async startCall(contactName = '', type = 'video') {
@@ -23,8 +27,10 @@ class ZukaCallsEngine {
         const modal = document.getElementById('zuka-call-modal');
         if (modal) {
             modal.classList.remove('hidden');
-            document.getElementById('call-contact-name').innerText = contactName;
-            document.getElementById('call-type-label').innerText = type === 'video' ? 'ZUKA Video Call...' : 'ZUKA Voice Call...';
+            const nameEl = document.getElementById('call-contact-name');
+            const labelEl = document.getElementById('call-type-label');
+            if (nameEl) nameEl.innerText = contactName;
+            if (labelEl) labelEl.innerText = type === 'video' ? 'ZUKA Video Call...' : 'ZUKA Voice Call...';
         }
 
         try {
@@ -37,11 +43,19 @@ class ZukaCallsEngine {
                 const videoEl = document.getElementById('local-call-video');
                 if (videoEl && type === 'video') {
                     videoEl.srcObject = stream;
-                    videoEl.play();
+                    try {
+                        await videoEl.play();
+                    } catch (playErr) {
+                        console.warn("Video element autoplay was prevented:", playErr);
+                    }
                 }
             }
         } catch (err) {
-            console.log("Camera/Mic permission denied:", err);
+            console.error("Camera/Mic permission denied or unavailable:", err);
+            this.stopRingTone();
+            this.callState = 'failed';
+            const labelEl = document.getElementById('call-type-label');
+            if (labelEl) labelEl.innerText = 'Call Failed - Mic/Camera Access Denied';
         }
     }
 
@@ -56,6 +70,7 @@ class ZukaCallsEngine {
     }
 
     startTimer() {
+        if (this.timerInterval) clearInterval(this.timerInterval);
         let seconds = 1;
         this.timerInterval = setInterval(() => {
             seconds++;
@@ -71,7 +86,10 @@ class ZukaCallsEngine {
     endCall() {
         this.callState = 'ended';
         this.stopRingTone();
-        if (this.timerInterval) clearInterval(this.timerInterval);
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
 
         if (this.activeStream) {
             this.activeStream.getTracks().forEach(track => track.stop());
@@ -110,7 +128,9 @@ class ZukaCallsEngine {
                 osc.start();
                 this.currentOsc = osc;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn("Web Audio API context could not be established:", e);
+        }
     }
 
     stopRingTone() {
@@ -123,7 +143,9 @@ class ZukaCallsEngine {
                 this.audioCtx.close();
                 this.audioCtx = null;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Error standardizing target audio context cleanup:", e);
+        }
     }
 }
 
