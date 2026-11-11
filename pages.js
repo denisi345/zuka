@@ -1,6 +1,8 @@
 /**
  * ZUKA - Pages Engine (pages.js)
  * 100% English - No Fake Pages, No Fake Followers, No Fake Likes
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaPagesEngine {
@@ -9,28 +11,43 @@ class ZukaPagesEngine {
     }
 
     initPages() {
-        let pages = window.ZukaDB.get('pages');
-        if (!pages) {
-            pages = [];
-            window.ZukaDB.set('pages', pages);
-        }
+        // Initialization handled remotely by Postgres schema constraints on Supabase
     }
 
-    getPages() {
-        return window.ZukaDB.get('pages') || [];
+    async getPages() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
+        const { data: pages, error } = await window.supabase
+            .from('pages')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching pages from Supabase:", error);
+            return [];
+        }
+
+        return pages || [];
     }
 
     async createPage({ name, category, about, avatarUrl, coverUrl }) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) throw new Error('Please log in first to create a Page.');
 
-        const scan = window.ZukaAIModerator.scanContent(name, currentUser.id);
-        if (scan.action === 'AUTO_BLOCK') {
-            throw new Error(`Page name blocked: ${scan.reason}`);
+        if (window.ZukaAIModerator) {
+            const scan = window.ZukaAIModerator.scanContent(name, currentUser.id);
+            if (scan && scan.action === 'AUTO_BLOCK') {
+                throw new Error(`Page name blocked: ${scan.reason}`);
+            }
         }
 
         const newPage = {
-            id: 'page_' + Date.now().toString(36),
             name,
             category: category || 'Business / Company',
             about: about || '',
@@ -45,21 +62,47 @@ class ZukaPagesEngine {
             created_at: new Date().toISOString()
         };
 
-        const pages = this.getPages();
-        pages.unshift(newPage);
-        window.ZukaDB.set('pages', pages);
-        return newPage;
+        const { data, error } = await window.supabase
+            .from('pages')
+            .insert([newPage])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 
-    toggleFollowPage(pageId) {
-        const pages = this.getPages();
-        const page = pages.find(p => p.id === pageId);
-        if (page) {
-            page.is_following = !page.is_following;
-            page.followers_count += page.is_following ? 1 : -1;
-            window.ZukaDB.set('pages', pages);
-            return page.is_following;
+    async toggleFollowPage(pageId) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
+
+        // 1. Fetch current follow status of the page from Supabase
+        const { data: page, error: fetchError } = await window.supabase
+            .from('pages')
+            .select('is_following, followers_count')
+            .eq('id', pageId)
+            .maybeSingle();
+
+        if (fetchError || !page) {
+            console.error("Error finding target page:", fetchError);
+            return false;
+        }
+
+        const nextStatus = !page.is_following;
+        const nextCount = page.followers_count + (nextStatus ? 1 : -1);
+
+        // 2. Perform an atomic column cell update on the page fields
+        const { error: updateError } = await window.supabase
+            .from('pages')
+            .update({ 
+                is_following: nextStatus, 
+                followers_count: Math.max(0, nextCount) 
+            })
+            .eq('id', pageId);
+
+        if (updateError) throw updateError;
+        return nextStatus;
     }
 }
 
