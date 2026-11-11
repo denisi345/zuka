@@ -3,7 +3,8 @@
  * Integrates real news sources as official verified Page Posts inside normal Feed.
  * NO separate news button or section.
  * News sources: BBC Swahili, CNN, Reuters, TBC, Azam TV, ITV, Google News.
- * Categories: Tanzania, Michezo, Siasa, Burudani, Teknolojia.
+ * Categories: Global, Sports, Politics, Entertainment, Business, Technology.
+ * 100% English Code Documentation - Fully Integrated with Supabase Client & Cloudflare Deploys
  */
 
 class ZukaAINewsEngine {
@@ -73,29 +74,51 @@ class ZukaAINewsEngine {
         setInterval(() => this.fetchRealNews(), 30 * 60 * 1000);
     }
 
-    initPages() {
-        const pages = window.ZukaDB.get('pages');
-        this.sources.forEach(src => {
-            const exists = pages.some(p => p.id === src.id || p.name === src.name);
-            if (!exists) {
-                pages.push({
-                    id: src.id,
-                    name: src.name,
-                    category: src.category,
-                    avatar_url: src.logo,
-                    cover_url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=900',
-                    about: `Official verified Page for ${src.name} delivering breaking real-time news across the world.`,
-                    is_verified: true,
-                    is_news_source: true,
-                    followers_count: 145000 + Math.floor(Math.random() * 80000),
-                    created_at: new Date().toISOString()
-                });
+    async initPages() {
+        if (!window.supabase) return;
+
+        try {
+            // Fetch existing pages to prevent duplicate generation
+            const { data: existingPages, error: fetchError } = await window.supabase
+                .from('pages')
+                .select('id, name');
+
+            if (fetchError) throw fetchError;
+            const pagesList = existingPages || [];
+
+            const newPages = [];
+            this.sources.forEach(src => {
+                const exists = pagesList.some(p => p.id === src.id || p.name === src.name);
+                if (!exists) {
+                    newPages.push({
+                        id: src.id,
+                        name: src.name,
+                        category: src.category,
+                        avatar_url: src.logo,
+                        cover_url: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=900',
+                        about: `Official verified Page for ${src.name} delivering breaking real-time news across the world.`,
+                        is_verified: true,
+                        is_news_source: true,
+                        followers_count: 145000 + Math.floor(Math.random() * 80000),
+                        created_at: new Date().toISOString()
+                    });
+                }
+            });
+
+            if (newPages.length > 0) {
+                const { error: insertError } = await window.supabase
+                    .from('pages')
+                    .insert(newPages);
+                if (insertError) throw insertError;
             }
-        });
-        window.ZukaDB.set('pages', pages);
+        } catch (e) {
+            console.error("Failed to initialize news source pages in Supabase:", e);
+        }
     }
 
     async fetchRealNews() {
+        if (!window.supabase) return;
+
         // Authentic curated real-time news articles from verified publishers in English
         const realNewsPool = [
             {
@@ -159,43 +182,31 @@ class ZukaAINewsEngine {
         // Check user news preferences from Settings
         const userPrefs = JSON.parse(localStorage.getItem('zuka_news_categories') || '["Global", "Sports", "Politics", "Entertainment", "Business", "Technology"]');
 
-        const posts = window.ZukaDB.get('posts');
+        try {
+            // Fetch live feed posts from Supabase to prevent collision anomalies
+            const { data: livePosts, error: postError } = await window.supabase
+                .from('posts')
+                .select('content');
 
-        realNewsPool.forEach(item => {
-            if (!userPrefs.includes(item.category)) return;
+            if (postError) throw postError;
+            const currentPosts = livePosts || [];
 
-            const src = this.sources.find(s => s.id === item.sourceId);
-            if (!src) return;
+            const newsPostsToInsert = [];
 
-            // Avoid duplicate identical titles
-            const exists = posts.some(p => p.content && p.content.includes(item.title));
-            if (!exists) {
-                const newsPost = {
-                    id: 'news_' + item.sourceId + '_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
-                    user_id: src.id,
-                    is_page_post: true,
-                    page_name: src.name,
-                    page_avatar: src.logo,
-                    is_verified: true,
-                    content: `📰 **${item.title}**\n\n${item.content}\n\n🔗 ${src.source} | Category: #${item.category}`,
-                    media_url: item.image,
-                    media_type: 'image',
-                    source_attribution: src.source,
-                    source_url: item.link,
-                    category: item.category,
-                    privacy: 'public',
-                    likes_count: 85 + Math.floor(Math.random() * 450),
-                    comments_count: 24 + Math.floor(Math.random() * 90),
-                    shares_count: 15 + Math.floor(Math.random() * 50),
-                    created_at: new Date(Date.now() - Math.floor(Math.random() * 3600000)).toISOString()
-                };
-                posts.unshift(newsPost);
-            }
-        });
+            realNewsPool.forEach(item => {
+                if (!userPrefs.includes(item.category)) return;
 
-        window.ZukaDB.set('posts', posts);
-        console.log("📰 [AI NEWS] Synchronized authentic news pages into ZUKA feed");
-    }
-}
+                const src = this.sources.find(s => s.id === item.sourceId);
+                if (!src) return;
 
-window.ZukaNews = new ZukaAINewsEngine();
+                // Avoid duplicate identical titles
+                const exists = currentPosts.some(p => p.content && p.content.includes(item.title));
+                if (!exists) {
+                    const newsPost = {
+                        user_id: src.id,
+                        is_page_post: true,
+                        page_name: src.name,
+                        page_avatar: src.logo,
+                        is_verified: true,
+                        content: `📰 **${item.title}**\n\n${item.content}\n\n🔗 ${src.source} | Category: #${item.category}`,
+                        media_url: item.image,
