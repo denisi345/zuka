@@ -1,7 +1,7 @@
 /**
  * ZUKA Super App - ZUKA AI Messenger Contact (zuka_ai_chat.js)
  * Implements a natural, friendly chat contact named "ZUKA AI" inside Messenger.
- * 100% English (US)
+ * 100% English (US) - Fully Integrated with Supabase Client & Cloudflare Deploys
  */
 
 class ZukaAIChatService {
@@ -16,50 +16,91 @@ class ZukaAIChatService {
             bio: 'Your personal intelligent assistant on ZUKA. Ask me anything!'
         };
 
-        this.initHistory();
+        this.defaultWelcomeMessage = {
+            id: 'ai_msg_0',
+            sender: 'ai',
+            message: 'Hi there! I am **ZUKA AI**, your smart personal assistant on ZUKA.\n\nI can help you with:\n- Writing engaging, high-reach posts & captions\n- Telling jokes and fun stories\n- Translating between languages\n- Homework help, creative ideas, and daily advice\n\nHow can I help you today?',
+            created_at: new Date().toISOString()
+        };
     }
 
-    initHistory() {
-        let history = window.ZukaDB.get('ai_chat_messages') || [];
+    /**
+     * Fetch AI chat history for the currently logged-in user from Supabase
+     */
+    async getMessages() {
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        if (!window.supabase || !currentUser) {
+            return [this.defaultWelcomeMessage];
+        }
 
-        if (history.length === 0) {
-            history = [
-                {
-                    id: 'ai_msg_0',
-                    sender: 'ai',
-                    message: 'Hi there! I am **ZUKA AI**, your smart personal assistant on ZUKA.\n\nI can help you with:\n- Writing engaging, high-reach posts & captions\n- Telling jokes and fun stories\n- Translating between languages\n- Homework help, creative ideas, and daily advice\n\nHow can I help you today?',
-                    created_at: new Date(Date.now() - 3600000).toISOString()
-                }
-            ];
-            window.ZukaDB.set('ai_chat_messages', history);
+        try {
+            const { data: messages, error } = await window.supabase
+                .from('ai_chat_messages')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            if (!messages || messages.length === 0) {
+                return [this.defaultWelcomeMessage];
+            }
+
+            return messages;
+        } catch (e) {
+            console.error("Error fetching ZUKA AI chat history from Supabase:", e);
+            return [this.defaultWelcomeMessage];
         }
     }
 
-    getMessages() {
-        return window.ZukaDB.get('ai_chat_messages') || [];
+    /**
+     * Clear AI chat history for the current user in Supabase
+     */
+    async clearHistory() {
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        if (!window.supabase || !currentUser) return;
+
+        try {
+            const { error } = await window.supabase
+                .from('ai_chat_messages')
+                .delete()
+                .eq('user_id', currentUser.id);
+
+            if (error) throw error;
+        } catch (e) {
+            console.error("Error clearing ZUKA AI chat history:", e);
+        }
     }
 
-    clearHistory() {
-        window.ZukaDB.set('ai_chat_messages', []);
-        this.initHistory();
-    }
-
+    /**
+     * Save user message to Supabase, fetch AI response, and save AI reply to Supabase
+     */
     async reply(userText) {
         const text = userText.trim();
         const lower = text.toLowerCase();
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
 
         const userMsg = {
-            id: 'msg_u_' + Date.now(),
+            user_id: currentUser ? currentUser.id : null,
             sender: 'user',
             message: text,
             created_at: new Date().toISOString()
         };
-        const history = this.getMessages();
-        history.push(userMsg);
-        window.ZukaDB.set('ai_chat_messages', history);
+
+        // 1. Save user message to Supabase if authenticated
+        if (window.supabase && currentUser) {
+            const { error: userMsgError } = await window.supabase
+                .from('ai_chat_messages')
+                .insert([userMsg]);
+
+            if (userMsgError) {
+                console.error("Error saving user prompt to Supabase:", userMsgError);
+            }
+        }
 
         let aiReplyText = '';
 
+        // 2. Attempt live backend AI endpoint first
         try {
             const response = await fetch('/api/ai/chat', {
                 method: 'POST',
@@ -73,7 +114,7 @@ class ZukaAIChatService {
                 }
             }
         } catch (e) {
-            // Local conversational fallback
+            // Fallback to built-in intelligent response generator
         }
 
         if (!aiReplyText) {
@@ -81,15 +122,26 @@ class ZukaAIChatService {
         }
 
         const aiMsg = {
-            id: 'msg_ai_' + Date.now(),
+            user_id: currentUser ? currentUser.id : null,
             sender: 'ai',
             message: aiReplyText,
             created_at: new Date().toISOString()
         };
-        history.push(aiMsg);
-        window.ZukaDB.set('ai_chat_messages', history);
 
-        return aiMsg;
+        // 3. Save AI response to Supabase and return the saved record
+        if (window.supabase && currentUser) {
+            const { data: savedAiMsg, error: aiMsgError } = await window.supabase
+                .from('ai_chat_messages')
+                .insert([aiMsg])
+                .select()
+                .single();
+
+            if (!aiMsgError && savedAiMsg) {
+                return savedAiMsg;
+            }
+        }
+
+        return { id: 'msg_ai_' + Date.now(), ...aiMsg };
     }
 
     generateLocalResponse(lower, original) {
