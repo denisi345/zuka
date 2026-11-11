@@ -1,6 +1,8 @@
 /**
  * ZUKA - Notifications Engine (notifications.js)
  * 100% English - No Fake Notifications
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
+ * Built for a global audience
  */
 
 class ZukaNotificationsEngine {
@@ -9,44 +11,91 @@ class ZukaNotificationsEngine {
     }
 
     initNotifications() {
-        let notifs = window.ZukaDB.get('notifications');
-        if (!notifs) {
-            notifs = [];
-            window.ZukaDB.set('notifications', notifs);
+        // Initialization handled remotely by Postgres schema constraints on Supabase
+    }
+
+    async getNotifications() {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
+
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        if (!currentUser) return [];
+
+        const { data: notifications, error } = await window.supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching notifications from Supabase:", error);
+            return [];
+        }
+
+        return notifications || [];
+    }
+
+    async getUnreadCount() {
+        if (!window.supabase) return 0;
+
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        if (!currentUser) return 0;
+
+        const { count, error } = await window.supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) {
+            console.error("Error counting unread notifications:", error);
+            return 0;
+        }
+
+        return count || 0;
+    }
+
+    async markAllAsRead() {
+        if (!window.supabase) return;
+
+        const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+        if (!currentUser) return;
+
+        const { error } = await window.supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) {
+            console.error("Error marking notifications as read:", error);
         }
     }
 
-    getNotifications() {
-        return window.ZukaDB.get('notifications') || [];
-    }
+    async send({ userId, actorName, actorAvatar, type, content }) {
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
+        }
 
-    getUnreadCount() {
-        const notifs = this.getNotifications();
-        return notifs.filter(n => !n.is_read).length;
-    }
-
-    markAllAsRead() {
-        const notifs = this.getNotifications();
-        notifs.forEach(n => n.is_read = true);
-        window.ZukaDB.set('notifications', notifs);
-    }
-
-    send({ userId, actorName, actorAvatar, type, content }) {
-        const notifs = this.getNotifications();
         const newNotif = {
-            id: 'n_' + Date.now(),
             user_id: userId,
             actor_name: actorName,
             actor_avatar: actorAvatar,
             type,
             content,
             is_read: false,
-            time: 'Just now',
             created_at: new Date().toISOString()
         };
-        notifs.unshift(newNotif);
-        window.ZukaDB.set('notifications', notifs);
-        return newNotif;
+
+        const { data, error } = await window.supabase
+            .from('notifications')
+            .insert([newNotif])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 }
 
