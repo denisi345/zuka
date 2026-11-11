@@ -9,10 +9,18 @@
     <meta property="og:description" content="ZUKA helps you connect, buy, watch, and share with the people in your life.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- Tailwind CSS CDN (Restores full layout, colors, and modal hiding) -->
     <script src="https://jsdelivr.net"></script>
+    
+    <!-- Supabase JS SDK (Required for window.supabase to initialize) -->
+    <script src="https://jsdelivr.net"></script>
+    
+    <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="/style.css">
     
     <!-- Eruda Test Tool -->
+    <script src="https://jsdelivr.net"></script>
     <script>eruda.init();</script>
 </head>
 <body class="bg-[#f0f2f5] min-h-screen flex flex-col justify-between font-sans">
@@ -57,7 +65,7 @@
                     <hr class="border-gray-200 my-2">
 
                     <div class="space-y-2">
-                        <button onclick="openSignupModal()" data-i18n="btn_create_account" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-lg text-xs transition border border-gray-300 cursor-pointer">
+                        <button type="button" onclick="openSignupModal()" data-i18n="btn_create_account" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-lg text-xs transition border border-gray-300 cursor-pointer">
                             Create new account
                         </button>
                     </div>
@@ -77,7 +85,7 @@
                     <h2 class="text-2xl font-black text-gray-900" data-i18n="signup_modal_title">Sign Up</h2>
                     <p class="text-xs text-gray-500" data-i18n="signup_modal_subtitle">It's quick and easy.</p>
                 </div>
-                <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">X</button>
+                <button type="button" onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">X</button>
             </div>
 
             <form id="zuka-signup-form" class="space-y-3">
@@ -123,7 +131,7 @@
                 <a href="javascript:void(0)" class="hover:underline">Advertising</a>
                 <a href="javascript:void(0)" class="hover:underline">Cookies</a>
                 <a href="javascript:void(0)" class="hover:underline">Help Center</a>
-                <button onclick="window.ZukaI18n.openLanguageModal()" class="text-[#1877F2] font-semibold hover:underline flex items-center gap-1">
+                <button type="button" onclick="window.ZukaI18n.openLanguageModal()" class="text-[#1877F2] font-semibold hover:underline flex items-center gap-1">
                     <span data-i18n="menu_language">Language</span>
                 </button>
             </div>
@@ -168,10 +176,3 @@
             const full_name = document.getElementById('reg-name').value;
             const username = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value;
-            const phone = document.getElementById('reg-phone').value;
-            const password = document.getElementById('reg-password').value;
-
-            try {
-                await window.ZukaAuth.signup({ full_name, username, email, phone, password });
-                alert('Success! Your ZUKA account has been created.');
-                window.location.href = '/home.html';
