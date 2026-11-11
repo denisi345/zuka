@@ -5,8 +5,8 @@
  * 100% English - No Hardcoded Credentials, No Seeded Owner Account
  */
 
-const DEFAULT_VITE_SUPABASE_URL = window.VITE_SUPABASE_URL || localStorage.getItem('ZUKA_SUPABASE_URL') || '';
-const DEFAULT_VITE_SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY || localStorage.getItem('VITE_SUPABASE_ANON_KEY') || '';
+const DEFAULT_VITE_SUPABASE_URL = window.VITE_SUPABASE_URL || "https://fgocnybpjweezxwvycdt.supabase.co";
+const DEFAULT_VITE_SUPABASE_ANON_KEY = window.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo";
 
 let supabaseClient = null;
 
@@ -17,6 +17,7 @@ function initSupabase() {
                 auth: { persistSession: true },
                 realtime: { params: { eventsPerSecond: 10 } }
             });
+            window.supabaseInstance = supabaseClient;
         } catch (e) {
             console.warn('[ZUKA] Supabase initialization failed:', e);
         }
@@ -116,9 +117,8 @@ window.ZukaSupabase = {
     },
 
     setCredentials(url, key) {
-        localStorage.setItem('VITE_SUPABASE_URL;https://fgocnybpjweezxwvycdt.supabase.co.";
-        localStorage.setItem('VITE_SUPABASE_ANON_KEY;'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnb2NueWJwandlZXp4d3Z5Y2R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4ODcyOTQsImV4cCI6MjEwODQ2MzI5NH0.mPeLgmZadGDw0MItQ0U-4FhzeeGrszMiddmXxf8Hhfo": 
-                            
+        localStorage.setItem('ZUKA_SUPABASE_URL', url);
+        localStorage.setItem('VITE_SUPABASE_ANON_KEY', key);
         window.location.reload();
     },
 
@@ -210,3 +210,7 @@ window.ZukaSupabase = {
         window.addEventListener('zuka:realtime:' + channelName, (e) => callback(e.detail));
     }
 };
+
+if (supabaseClient) {
+    window.supabase = supabaseClient;
+}
