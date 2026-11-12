@@ -1,6 +1,6 @@
 /**
  * ZUKA Super App - Avatar Creator (avatar.js)
- * Implements Facebook-style Avatar customizer (skin tone, hairstyle, outfit, eyewear).
+ * Implements Avatar customizer (skin tone, hairstyle, outfit, eyewear).
  */
 
 class ZukaAvatarCreator {
@@ -14,14 +14,18 @@ class ZukaAvatarCreator {
         };
     }
 
-    generateAvatarUrl(seed = 'juma') {
-        const style = this.options.hairStyle || 'afro';
-        return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(seed)}&backgroundColor=1877f2`;
+    generateAvatarUrl(seed = 'user') {
+        const customSeed = `${seed}-${this.options.skinTone}-${this.options.hairStyle}-${this.options.outfit}`;
+        return `https://dicebear.com{encodeURIComponent(customSeed)}&backgroundColor=1877f2`;
     }
 
-    applyCustomAvatar(seed) {
+    async applyCustomAvatar(seed) {
         const url = this.generateAvatarUrl(seed);
-        window.ZukaProfile.updateAvatar(url);
+        if (window.ZukaProfile && typeof window.ZukaProfile.updateAvatar === 'function') {
+            await window.ZukaProfile.updateAvatar(url);
+        } else {
+            console.warn("ZukaProfile haijapakia bado.");
+        }
         return url;
     }
 }
