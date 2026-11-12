@@ -169,10 +169,25 @@
 
         function closeSignupModal() {
             document.getElementById('signup-modal').classList.add('hidden');
-        }
-
-        document.getElementById('zuka-signup-form').addEventListener('submit', async (e) => {
+     }
+ 
+         document.getElementById('zuka-signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const full_name = document.getElementById('reg-name').value;
             const username = document.getElementById('reg-username').value;
             const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                await window.ZukaAuth.signup({ full_name, username, email, phone, password });
+                alert('Success! Your ZUKA account has been created.');
+                window.location.href = '/home.html';
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    </script>
+</body>
+</html>
+       
