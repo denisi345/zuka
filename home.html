@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZUKA - Social Super App</title>
     <!-- Tailwind CSS Browser Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://jsdelivr.net"></script>
     <!-- Supabase JS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://jsdelivr.net"></script>
     <link rel="stylesheet" href="/style.css">
-    </head>
+</head>
 <body class="bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] antialiased">
 
-    <!-- TOP NAVIGATION BAR (FACEBOOK STYLE) -->
+    <!-- TOP NAVIGATION BAR -->
     <header class="zuka-top-nav">
         <!-- Left: Logo & Search -->
         <div class="flex items-center gap-2">
@@ -30,51 +30,47 @@
 
         <!-- Center: Primary Navigation Tabs (Desktop) -->
         <div class="zuka-desktop-nav-center hidden md:flex items-center justify-center gap-1 flex-1 max-w-xl mx-4">
-            <div class="zuka-nav-tab active" data-i18n-title="nav_feed" title="Home" onclick="switchMainTab('feed')">
+            <div class="zuka-nav-tab active" id="nav-tab-feed" data-i18n-title="nav_feed" title="Home" onclick="switchMainTab('feed')">
                 <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             </div>
-            <div class="zuka-nav-tab" data-i18n-title="nav_watch" title="Watch" onclick="switchMainTab('watch')">
+            <div class="zuka-nav-tab" id="nav-tab-watch" data-i18n-title="nav_watch" title="Watch" onclick="switchMainTab('watch')">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <div class="zuka-nav-tab" data-i18n-title="nav_marketplace" title="Marketplace" onclick="switchMainTab('marketplace')">
+            <div class="zuka-nav-tab" id="nav-tab-marketplace" data-i18n-title="nav_marketplace" title="Marketplace" onclick="switchMainTab('marketplace')">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </div>
-            <div class="zuka-nav-tab" data-i18n-title="nav_groups" title="Groups" onclick="switchMainTab('groups')">
+            <div class="zuka-nav-tab" id="nav-tab-groups" data-i18n-title="nav_groups" title="Groups" onclick="switchMainTab('groups')">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </div>
-            <div class="zuka-nav-tab" data-i18n-title="nav_gaming" title="Gaming" onclick="switchMainTab('gaming')">
+            <div class="zuka-nav-tab" id="nav-tab-gaming" data-i18n-title="nav_gaming" title="Gaming" onclick="switchMainTab('gaming')">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
             </div>
         </div>
 
         <!-- Right: Icons Only (Messenger + Bell + Profile) -->
         <div class="flex items-center gap-2">
-            <!-- Messenger Circle -->
             <div class="action-circle-btn" onclick="toggleMessengerDrawer()" title="Messenger">
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.909 1.458 5.517 3.738 7.185v3.557l3.418-1.876c.905.251 1.862.388 2.844.388 5.523 0 10-4.145 10-9.254C22 6.145 17.523 2 12 2zm1.054 12.457l-2.709-2.888-5.289 2.888 5.818-6.177 2.774 2.888 5.225-2.888-5.819 6.177z"/></svg>
                 <div class="unread-badge" id="messenger-unread-badge">1</div>
             </div>
 
-            <!-- Notifications Circle -->
             <div class="action-circle-btn" onclick="toggleNotificationDrawer()" title="Notifications">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 <div class="unread-badge" id="notif-badge-count">2</div>
             </div>
 
-            <!-- User Avatar & Profile Menu Trigger -->
             <div class="relative cursor-pointer" onclick="toggleProfileMenu()">
-                <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" alt="Profile">
+                <img id="nav-user-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" alt="Profile">
             </div>
         </div>
     </header>
-
     <!-- MAIN BODY GRID (DESKTOP 3 COLUMNS / MOBILE 1 COLUMN) -->
     <div class="max-w-[1600px] mx-auto px-0 md:px-4 py-4 flex gap-6">
 
         <!-- LEFT SIDEBAR (DESKTOP) -->
         <aside class="hidden lg:block w-72 shrink-0 space-y-1 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto pr-2">
             <div class="zuka-sidebar-link" onclick="switchMainTab('profile')">
-                <img id="left-sidebar-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-9 h-9 rounded-full object-cover">
+                <img id="left-sidebar-avatar" src="https://unsplash.com" class="w-9 h-9 rounded-full object-cover">
                 <div class="flex-1 truncate">
                     <div id="left-sidebar-name" class="font-bold text-sm text-gray-900 dark:text-white truncate">John Miller</div>
                     <div class="text-[11px] text-gray-500" data-i18n="view_your_profile">View your profile</div>
@@ -170,7 +166,6 @@
                 </button>
             </div>
         </aside>
-
         <!-- CENTER FEED CONTAINER -->
         <main class="flex-1 max-w-3xl mx-auto px-2 sm:px-3 w-full min-w-0" id="main-view-container">
 
@@ -181,10 +176,10 @@
                 </div>
             </div>
 
-            <!-- 2. CREATE POST BOX (WHAT'S ON YOUR MIND?) -->
+            <!-- 2. CREATE POST BOX -->
             <div class="zuka-card p-4">
                 <div class="flex items-center gap-3">
-                    <img id="create-post-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-10 h-10 rounded-full object-cover">
+                    <img id="create-post-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover">
                     <div onclick="openCreatePostModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full py-2.5 px-4 text-xs sm:text-sm text-gray-500 cursor-pointer transition">
                         <span id="create-post-prompt">What's on your mind, John?</span>
                     </div>
@@ -223,7 +218,7 @@
                     <button onclick="switchMainTab('ads')" data-i18n="sidebar_create_ad" class="text-blue-600 hover:underline">Create Ad</button>
                 </div>
                 <div class="flex gap-3 items-center">
-                    <img src="https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?w=200" class="w-20 h-16 rounded-lg object-cover">
+                    <img src="https://unsplash.com" class="w-20 h-16 rounded-lg object-cover">
                     <div>
                         <div class="font-bold text-xs text-gray-900 dark:text-white leading-tight">Toyota Harrier 2026 Special Edition</div>
                         <p class="text-[11px] text-gray-500 mt-1">globalmotors.com</p>
@@ -231,7 +226,7 @@
                 </div>
             </div>
 
-            <!-- Contacts / Messenger List with ZUKA AI pinned on top! -->
+            <!-- Contacts / Messenger List -->
             <div class="zuka-card p-3">
                 <div class="flex items-center justify-between text-xs text-gray-500 font-bold mb-3">
                     <span data-i18n="sidebar_contacts">Contacts (Messenger)</span>
@@ -247,7 +242,7 @@
         </aside>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION BAR (ICONS ONLY, NO TEXT) -->
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
     <nav class="zuka-mobile-bottom-bar">
         <button onclick="switchMainTab('feed')" class="mob-nav-item active" id="mob-tab-feed" title="Home" aria-label="Home">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -268,7 +263,6 @@
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
     </nav>
-
     <!-- CREATE POST MODAL -->
     <div id="create-post-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
@@ -279,7 +273,7 @@
 
             <div class="p-4 space-y-3">
                 <div class="flex items-center gap-3">
-                    <img id="modal-post-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-10 h-10 rounded-full object-cover">
+                    <img id="modal-post-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover">
                     <div>
                         <div id="modal-post-name" class="font-bold text-sm text-gray-900 dark:text-white">John Miller</div>
                         <select id="post-privacy-select" class="text-[11px] bg-gray-100 dark:bg-gray-800 border-none rounded px-2 py-0.5 mt-0.5 text-gray-600 dark:text-gray-300">
@@ -318,7 +312,7 @@
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                         </button>
                         <button onclick="promptFeeling()" class="text-amber-500 hover:scale-110 transition cursor-pointer" title="Feeling/Activity">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-3.5-9a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm7 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm-3.5 6.5a5 5 0 004.5-3h-9a5 5 0 004.5 3z"/></svg>
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-3.5-9a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm7 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm-3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
                         </button>
                     </div>
                 </div>
@@ -366,7 +360,7 @@
     <div id="zuka-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 hidden">
         <div class="max-w-md w-full bg-gray-900 border border-gray-800 rounded-3xl p-6 text-center space-y-6 shadow-2xl">
             <div class="relative w-28 h-28 mx-auto">
-                <img id="call-avatar" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200" class="w-28 h-28 rounded-full object-cover border-4 border-blue-500 shadow-xl">
+                <img id="call-avatar" src="https://unsplash.com" class="w-28 h-28 rounded-full object-cover border-4 border-blue-500 shadow-xl">
                 <div class="absolute inset-0 rounded-full border-4 border-blue-400 animate-ping opacity-30"></div>
             </div>
             <div>
@@ -390,19 +384,18 @@
             </div>
         </div>
     </div>
-
     <!-- FLOATING ROUND ZUKA AI BUTTON (BOTTOM-RIGHT) -->
     <button id="zuka-floating-ai-trigger" onclick="toggleZukaAIChat()" class="zuka-floating-ai-btn" title="Chat with ZUKA AI" aria-label="Open ZUKA AI Chat">
         <span class="text-2xl select-none">🤖</span>
         <span class="online-indicator" style="bottom: 3px; right: 3px;"></span>
     </button>
 
-    <!-- ZUKA AI & MESSENGER POPUP (350px x 500px, BOTTOM-RIGHT, CLOSED BY DEFAULT) -->
+    <!-- ZUKA AI & MESSENGER POPUP -->
     <div id="messenger-chat-drawer" class="zuka-ai-popup hidden" role="dialog" aria-label="ZUKA AI Chat">
         <div class="bg-[#1877F2] text-white px-4 py-3 rounded-t-2xl flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2">
                 <div class="relative">
-                    <img id="chat-header-avatar" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100" class="w-8 h-8 rounded-full object-cover border border-white/40">
+                    <img id="chat-header-avatar" src="https://unsplash.com" class="w-8 h-8 rounded-full object-cover border border-white/40">
                     <span class="online-indicator"></span>
                 </div>
                 <div>
@@ -469,7 +462,7 @@
     <!-- USER PROFILE MENU POPUP -->
     <div id="profile-menu-popup" class="fixed top-14 right-4 w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 p-3 hidden">
         <div class="p-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 cursor-pointer" onclick="switchMainTab('profile'); toggleProfileMenu();">
-            <img id="dropdown-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-12 h-12 rounded-full object-cover">
+            <img id="dropdown-avatar" src="https://unsplash.com" class="w-12 h-12 rounded-full object-cover">
             <div>
                 <div id="dropdown-name" class="font-bold text-sm text-gray-900 dark:text-white">John Miller</div>
                 <div class="text-xs text-blue-600" data-i18n="view_your_profile">View your profile</div>
@@ -498,7 +491,6 @@
             </div>
         </div>
     </div>
-
     <!-- BLUE TICK VERIFICATION MODAL -->
     <div id="bluetick-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4">
@@ -534,28 +526,18 @@
 
     <!-- VIDEO / REELS COMMENTS BOTTOM SHEET (70% HEIGHT) -->
     <div id="video-comments-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl flex flex-col transition-transform duration-300 transform translate-y-full max-w-lg mx-auto border-t border-gray-200 dark:border-gray-800 h-[70%] max-h-[85vh]">
-        <!-- Drag Handle -->
         <div class="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto my-2.5 shrink-0"></div>
-
-        <!-- Header -->
         <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
             <h3 class="font-bold text-sm text-gray-900 dark:text-white" id="sheet-comments-count-title">Comments</h3>
             <button onclick="closeVideoCommentsSheet()" class="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 text-lg font-bold leading-none cursor-pointer">✕</button>
         </div>
-
-        <!-- Comments List -->
-        <div id="sheet-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3.5">
-            <!-- Dynamic comments -->
-        </div>
-
-        <!-- Comment Input Bar -->
+        <div id="sheet-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3.5"></div>
         <div class="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 flex items-center gap-2 shrink-0">
-            <img id="sheet-input-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-8 h-8 rounded-full object-cover">
+            <img id="sheet-input-avatar" src="https://unsplash.com" class="w-8 h-8 rounded-full object-cover">
             <input type="text" id="sheet-comment-input" placeholder="Add a comment..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" onkeydown="if(event.key==='Enter') submitVideoComment()">
             <button onclick="submitVideoComment()" class="text-[#1877F2] font-bold text-xs px-3 py-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/40 cursor-pointer">Post</button>
         </div>
     </div>
-    <!-- Bottom Sheet Backdrop -->
     <div id="video-comments-backdrop" onclick="closeVideoCommentsSheet()" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity"></div>
 
     <!-- ALL APPLICATION JAVASCRIPT MODULES -->
@@ -590,17 +572,14 @@
     <script src="/saved.js"></script>
     <script src="/memories.js"></script>
     <script src="/music.js"></script>
-    <script src="/avatar.js"></script>
     <script src="/verification.js"></script>
     <script src="/monetization.js"></script>
     <script src="/ads.js"></script>
     <script src="/settings.js"></script>
-
     <!-- CORE UI CONTROLLER -->
     <script>
         let attachedMediaUrl = null;
 
-        // Initialize User & Feed on load
         document.addEventListener('DOMContentLoaded', () => {
             syncUserData();
             updateLangBadge();
@@ -610,7 +589,6 @@
             renderNotifications();
         });
 
-        // Listen for language changes and re-render the whole UI instantly
         window.addEventListener('zuka:language_changed', (e) => {
             updateLangBadge();
             syncUserData();
@@ -648,7 +626,6 @@
             document.getElementById('sidebar-stars-balance').innerText = `${user.stars_balance || 0} ⭐`;
         }
 
-        // Render Stories Carousel
         function renderStories() {
             const stories = window.ZukaStories.getStories();
             const currentUser = window.ZukaAuth.getCurrentUser();
@@ -658,18 +635,13 @@
             const t = (k) => window.ZukaI18n ? window.ZukaI18n.t(k) : k;
 
             tray.innerHTML = `
-                <!-- Create Story Tile -->
                 <div onclick="openCreateStoryModal()" class="story-card bg-white dark:bg-gray-800 flex flex-col justify-between border border-gray-200 dark:border-gray-800">
                     <img src="${currentUser ? currentUser.avatar_url : ''}" class="w-full h-32 object-cover">
                     <div class="relative flex flex-col items-center justify-center p-2 bg-white dark:bg-gray-800 flex-1">
-                        <div class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-bold text-lg -mt-6 border-2 border-white dark:border-gray-800">
-                            +
-                        </div>
+                        <div class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-bold text-lg -mt-6 border-2 border-white dark:border-gray-800">+</div>
                         <span class="text-[11px] font-bold text-gray-800 dark:text-white mt-1">${t('story_create_title')}</span>
                     </div>
                 </div>
-
-                <!-- Friends Stories -->
                 ${stories.map(s => `
                     <div onclick="viewStory('${s.id}')" class="story-card" style="background-image: url('${s.media_url}')">
                         <div class="story-avatar-ring">
@@ -681,18 +653,13 @@
                 `).join('')}
             `;
         }
-
-        // Render Feed with reactions and interleaved news
         function renderFeed() {
             const posts = window.ZukaFeed.getFeedPosts();
             const container = document.getElementById('feed-posts-container');
             if (!container) return;
 
-            const t = (k, p) => window.ZukaI18n ? window.ZukaI18n.t(k, p) : k;
-
             container.innerHTML = posts.map(p => `
                 <div class="zuka-card" id="post-${p.id}">
-                    <!-- Post Header -->
                     <div class="p-3.5 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <img src="${p.author_avatar || p.page_avatar}" class="w-10 h-10 rounded-full object-cover">
@@ -709,19 +676,13 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Dropdown actions -->
-                        <button onclick="openPostOptions('${p.id}')" class="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full cursor-pointer">
-                            •••
-                        </button>
+                        <button onclick="openPostOptions('${p.id}')" class="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full cursor-pointer">•••</button>
                     </div>
 
-                    <!-- Post Body: 16px crisp black text -->
                     <div class="px-3.5 pb-2.5 zuka-post-body-text whitespace-pre-line leading-relaxed">
                         ${p.content}
                     </div>
 
-                    <!-- Media: 100% full width -->
                     ${p.media_url ? `
                         <div class="zuka-post-media-container">
                             ${p.media_type === 'video' ? `
@@ -732,7 +693,6 @@
                         </div>
                     ` : ''}
 
-                    <!-- Poll Widget if Present -->
                     ${p.poll_data ? `
                         <div class="p-4 mx-3 my-2 bg-gray-50 dark:bg-gray-800/60 rounded-xl space-y-2 border border-gray-200 dark:border-gray-700">
                             <div class="font-bold text-xs uppercase tracking-wider text-blue-600">${p.poll_data.question}</div>
@@ -750,7 +710,6 @@
                         </div>
                     ` : ''}
 
-                    <!-- Reactions & Comments Count bar -->
                     <div class="px-3.5 py-2 flex items-center justify-between text-xs text-gray-500 border-b border-gray-100 dark:border-gray-800">
                         <div class="flex items-center gap-1">
                             <span>👍❤️</span>
@@ -762,7 +721,6 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons: Facebook style only: Like, Comment, Share (NO STAR ICON) -->
                     <div class="zuka-post-actions-row">
                         <div class="relative like-btn-container flex-1">
                             <div class="reaction-popover">
@@ -793,8 +751,6 @@
                 </div>
             `).join('');
         }
-
-        // Render Contacts with ZUKA AI
         function renderContacts() {
             const contacts = window.ZukaChat.getContacts();
             const container = document.getElementById('contacts-list-container');
@@ -817,7 +773,6 @@
             `).join('');
         }
 
-        // Render Notifications Drawer
         function renderNotifications() {
             const notifs = window.ZukaNotifications.getNotifications();
             const unread = window.ZukaNotifications.getUnreadCount();
@@ -840,7 +795,6 @@
             `).join('');
         }
 
-        // Post Creation Actions
         function openCreatePostModal(type) {
             document.getElementById('create-post-modal').classList.remove('hidden');
             if (type === 'image') {
@@ -942,7 +896,6 @@
                 alert(err.message);
             }
         }
-
         function reactTo(postId, reactionType) {
             window.ZukaFeed.reactToPost(postId, reactionType);
             renderFeed();
@@ -966,15 +919,23 @@
             renderFeed();
         }
 
-        function sharePost(postId) {
+        async function sharePost(postId) {
             const msg = (window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw')
                 ? 'Chapisho limeshirikiwa kwenye ukuta wako wa ZUKA!'
                 : 'Post shared to your ZUKA timeline!';
+            
+            if (window.ZukaFeed && typeof window.ZukaFeed.sharePost === 'function') {
+                await window.ZukaFeed.sharePost(postId);
+            } else if (window.supabaseClient) {
+                const posts = window.ZukaFeed.getFeedPosts();
+                const p = posts.find(item => item.id === postId);
+                if (p) {
+                    const newCount = (p.shares_count || 0) + 1;
+                    p.shares_count = newCount;
+                    await window.supabaseClient.from('posts').update({ shares_count: newCount }).eq('id', postId);
+                }
+            }
             alert(msg);
-            const posts = window.ZukaDB.get('posts');
-            const p = posts.find(item => item.id === postId);
-            if (p) p.shares_count = (p.shares_count || 0) + 1;
-            window.ZukaDB.set('posts', posts);
             renderFeed();
         }
 
@@ -1002,7 +963,6 @@
             }
         }
 
-        // Live Modal Handlers
         async function openLiveModal() {
             const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
             const title = prompt(
@@ -1029,7 +989,6 @@
             input.value = '';
         }
 
-        // Chat & Messenger Handlers (ZUKA AI Popup & Messenger)
         function openChatWith(contactId) {
             window.activeContact = contactId;
             const contacts = window.ZukaChat.getContacts();
@@ -1041,17 +1000,13 @@
             if (avatarEl) avatarEl.src = contact.avatar;
 
             const drawer = document.getElementById('messenger-chat-drawer');
-            if (drawer) {
-                drawer.classList.remove('hidden');
-            }
+            if (drawer) drawer.classList.remove('hidden');
             renderChatMessages();
         }
 
         function closeZukaAIChat() {
             const drawer = document.getElementById('messenger-chat-drawer');
-            if (drawer) {
-                drawer.classList.add('hidden');
-            }
+            if (drawer) drawer.classList.add('hidden');
         }
 
         function toggleZukaAIChat() {
@@ -1133,13 +1088,11 @@
         }
 
         function toggleNotificationDrawer() {
-            const d = document.getElementById('notification-drawer');
-            d.classList.toggle('hidden');
+            document.getElementById('notification-drawer').classList.toggle('hidden');
         }
 
         function toggleProfileMenu() {
-            const m = document.getElementById('profile-menu-popup');
-            m.classList.toggle('hidden');
+            document.getElementById('profile-menu-popup').classList.toggle('hidden');
         }
 
         function openBlueTickRequestModal() {
@@ -1169,7 +1122,6 @@
                 syncUserData();
             }
         }
-
         // TAB SWITCHER CONTROLLER (Feed, Watch, Marketplace, Groups, Profile, etc.)
         function switchMainTab(tab) {
             document.querySelectorAll('.zuka-nav-tab').forEach(t => t.classList.remove('active'));
@@ -1267,6 +1219,7 @@
                         </div>
                     </div>
                 `;
+            }
             } else if (tab === 'reels') {
                 renderFacebookVideoTab('reels');
             } else if (tab === 'profile') {
@@ -1310,7 +1263,6 @@
                             </div>
                         </div>
 
-                        <!-- User's posts -->
                         <div id="feed-posts-container" class="space-y-4"></div>
                     </div>
                 `;
@@ -1321,7 +1273,6 @@
                     <div class="zuka-card p-6 space-y-6">
                         <h2 class="text-xl font-bold" data-i18n="settings_title">${t('settings_title')}</h2>
                         <div class="space-y-4 text-xs">
-                            <!-- Language Preference Box -->
                             <div class="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-xl flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <span class="text-2xl">🌐</span>
@@ -1408,13 +1359,10 @@
             const cap = prompt(isSwahili ? 'Maelezo ya Reel yako:' : 'Reel caption:');
             if (cap) {
                 window.ZukaReels.createReel({
-                    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-african-girl-dancing-in-traditional-dress-41584-large.mp4',
+                    videoUrl: 'https://mixkit.co',
                     caption: cap
                 });
                 switchMainTab('reels');
-            }
-        }
-
         function promptEditBio() {
             const b = prompt('Edit your bio:', window.ZukaAuth.getCurrentUser().bio);
             if (b) {
@@ -1423,9 +1371,8 @@
                 switchMainTab('profile');
             }
         }
-
         // ==========================================================================
-        // FACEBOOK VIDEO & REELS CONTROLLER
+        // VIDEO & REELS CONTROLLER
         // ==========================================================================
         let currentVideoSubtab = 'for_you';
         let currentVideoSearchQuery = '';
@@ -1468,7 +1415,6 @@
 
             container.innerHTML = `
                 <div class="zuka-video-tab-root w-full bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[calc(100vh-100px)]">
-                    <!-- 1. TOP OF VIDEO TAB: 2 tabs only: [ For You | Reels ] + Search icon on right. White background, black text, active tab has blue underline -->
                     <div class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-5 pt-2.5 pb-0 flex items-center justify-between shrink-0 z-30">
                         <div class="flex items-center gap-8">
                             <button onclick="switchVideoSubtab('for_you')" id="subtab-btn-for-you" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'for_you' ? 'border-b-2 border-[#1877F2] text-[#1877F2] dark:text-[#1877F2] font-bold' : 'text-gray-900 dark:text-white hover:text-[#1877F2]'}">
@@ -1485,13 +1431,10 @@
                         </div>
                     </div>
 
-                    <!-- Collapsible Search Row -->
                     <div id="video-search-bar" class="${query ? '' : 'hidden'} bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 shrink-0 z-20">
                         <input type="text" id="video-search-input" value="${query}" placeholder="Search videos, creators, or music..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" oninput="handleVideoSearchInput(this.value)">
                         <button onclick="clearVideoSearch()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-semibold px-2 cursor-pointer">Clear</button>
                     </div>
-
-                    <!-- 2. MAIN FEED: Vertical swipe, 1 video per screen, video fills 100% width and 100% height, black background, no white cards, no grid -->
                     <div id="video-feed-scroll" class="zuka-video-feed-wrapper flex-1">
                         ${items.length === 0 ? `
                             <div class="w-full h-full flex flex-col items-center justify-center text-white space-y-3 p-6 text-center select-none">
@@ -1502,10 +1445,8 @@
                             </div>
                         ` : items.map((v, idx) => `
                             <div class="zuka-video-snap-item" data-video-id="${v.id}" data-video-type="${subtab}" onclick="handleVideoTapOrDoubleTap(event, '${v.id}', '${subtab}')">
-                                <!-- Black Backdrop -->
                                 <div class="absolute inset-0 bg-black"></div>
 
-                                <!-- VIDEO: Fills 100% width and 100% height -->
                                 <video 
                                     id="video-player-${v.id}"
                                     src="${v.video_url}" 
@@ -1518,22 +1459,16 @@
                                     ontimeupdate="onVideoTimeUpdate(this, '${v.id}')"
                                 ></video>
 
-                                <!-- Top overlay gradient for legibility -->
                                 <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-15 pointer-events-none"></div>
-
-                                <!-- Bottom overlay gradient for text legibility -->
                                 <div class="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-15 pointer-events-none"></div>
 
-                                <!-- Floating Mute / Unmute Button on top right of video -->
                                 <div class="absolute top-4 right-4 z-25">
                                     <button onclick="event.stopPropagation(); toggleVideoAudioMute();" class="w-10 h-10 rounded-full bg-black/45 backdrop-blur-md flex items-center justify-center text-white text-base shadow-lg border border-white/20 hover:scale-105 active:scale-95 transition cursor-pointer" title="Toggle Sound">
                                         <span class="video-global-mute-icon">${window.zukaVideoMuted ? '🔇' : '🔊'}</span>
                                     </button>
                                 </div>
 
-                                <!-- 3. ON VIDEO - RIGHT SIDE VERTICAL BUTTONS: Big round white icons -->
                                 <div class="absolute right-3 sm:right-6 bottom-14 sm:bottom-18 z-25 flex flex-col items-center gap-4 sm:gap-5 select-none">
-                                    <!-- Heart Like with count -->
                                     <div onclick="event.stopPropagation(); triggerVideoLikeAction('${v.id}', '${subtab}');" class="video-action-btn" title="Like">
                                         <div class="video-action-icon-circle ${v.is_liked ? '!bg-rose-600/90' : ''}">
                                             <span class="text-2xl drop-shadow">${v.is_liked ? '❤️' : '🤍'}</span>
@@ -1541,7 +1476,6 @@
                                         <span id="v-like-cnt-${v.id}" class="video-action-label">${formatCount(v.likes_count)}</span>
                                     </div>
 
-                                    <!-- Comment bubble with count -->
                                     <div onclick="event.stopPropagation(); openVideoCommentsSheet('${v.id}', '${subtab}');" class="video-action-btn" title="Comments">
                                         <div class="video-action-icon-circle">
                                             <span class="text-2xl drop-shadow">💬</span>
@@ -1549,7 +1483,6 @@
                                         <span id="v-comm-cnt-${v.id}" class="video-action-label">${formatCount(v.comments_count)}</span>
                                     </div>
 
-                                    <!-- Share arrow with count -->
                                     <div onclick="event.stopPropagation(); shareVideoItem('${v.id}');" class="video-action-btn" title="Share">
                                         <div class="video-action-icon-circle">
                                             <span class="text-2xl drop-shadow">↗️</span>
@@ -1557,7 +1490,6 @@
                                         <span class="video-action-label">${formatCount(v.shares_count || 1400)}</span>
                                     </div>
 
-                                    <!-- Save bookmark -->
                                     <div onclick="event.stopPropagation(); toggleVideoSaveItem('${v.id}', '${subtab}');" class="video-action-btn" title="Save Video">
                                         <div class="video-action-icon-circle ${v.is_saved ? '!bg-amber-500/90' : ''}">
                                             <span class="text-2xl drop-shadow">${v.is_saved ? '🔖' : '📑'}</span>
@@ -1565,7 +1497,6 @@
                                         <span id="v-save-lbl-${v.id}" class="video-action-label">${v.is_saved ? 'Saved' : 'Save'}</span>
                                     </div>
 
-                                    <!-- 3 dots more -->
                                     <div onclick="event.stopPropagation(); showVideoMoreMenu('${v.id}');" class="video-action-btn" title="More options">
                                         <div class="video-action-icon-circle">
                                             <span class="text-2xl drop-shadow">•••</span>
@@ -1574,9 +1505,7 @@
                                     </div>
                                 </div>
 
-                                <!-- 4. ON VIDEO - BOTTOM LEFT: Profile pic round + Name + Follow button, Caption, Music -->
                                 <div class="absolute left-3 sm:left-6 bottom-5 right-20 sm:right-24 z-20 text-white select-none">
-                                    <!-- Profile row -->
                                     <div class="flex items-center gap-2.5">
                                         <img src="${v.creator_avatar}" class="w-10 h-10 rounded-full border-2 border-white object-cover shadow-md shrink-0">
                                         <div class="flex items-center gap-1.5 flex-wrap">
@@ -1588,12 +1517,10 @@
                                         </div>
                                     </div>
 
-                                    <!-- Caption 2 lines -->
                                     <p class="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow mt-1.5 font-normal leading-snug">
                                         ${v.title || v.caption}
                                     </p>
 
-                                    <!-- Music icon + song name scrolling -->
                                     <div class="flex items-center gap-2 text-xs text-white/90 font-medium mt-1.5 overflow-hidden max-w-[240px] sm:max-w-[280px]">
                                         <span class="text-sm">🎵</span>
                                         <div class="music-marquee-container">
@@ -1602,7 +1529,6 @@
                                     </div>
                                 </div>
 
-                                <!-- 5. CONTROLS: Bottom thin progress bar white -->
                                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/25 z-25 pointer-events-none">
                                     <div id="video-progress-${v.id}" class="h-full bg-white transition-[width] duration-100" style="width: 0%"></div>
                                 </div>
@@ -1614,7 +1540,6 @@
 
             initVideoFeedObserver();
         }
-
         function switchVideoSubtab(subtab) {
             renderFacebookVideoTab(subtab, currentVideoSearchQuery);
         }
@@ -1652,7 +1577,6 @@
             const videoEl = container.querySelector('video');
 
             if (timeDiff < 300) {
-                // Double tap detected: Big heart animation & Like
                 lastVideoTapTimestamp = 0;
                 triggerBigHeartAnimation(container);
                 triggerVideoLikeAction(videoId, subtab, true);
@@ -1660,7 +1584,6 @@
                 lastVideoTapTimestamp = now;
                 setTimeout(() => {
                     if (lastVideoTapTimestamp === now && videoEl) {
-                        // Single tap: toggle Play/Pause
                         toggleVideoPlay(videoEl, container);
                     }
                 }, 300);
@@ -1702,7 +1625,6 @@
                 icon.innerText = window.zukaVideoMuted ? '🔇' : '🔊';
             });
         }
-
         function triggerVideoLikeAction(videoId, subtab, forceLike = false) {
             let item = null;
             if (subtab === 'for_you') {
@@ -1813,7 +1735,6 @@
                 videoIntersectionObserver.observe(item);
             });
         }
-
         // ==========================================================================
         // COMMENTS BOTTOM SHEET HANDLERS (Videos, Reels, Feed Posts)
         // ==========================================================================
