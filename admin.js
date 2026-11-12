@@ -1,8 +1,9 @@
 /**
  * ZUKA Super App - Owner Secret Panel Engine (admin.js)
- * Implements Mark Zuckerberg-level super-admin control across all ZUKA.
- * Validates role = 'owner' against `zuka_owners` table.
- * Controls moderation queue with AI Learning feedback, users ban/verify/delete, posts, groups, live streams, and logs.
+ * Implements Supreme Owner super-admin control across all ZUKA.
+ * Validates role = 'owner' against `zuka_owners` table on Supabase.
+ * Controls moderation queue with AI Learning feedback, user bans/verification/deletion, posts, groups, live streams, and audit logs.
+ * 100% English - Fully Integrated with Supabase Client
  */
 
 class ZukaOwnerAdminEngine {
@@ -24,232 +25,293 @@ class ZukaOwnerAdminEngine {
     }
 
     /**
-     * Authenticate Owner against table `zuka_owners`
+     * Authenticate Owner against remote `zuka_owners` table
      */
     async loginOwner(username, password) {
-        const owners = window.ZukaDB.get('zuka_owners');
-        const owner = owners.find(o => o.owner_username === username && o.role === 'owner');
-
-        if (!owner) {
-            this.logOwnerAction('FAILED_LOGIN', null, `Jaribio la kuingia kwa jina lisilo sahihi: ${username}`);
-            throw new Error('Akaunti ya Mmiliki wa ZUKA haijapatikana au huna mamlaka ya "owner".');
+        if (!window.supabase) {
+            throw new Error('Supabase client is not initialized.');
         }
 
-        // Verify password against stored hash/credential
+        const { data: owner, error } = await window.supabase
+            .from('zuka_owners')
+            .select('*')
+            .eq('owner_username', username)
+            .eq('role', 'owner')
+            .maybeSingle();
+
+        if (error || !owner) {
+            await this.logOwnerAction('FAILED_LOGIN', null, `Failed login attempt with invalid username: ${username}`);
+            throw new Error('ZUKA Owner account not found or lacks "owner" privileges.');
+        }
+
         if (owner.password_hash !== password) {
-            this.logOwnerAction('FAILED_LOGIN', owner.id, 'Nenosiri lisilo sahihi.');
-            throw new Error('Nenosiri la Mmiliki wa ZUKA si sahihi.');
+            await this.logOwnerAction('FAILED_LOGIN', owner.id, 'Incorrect password entered.');
+            throw new Error('Invalid ZUKA Owner password.');
         }
 
-        // Record successful login
-        owner.last_login = new Date().toISOString();
-        window.ZukaDB.update('zuka_owners', owner.id, owner);
+        const nowIso = new Date().toISOString();
+        await window.supabase
+            .from('zuka_owners')
+            .update({ last_login: nowIso })
+            .eq('id', owner.id);
 
+        owner.last_login = nowIso;
         this.currentOwner = owner;
         sessionStorage.setItem('zuka_owner_session', JSON.stringify(owner));
-        this.logOwnerAction('OWNER_LOGIN', owner.id, 'Mmiliki wa ZUKA ameingia kwenye Secret Panel');
+        await this.logOwnerAction('OWNER_LOGIN', owner.id, 'ZUKA Owner signed into the Secret Panel.');
 
         return owner;
     }
 
-    logoutOwner() {
+    async logoutOwner() {
         if (this.currentOwner) {
-            this.logOwnerAction('OWNER_LOGOUT', this.currentOwner.id, 'Mmiliki wa ZUKA ametoka');
+            await this.logOwnerAction('OWNER_LOGOUT', this.currentOwner.id, 'ZUKA Owner signed out.');
         }
         this.currentOwner = null;
         sessionStorage.removeItem('zuka_owner_session');
         window.location.reload();
     }
 
-    getStats() {
-        const users = window.ZukaDB.get('users');
-        const posts = window.ZukaDB.get('posts');
-        const reports = window.ZukaDB.get('reports');
-        const groups = window.ZukaDB.get('groups');
-        const lives = window.ZukaDB.get('lives');
-        const aiFlags = window.ZukaDB.get('ai_flags');
+    async getStats() {
+        if (!window.supabase) {
+            return {
+                totalUsers: 0,
+                totalPosts: 0,
+                totalReports: 0,
+                totalGroups: 0,
+                activeLives: 0,
+                aiFlagsCount: 0,
+                storageUsedMb: '0.0'
+            };
+        }
+
+        const [
+            usersRes,
+            postsRes,
+            reportsRes,
+            groupsRes,
+            livesRes,
+            flagsRes
+        ] = await Promise.all([
+            window.supabase.from('users').select('*', { count: 'exact', head: true }),
+            window.supabase.from('posts').select('*', { count: 'exact', head: true }),
+            window.supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            window.supabase.from('groups').select('*', { count: 'exact', head: true }),
+            window.supabase.from('lives').select('*', { count: 'exact', head: true }).eq('is_active', true),
+            window.supabase.from('ai_flags').select('*', { count: 'exact', head: true })
+        ]);
+
+        const totalUsers = usersRes.count || 0;
+        const totalPosts = postsRes.count || 0;
 
         return {
-            totalUsers: users.length,
-            totalPosts: posts.length,
-            totalReports: reports.filter(r => r.status === 'pending').length,
-            totalGroups: groups.length,
-            activeLives: lives.filter(l => l.is_active).length,
-            aiFlagsCount: aiFlags.length,
-            storageUsedMb: (users.length * 1.5 + posts.length * 2.8).toFixed(1)
+            totalUsers,
+            totalPosts,
+            totalReports: reportsRes.count || 0,
+            totalGroups: groupsRes.count || 0,
+            activeLives: livesRes.count || 0,
+            aiFlagsCount: flagsRes.count || 0,
+            storageUsedMb: (totalUsers * 1.5 + totalPosts * 2.8).toFixed(1)
         };
     }
 
-    getReports() {
-        return window.ZukaDB.get('reports');
+    async getReports() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('reports')
+            .select('*')
+            .order('created_at', { ascending: false });
+        return data || [];
     }
 
-    getUsers() {
-        return window.ZukaDB.get('users');
+    async getUsers() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('users')
+            .select('*')
+            .order('created_at', { ascending: false });
+        return data || [];
     }
 
-    getPosts() {
-        return window.ZukaDB.get('posts');
+    async getPosts() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('posts')
+            .select('*')
+            .order('created_at', { ascending: false });
+        return data || [];
     }
 
-    getGroups() {
-        return window.ZukaDB.get('groups');
+    async getGroups() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('groups')
+            .select('*')
+            .order('created_at', { ascending: false });
+        return data || [];
     }
 
-    getPages() {
-        return window.ZukaDB.get('pages');
+    async getPages() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('pages')
+            .select('*')
+            .order('created_at', { ascending: false });
+        return data || [];
     }
 
-    getLives() {
-        return window.ZukaDB.get('lives');
+    async getLives() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('lives')
+            .select('*')
+            .order('started_at', { ascending: false });
+        return data || [];
     }
 
-    getVerificationRequests() {
-        return window.ZukaDB.get('verification_requests') || [];
+    async getVerificationRequests() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('verification_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+        return data || [];
     }
 
-    getActionLogs() {
-        return window.ZukaDB.get('owner_actions') || [];
+    async getActionLogs() {
+        if (!window.supabase) return [];
+        const { data } = await window.supabase
+            .from('owner_actions')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        return data || [];
     }
 
     // Owner Moderation Actions with AI Learning
-    ownerResolveReport(reportId, action, termToLearn = '') {
-        const reports = window.ZukaDB.get('reports');
-        const rep = reports.find(r => r.id === reportId);
+    async ownerResolveReport(reportId, action, termToLearn = '') {
+        if (!window.supabase) return;
+
+        const { data: rep } = await window.supabase
+            .from('reports')
+            .select('*')
+            .eq('id', reportId)
+            .maybeSingle();
+
         if (!rep) return;
 
-        rep.status = 'resolved';
-        rep.action_taken = action;
-        window.ZukaDB.set('reports', reports);
+        await window.supabase
+            .from('reports')
+            .update({ status: 'resolved', action_taken: action })
+            .eq('id', reportId);
 
-        // AI Feedback Learning
         if (window.ZukaAIModerator) {
-            window.ZukaAIModerator.learnOwnerDecision(action, termToLearn || rep.snippet);
+            window.ZukaAIModerator.learnOwnerDecision(action, termToLearn || rep.snippet || rep.reason);
         }
 
-        // If action was DELETE, delete the underlying content
         if (action === 'DELETE' && rep.content_id) {
-            let posts = window.ZukaDB.get('posts');
-            posts = posts.filter(p => p.id !== rep.content_id);
-            window.ZukaDB.set('posts', posts);
+            await window.supabase
+                .from('posts')
+                .delete()
+                .eq('id', rep.content_id);
         }
 
-        this.logOwnerAction(`RESOLVE_REPORT_${action}`, rep.id, `Report #${reportId} iliamuliwa kuwa ${action}`);
+        await this.logOwnerAction(`RESOLVE_REPORT_${action}`, rep.id, `Report #${reportId} resolved as ${action}.`);
     }
 
     // User Controls
-    toggleBanUser(userId) {
-        const users = window.ZukaDB.get('users');
-        const u = users.find(user => user.id === userId);
-        if (!u) return;
+    async toggleBanUser(userId) {
+        if (!window.supabase) return false;
 
-        u.is_banned = !u.is_banned;
-        window.ZukaDB.set('users', users);
-        this.logOwnerAction(u.is_banned ? 'BAN_USER' : 'UNBAN_USER', userId, `Mtumiaji @${u.username} amewekewa marufuku: ${u.is_banned}`);
-        return u.is_banned;
+        const { data: u } = await window.supabase
+            .from('users')
+            .select('username, is_banned')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (!u) return false;
+
+        const nextBanStatus = !u.is_banned;
+        await window.supabase
+            .from('users')
+            .update({ is_banned: nextBanStatus })
+            .eq('id', userId);
+
+        await this.logOwnerAction(
+            nextBanStatus ? 'BAN_USER' : 'UNBAN_USER',
+            userId,
+            `User @${u.username} ban status updated to: ${nextBanStatus}`
+        );
+        return nextBanStatus;
     }
 
-    toggleVerifyUser(userId) {
-        const users = window.ZukaDB.get('users');
-        const u = users.find(user => user.id === userId);
-        if (!u) return;
+    async toggleVerifyUser(userId) {
+        if (!window.supabase) return false;
 
-        u.is_verified = !u.is_verified;
-        window.ZukaDB.set('users', users);
-        this.logOwnerAction('VERIFY_USER', userId, `Mtumiaji @${u.username} amepewa Blue Tick: ${u.is_verified}`);
-        return u.is_verified;
+        const { data: u } = await window.supabase
+            .from('users')
+            .select('username, is_verified')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (!u) return false;
+
+        const nextVerifyStatus = !u.is_verified;
+        await window.supabase
+            .from('users')
+            .update({ is_verified: nextVerifyStatus })
+            .eq('id', userId);
+
+        await this.logOwnerAction(
+            'VERIFY_USER',
+            userId,
+            `User @${u.username} Blue Tick status updated to: ${nextVerifyStatus}`
+        );
+        return nextVerifyStatus;
     }
 
-    deleteUserAccount(userId) {
-        if (!confirm('Je, una uhakika wa kumfuta mtumiaji huyu kabisa kutoka mfumo mzima wa ZUKA?')) return;
-        window.ZukaDB.delete('users', userId);
-        this.logOwnerAction('DELETE_USER_PERMANENT', userId, 'Akaunti ya mtumiaji imefutwa kabisa na Mmiliki');
+    async deleteUserAccount(userId) {
+        if (!window.supabase) return;
+        if (!confirm('Are you sure you want to permanently delete this user account from ZUKA?')) return;
+
+        await window.supabase
+            .from('users')
+            .delete()
+            .eq('id', userId);
+
+        await this.logOwnerAction('DELETE_USER_PERMANENT', userId, 'User account permanently deleted by Owner.');
     }
 
     // Content Controls
-    ownerDeletePost(postId) {
-        let posts = window.ZukaDB.get('posts');
-        posts = posts.filter(p => p.id !== postId);
-        window.ZukaDB.set('posts', posts);
-        this.logOwnerAction('OWNER_DELETE_POST', postId, 'Chapisho limefutwa na Mmiliki wa ZUKA');
+    async ownerDeletePost(postId) {
+        if (!window.supabase) return;
+
+        await window.supabase
+            .from('posts')
+            .delete()
+            .eq('id', postId);
+
+        await this.logOwnerAction('OWNER_DELETE_POST', postId, 'Post deleted by ZUKA Owner.');
     }
 
-    ownerHidePost(postId) {
-        const posts = window.ZukaDB.get('posts');
-        const p = posts.find(post => post.id === postId);
+    async ownerHidePost(postId) {
+        if (!window.supabase) return;
+
+        const { data: p } = await window.supabase
+            .from('posts')
+            .select('is_hidden')
+            .eq('id', postId)
+            .maybeSingle();
+
         if (p) {
-            p.is_hidden = !p.is_hidden;
-            window.ZukaDB.set('posts', posts);
-            this.logOwnerAction('OWNER_HIDE_POST', postId, `Chapisho limefichwa: ${p.is_hidden}`);
+            const nextHidden = !p.is_hidden;
+            await window.supabase
+                .from('posts')
+                .update({ is_hidden: nextHidden })
+                .eq('id', postId);
+
+            await this.logOwnerAction('OWNER_HIDE_POST', postId, `Post visibility hidden status set to: ${nextHidden}`);
         }
     }
 
     // Group Controls
-    ownerDeleteGroup(groupId) {
-        if (!confirm('Je, una uhakika wa kufuta kundi hili kabisa kutoka ZUKA?')) return;
-        window.ZukaDB.delete('groups', groupId);
-        this.logOwnerAction('OWNER_DELETE_GROUP', groupId, 'Kundi limefutwa kabisa na Mmiliki wa ZUKA');
-    }
-
-    ownerWarnGroupAdmin(groupId, warningText) {
-        alert(`Onyo rasmi limetumwa kwa Msimamizi wa Kundi: "${warningText}"`);
-        this.logOwnerAction('WARN_GROUP_ADMIN', groupId, `Onyo kwa admin: ${warningText}`);
-    }
-
-    // Live Controls
-    ownerEndLive(liveId) {
-        const lives = window.ZukaDB.get('lives');
-        const live = lives.find(l => l.id === liveId);
-        if (live) {
-            live.is_active = false;
-            window.ZukaDB.set('lives', lives);
-            this.logOwnerAction('OWNER_SHUTDOWN_LIVE', liveId, 'Mubashara umesitishwa mara moja na Mmiliki wa ZUKA');
-        }
-    }
-
-    // Verification Approval
-    approveVerification(requestId) {
-        const reqs = window.ZukaDB.get('verification_requests') || [];
-        const req = reqs.find(r => r.id === requestId);
-        if (req) {
-            req.status = 'approved';
-            window.ZukaDB.set('verification_requests', reqs);
-            this.toggleVerifyUser(req.user_id);
-            this.logOwnerAction('APPROVE_VERIFICATION', req.id, `Maombi ya uthibitisho kwa @${req.user_name} yamekubaliwa`);
-        }
-    }
-
-    rejectVerification(requestId) {
-        const reqs = window.ZukaDB.get('verification_requests') || [];
-        const req = reqs.find(r => r.id === requestId);
-        if (req) {
-            req.status = 'rejected';
-            window.ZukaDB.set('verification_requests', reqs);
-            this.logOwnerAction('REJECT_VERIFICATION', req.id, `Maombi ya uthibitisho kwa @${req.user_name} yamekataliwa`);
-        }
-    }
-
-    changeOwnerPassword(newPassword) {
-        if (!this.currentOwner) return;
-        this.currentOwner.password_hash = newPassword;
-        window.ZukaDB.update('zuka_owners', this.currentOwner.id, this.currentOwner);
-        sessionStorage.setItem('zuka_owner_session', JSON.stringify(this.currentOwner));
-        alert('Nenosiri la siri la Mmiliki wa ZUKA limebadilishwa kikamilifu!');
-        this.logOwnerAction('CHANGE_OWNER_PASSWORD', this.currentOwner.id, 'Nenosiri la Mmiliki limebadilishwa');
-    }
-
-    logOwnerAction(actionType, targetId, notes) {
-        const logs = window.ZukaDB.get('owner_actions') || [];
-        logs.unshift({
-            id: 'act_' + Date.now(),
-            owner_id: this.currentOwner ? this.currentOwner.owner_username : 'system',
-            action_type: actionType,
-            target_id: targetId,
-            notes,
-            created_at: new Date().toISOString()
-        });
-        window.ZukaDB.set('owner_actions', logs);
-    }
-}
-
-window.ZukaOwnerAdmin = new ZukaOwnerAdminEngine();
