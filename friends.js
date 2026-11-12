@@ -116,7 +116,7 @@ class ZukaFriendsEngine {
                 .map(u => ({
                     id: u.id,
                     name: u.full_name || u.username || '',
-                    avatar: u.avatar_url || '',
+                 avatar: u.avatar_url || '',
                     mutual: '',
                     work: u.work || ''
                 }));
