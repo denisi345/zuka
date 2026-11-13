@@ -93,12 +93,12 @@ class ZukaOwnerAdminEngine {
             livesRes,
             flagsRes
         ] = await Promise.all([
-            window.supabase.from('users').select('*', { count: 'exact', head: true }),
-            window.supabase.from('posts').select('*', { count: 'exact', head: true }),
-            window.supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-            window.supabase.from('groups').select('*', { count: 'exact', head: true }),
-            window.supabase.from('lives').select('*', { count: 'exact', head: true }).eq('is_active', true),
-            window.supabase.from('ai_flags').select('*', { count: 'exact', head: true })
+            window.supabaseClient.from('users').select('*', { count: 'exact', head: true }),
+            window.supabaseClient.from('posts').select('*', { count: 'exact', head: true }),
+            window.supabaseClient.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            window.supabaseClient.from('groups').select('*', { count: 'exact', head: true }),
+            window.supabaseClient.from('lives').select('*', { count: 'exact', head: true }).eq('is_active', true),
+            window.supabaseClient.from('ai_flags').select('*', { count: 'exact', head: true })
         ]);
 
         const totalUsers = usersRes.count || 0;

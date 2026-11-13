@@ -63,7 +63,7 @@ class ZukaAuthService {
         }
 
         // 2. Register the user via official Supabase Auth
-        const { data: authData, error: authError } = await window.supabase.auth.signUp({
+        const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
             email: email,
             password: password
         });
@@ -139,7 +139,7 @@ class ZukaAuthService {
         }
 
         // 2. Perform authentication using Supabase Auth
-        const { data: authData, error: authError } = await window.supabase.auth.signInWithPassword({
+        const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
             email: targetEmail,
             password: password
         });
@@ -157,7 +157,7 @@ class ZukaAuthService {
         if (!userProfile) throw new Error('User profile record not found.');
 
         if (userProfile.is_banned) {
-            await window.supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             throw new Error('This account has been suspended by the ZUKA Owner for violating Community Standards.');
         }
 
@@ -165,11 +165,11 @@ class ZukaAuthService {
         if (userProfile.two_factor_enabled) {
             const code = twoFactorCode || prompt('Enter 2FA Security Code:');
             if (!code) {
-                await window.supabase.auth.signOut();
+                await window.supabaseClient.auth.signOut();
                 throw new Error('2FA security code is required.');
             }
             if (userProfile.two_factor_code && code !== userProfile.two_factor_code) {
-                await window.supabase.auth.signOut();
+                await window.supabaseClient.auth.signOut();
                 throw new Error('Invalid 2FA security code.');
             }
         }
@@ -181,7 +181,7 @@ class ZukaAuthService {
     async logout() {
         localStorage.removeItem('zuka_current_user');
         if (window.supabase) {
-            await window.supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
         }
         window.location.href = '/index.html';
     }

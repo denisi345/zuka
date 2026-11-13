@@ -28,11 +28,11 @@ window.ZukaSearch = {
                 postsResult,
                 productsResult
             ] = await Promise.all([
-                window.supabase.from('users').select('id, full_name, username, avatar_url'),
-                window.supabase.from('groups').select('*'),
-                window.supabase.from('pages').select('*'),
-                window.supabase.from('posts').select('*').eq('is_hidden', false),
-                window.supabase.from('products').select('*').eq('is_sold', false)
+                window.supabaseClient.from('users').select('id, full_name, username, avatar_url'),
+                window.supabaseClient.from('groups').select('*'),
+                window.supabaseClient.from('pages').select('*'),
+                window.supabaseClient.from('posts').select('*').eq('is_hidden', false),
+                window.supabaseClient.from('products').select('*').eq('is_sold', false)
             ]);
 
             // Handle errors for individual fetch channels silently while providing fallbacks

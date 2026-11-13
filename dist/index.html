@@ -10,18 +10,18 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     
-    <!-- Tailwind CSS CDN (Restores full layout, colors, and modal hiding) -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://://tailwindcss.com"></script>
     
-    <!-- Supabase JS SDK (Required for window.supabase to initialize) -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="./style.css">
     
     <!-- Eruda Test Tool -->
-    <script src="https://jsdelivr.net"></script>
-    <script>eruda.init();</script>
+    
+    
 </head>
 <body class="bg-[#f0f2f5] min-h-screen flex flex-col justify-between font-sans">
 
@@ -70,7 +70,6 @@
                         </button>
                     </div>
                 </div>
-
                 <div class="mt-6 text-center text-xs text-gray-500" data-i18n="create_page_notice">
                     <strong>Create a Page</strong> for a celebrity, brand or business.
                 </div>
@@ -139,10 +138,10 @@
     </footer>
 
     <!-- Core App Scripts -->
-    <script src="/i18n.js"></script>
-    <script src="/supabase.js"></script>
-    <script src="/ai_moderation.js"></script>
-    <script src="/auth.js"></script>
+    <script src="./i18n.js"></script>
+    <script src="./supabase.js"></script>
+    <script src="./ai_moderation.js"></script>
+    <script src="./auth.js"></script>
     
     <script>
         const loginForm = document.getElementById('zuka-login-form');
@@ -169,9 +168,9 @@
 
         function closeSignupModal() {
             document.getElementById('signup-modal').classList.add('hidden');
-     }
- 
-         document.getElementById('zuka-signup-form').addEventListener('submit', async (e) => {
+        }
+
+        document.getElementById('zuka-signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const full_name = document.getElementById('reg-name').value;
             const username = document.getElementById('reg-username').value;
@@ -190,4 +189,3 @@
     </script>
 </body>
 </html>
-       
