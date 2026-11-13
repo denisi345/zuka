@@ -15,11 +15,11 @@ class ZukaPagesEngine {
     }
 
     async getPages() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: pages, error } = await window.supabase
+        const { data: pages, error } = await window.supabaseClient
             .from('pages')
             .select('*')
             .order('created_at', { ascending: false });
@@ -33,7 +33,7 @@ class ZukaPagesEngine {
     }
 
     async createPage({ name, category, about, avatarUrl, coverUrl }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -62,7 +62,7 @@ class ZukaPagesEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('pages')
             .insert([newPage])
             .select()
@@ -73,12 +73,12 @@ class ZukaPagesEngine {
     }
 
     async toggleFollowPage(pageId) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         // 1. Fetch current follow status of the page from Supabase
-        const { data: page, error: fetchError } = await window.supabase
+        const { data: page, error: fetchError } = await window.supabaseClient
             .from('pages')
             .select('is_following, followers_count')
             .eq('id', pageId)
@@ -93,7 +93,7 @@ class ZukaPagesEngine {
         const nextCount = page.followers_count + (nextStatus ? 1 : -1);
 
         // 2. Perform an atomic column cell update on the page fields
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('pages')
             .update({ 
                 is_following: nextStatus, 

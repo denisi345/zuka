@@ -10,7 +10,7 @@ window.ZukaAds = {
      * Boost an existing post by committing an ad tracking row document straight to Supabase
      */
     async boostPost({ postId, budget, durationDays, targetLocation, ageMin, ageMax, paymentMethod }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -31,7 +31,7 @@ window.ZukaAds = {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('ads')
             .insert([newAd])
             .select()
@@ -45,11 +45,11 @@ window.ZukaAds = {
      * Fetch active promotional campaigns across the network directly via Supabase select queries
      */
     async getAds() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: ads, error } = await window.supabase
+        const { data: ads, error } = await window.supabaseClient
             .from('ads')
             .select('*')
             .order('created_at', { ascending: false });

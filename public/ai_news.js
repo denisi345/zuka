@@ -75,11 +75,11 @@ class ZukaAINewsEngine {
     }
 
     async initPages() {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         try {
             // Fetch existing pages to prevent duplicate generation
-            const { data: existingPages, error: fetchError } = await window.supabase
+            const { data: existingPages, error: fetchError } = await window.supabaseClient
                 .from('pages')
                 .select('id, name');
 
@@ -106,7 +106,7 @@ class ZukaAINewsEngine {
             });
 
             if (newPages.length > 0) {
-                const { error: insertError } = await window.supabase
+                const { error: insertError } = await window.supabaseClient
                     .from('pages')
                     .insert(newPages);
                 if (insertError) throw insertError;
@@ -117,7 +117,7 @@ class ZukaAINewsEngine {
     }
 
     async fetchRealNews() {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         // Authentic curated real-time news articles from verified publishers in English
         const realNewsPool = [
@@ -184,7 +184,7 @@ class ZukaAINewsEngine {
 
         try {
             // Fetch live feed posts from Supabase to prevent collision anomalies
-            const { data: livePosts, error: postError } = await window.supabase
+            const { data: livePosts, error: postError } = await window.supabaseClient
                 .from('posts')
                 .select('content');
 

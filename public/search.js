@@ -10,7 +10,7 @@ window.ZukaSearch = {
      * Perform global search lookups concurrently across multiple Supabase relational data vectors
      */
     async searchAll(query = '') {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 

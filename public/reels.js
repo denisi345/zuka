@@ -15,11 +15,11 @@ class ZukaReelsEngine {
     }
 
     async getReels() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: reels, error } = await window.supabase
+        const { data: reels, error } = await window.supabaseClient
             .from('reels')
             .select('*')
             .order('created_at', { ascending: false });
@@ -33,9 +33,9 @@ class ZukaReelsEngine {
     }
 
     async toggleLikeReel(reelId) {
-        if (!window.supabase) return null;
+        if (!window.supabaseClient) return null;
 
-        const { data: reel, error: fetchError } = await window.supabase
+        const { data: reel, error: fetchError } = await window.supabaseClient
             .from('reels')
             .select('is_liked, likes_count')
             .eq('id', reelId)
@@ -46,7 +46,7 @@ class ZukaReelsEngine {
         const nextLikedStatus = !reel.is_liked;
         const nextLikesCount = reel.likes_count + (nextLikedStatus ? 1 : -1);
 
-        const { data: updatedReel, error: updateError } = await window.supabase
+        const { data: updatedReel, error: updateError } = await window.supabaseClient
             .from('reels')
             .update({ 
                 is_liked: nextLikedStatus, 
@@ -61,9 +61,9 @@ class ZukaReelsEngine {
     }
 
     async toggleFollowCreator(reelId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: reel, error: fetchError } = await window.supabase
+        const { data: reel, error: fetchError } = await window.supabaseClient
             .from('reels')
             .select('is_following')
             .eq('id', reelId)
@@ -73,7 +73,7 @@ class ZukaReelsEngine {
 
         const nextFollowStatus = !reel.is_following;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('reels')
             .update({ is_following: nextFollowStatus })
             .eq('id', reelId);
@@ -83,9 +83,9 @@ class ZukaReelsEngine {
     }
 
     async toggleSave(reelId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: reel, error: fetchError } = await window.supabase
+        const { data: reel, error: fetchError } = await window.supabaseClient
             .from('reels')
             .select('is_saved')
             .eq('id', reelId)
@@ -95,7 +95,7 @@ class ZukaReelsEngine {
 
         const nextSaveStatus = !reel.is_saved;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('reels')
             .update({ is_saved: nextSaveStatus })
             .eq('id', reelId);
@@ -105,11 +105,11 @@ class ZukaReelsEngine {
     }
 
     async addComment(reelId, commentText) {
-        if (!window.supabase) return null;
+        if (!window.supabaseClient) return null;
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
 
-        const { data: reel, error: fetchError } = await window.supabase
+        const { data: reel, error: fetchError } = await window.supabaseClient
             .from('reels')
             .select('comments, comments_count')
             .eq('id', reelId)
@@ -129,7 +129,7 @@ class ZukaReelsEngine {
         currentComments.push(newC);
         const nextCommentsCount = (reel.comments_count || 0) + 1;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('reels')
             .update({ 
                 comments: currentComments, 
@@ -142,7 +142,7 @@ class ZukaReelsEngine {
     }
 
     async createReel({ videoUrl, caption, audioTrack }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -173,7 +173,7 @@ class ZukaReelsEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('reels')
             .insert([newReel])
             .select()

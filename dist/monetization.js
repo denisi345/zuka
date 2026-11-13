@@ -10,7 +10,7 @@ window.ZukaMonetization = {
      * Send Stars to content creators using Supabase real-time row transactional state updates
      */
     async sendStars(postId, recipientId, amount = 50) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -18,7 +18,7 @@ window.ZukaMonetization = {
         if (!currentUser) throw new Error('Please log in first to send Stars.');
 
         // 1. Fetch current live balance from database to prevent manipulation anomalies
-        const { data: userProfile, error: balanceError } = await window.supabase
+        const { data: userProfile, error: balanceError } = await window.supabaseClient
             .from('users')
             .select('stars_balance')
             .eq('id', currentUser.id)
@@ -36,7 +36,7 @@ window.ZukaMonetization = {
         const updatedBalance = liveBalance - amount;
 
         // 2. Perform atomic subtraction cell update on the user profile record
-        const { error: userUpdateError } = await window.supabase
+        const { error: userUpdateError } = await window.supabaseClient
             .from('users')
             .update({ stars_balance: updatedBalance })
             .eq('id', currentUser.id);
@@ -52,7 +52,7 @@ window.ZukaMonetization = {
             created_at: new Date().toISOString()
         };
 
-        const { error: insertError } = await window.supabase
+        const { error: insertError } = await window.supabaseClient
             .from('stars')
             .insert([starTx]);
 
@@ -70,14 +70,14 @@ window.ZukaMonetization = {
      * Top-up user balances by invoking transactional receipt rows directly on Supabase
      */
     async buyStars(packageAmount, costTzs, method = 'M-Pesa') {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) return 0;
 
-        const { data: userProfile, error: balanceError } = await window.supabase
+        const { data: userProfile, error: balanceError } = await window.supabaseClient
             .from('users')
             .select('stars_balance')
             .eq('id', currentUser.id)
@@ -87,7 +87,7 @@ window.ZukaMonetization = {
 
         const nextBalance = (userProfile.stars_balance || 0) + packageAmount;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('users')
             .update({ stars_balance: nextBalance })
             .eq('id', currentUser.id);

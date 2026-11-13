@@ -18,7 +18,7 @@ class ZukaLiveEngine {
     }
 
     async startBroadcast(title = 'Live from ZUKA', category = 'Entertainment') {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -58,7 +58,7 @@ class ZukaLiveEngine {
         this.viewerInterval = setInterval(async () => {
             if (this.isBroadcasting && this.currentLiveId) {
                 // Fetch latest live metrics directly from the database row to prevent manipulation
-                const { data, error } = await window.supabase
+                const { data, error } = await window.supabaseClient
                     .from('lives')
                     .select('viewers_count')
                     .eq('id', this.currentLiveId)
@@ -84,7 +84,7 @@ class ZukaLiveEngine {
             started_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('lives')
             .insert([liveRecord])
             .select()
@@ -97,7 +97,7 @@ class ZukaLiveEngine {
     }
 
     async sendLiveComment(text) {
-        if (!window.supabase || !this.currentLiveId) return null;
+        if (!window.supabaseClient || !this.currentLiveId) return null;
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
 
@@ -115,7 +115,7 @@ class ZukaLiveEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('live_comments')
             .insert([newComment])
             .select()
@@ -128,7 +128,7 @@ class ZukaLiveEngine {
     }
 
     async endBroadcast() {
-        if (!window.supabase || !this.currentLiveId) return;
+        if (!window.supabaseClient || !this.currentLiveId) return;
 
         this.isBroadcasting = false;
         if (this.viewerInterval) {
@@ -144,7 +144,7 @@ class ZukaLiveEngine {
         const endTime = new Date().toISOString();
 
         // 1. Update live record entry state on remote database
-        await window.supabase
+        await window.supabaseClient
             .from('lives')
             .update({
                 is_active: false,
@@ -170,7 +170,7 @@ class ZukaLiveEngine {
         };
 
         // 2. Archive live broadcast recording row directly down to the 'watch_videos' repository table
-        await window.supabase
+        await window.supabaseClient
             .from('watch_videos')
             .insert([replayVideo]);
 

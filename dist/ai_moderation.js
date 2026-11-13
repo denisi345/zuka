@@ -192,7 +192,7 @@ class ZukaAIModeration {
     }
 
     async sendSecretReportToOwner(reportData) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         const report = {
             content_type: reportData.category,
@@ -205,7 +205,7 @@ class ZukaAIModeration {
         };
 
         try {
-            await window.supabase
+            await window.supabaseClient
                 .from('reports')
                 .insert([report]);
             console.log("🛡️ [AI MODERATION] Secret report delivered to Supabase reports table.");
@@ -215,7 +215,7 @@ class ZukaAIModeration {
     }
 
     async logFlag(flagType, contentType, aiScore, detectedTerms, actionTaken) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         const flag = {
             flag_type: flagType,
@@ -227,7 +227,7 @@ class ZukaAIModeration {
         };
 
         try {
-            await window.supabase
+            await window.supabaseClient
                 .from('ai_flags')
                 .insert([flag]);
         } catch (e) {

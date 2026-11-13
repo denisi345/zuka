@@ -18,11 +18,11 @@ class ZukaWatchEngine {
      * Fetch videos from Supabase filtered by category or saved state
      */
     async getVideos(category = 'All') {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        let query = window.supabase
+        let query = window.supabaseClient
             .from('watch_videos')
             .select('*')
             .order('created_at', { ascending: false });
@@ -48,7 +48,7 @@ class ZukaWatchEngine {
      * Upload and publish a new video record directly to Supabase
      */
     async addVideo({ title, videoUrl, thumbnailUrl, audioTrack, category }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -82,7 +82,7 @@ class ZukaWatchEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('watch_videos')
             .insert([newVideo])
             .select()
@@ -96,9 +96,9 @@ class ZukaWatchEngine {
      * Toggle like status and update the likes counter atomically on Supabase
      */
     async toggleLikeVideo(videoId) {
-        if (!window.supabase) return null;
+        if (!window.supabaseClient) return null;
 
-        const { data: v, error: fetchError } = await window.supabase
+        const { data: v, error: fetchError } = await window.supabaseClient
             .from('watch_videos')
             .select('is_liked, likes_count')
             .eq('id', videoId)
@@ -109,7 +109,7 @@ class ZukaWatchEngine {
         const nextLiked = !v.is_liked;
         const nextLikesCount = (v.likes_count || 0) + (nextLiked ? 1 : -1);
 
-        const { data: updatedVideo, error: updateError } = await window.supabase
+        const { data: updatedVideo, error: updateError } = await window.supabaseClient
             .from('watch_videos')
             .update({
                 is_liked: nextLiked,
@@ -127,9 +127,9 @@ class ZukaWatchEngine {
      * Toggle creator follow status on a video record
      */
     async toggleFollow(videoId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: v, error: fetchError } = await window.supabase
+        const { data: v, error: fetchError } = await window.supabaseClient
             .from('watch_videos')
             .select('is_following')
             .eq('id', videoId)
@@ -139,7 +139,7 @@ class ZukaWatchEngine {
 
         const nextFollowing = !v.is_following;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('watch_videos')
             .update({ is_following: nextFollowing })
             .eq('id', videoId);
@@ -152,9 +152,9 @@ class ZukaWatchEngine {
      * Toggle bookmark / saved state on a video record
      */
     async toggleSave(videoId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: v, error: fetchError } = await window.supabase
+        const { data: v, error: fetchError } = await window.supabaseClient
             .from('watch_videos')
             .select('is_saved')
             .eq('id', videoId)
@@ -164,7 +164,7 @@ class ZukaWatchEngine {
 
         const nextSaved = !v.is_saved;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('watch_videos')
             .update({ is_saved: nextSaved })
             .eq('id', videoId);
@@ -177,7 +177,7 @@ class ZukaWatchEngine {
      * Add a moderated comment to a video and update comment counts on Supabase
      */
     async addComment(videoId, commentText) {
-        if (!window.supabase || !commentText || !commentText.trim()) return null;
+        if (!window.supabaseClient || !commentText || !commentText.trim()) return null;
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) throw new Error('You must log in first to comment.');
@@ -189,7 +189,7 @@ class ZukaWatchEngine {
             }
         }
 
-        const { data: v, error: fetchError } = await window.supabase
+        const { data: v, error: fetchError } = await window.supabaseClient
             .from('watch_videos')
             .select('comments, comments_count')
             .eq('id', videoId)
@@ -210,7 +210,7 @@ class ZukaWatchEngine {
         currentComments.push(newC);
         const nextCommentsCount = (v.comments_count || 0) + 1;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('watch_videos')
             .update({
                 comments: currentComments,
@@ -226,9 +226,9 @@ class ZukaWatchEngine {
      * Permanently delete a video record from Supabase
      */
     async deleteVideo(videoId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('watch_videos')
             .delete()
             .eq('id', videoId);

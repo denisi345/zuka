@@ -18,14 +18,14 @@ class ZukaStoriesEngine {
      * Fetch active non-expired stories directly via Supabase filters
      */
     async getStories() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const nowIso = new Date().toISOString();
 
         // Query entries that have an expiration timestamp strictly ahead of the current runtime moment
-        const { data: stories, error } = await window.supabase
+        const { data: stories, error } = await window.supabaseClient
             .from('stories')
             .select('*')
             .gt('expires_at', nowIso)
@@ -43,7 +43,7 @@ class ZukaStoriesEngine {
      * Create a new 24h story entry record and commit it directly to the remote database
      */
     async createStory({ mediaUrl, caption, musicTrack }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -79,7 +79,7 @@ class ZukaStoriesEngine {
             created_at: new Date(now).toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('stories')
             .insert([newStory])
             .select()
@@ -93,9 +93,9 @@ class ZukaStoriesEngine {
      * Delete an active story row entry from the database repository using an explicit identifier target
      */
     async deleteStory(storyId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('stories')
             .delete()
             .eq('id', storyId);

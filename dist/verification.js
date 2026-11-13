@@ -10,7 +10,7 @@ window.ZukaVerification = {
      * Submit a new Blue Tick verification request directly to Supabase
      */
     async submitRequest({ category, reason, documentFile }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -41,7 +41,7 @@ window.ZukaVerification = {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('verification_requests')
             .insert([newReq])
             .select()
@@ -55,11 +55,11 @@ window.ZukaVerification = {
      * Fetch all pending verification requests for the Owner review dashboard
      */
     async getPendingRequests() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('verification_requests')
             .select('*')
             .eq('status', 'pending')
@@ -77,9 +77,9 @@ window.ZukaVerification = {
      * Check the current verification request status of a specific user
      */
     async getUserRequest(userId) {
-        if (!window.supabase || !userId) return null;
+        if (!window.supabaseClient || !userId) return null;
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('verification_requests')
             .select('*')
             .eq('user_id', userId)
@@ -99,12 +99,12 @@ window.ZukaVerification = {
      * Approve a verification request and automatically grant Blue Tick status on the user's profile
      */
     async approveRequest(requestId) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         // 1. Fetch the request to get the target user_id
-        const { data: req, error: fetchError } = await window.supabase
+        const { data: req, error: fetchError } = await window.supabaseClient
             .from('verification_requests')
             .select('user_id')
             .eq('id', requestId)
@@ -115,7 +115,7 @@ window.ZukaVerification = {
         }
 
         // 2. Update request status to 'approved'
-        const { error: reqUpdateError } = await window.supabase
+        const { error: reqUpdateError } = await window.supabaseClient
             .from('verification_requests')
             .update({ status: 'approved' })
             .eq('id', requestId);
@@ -123,7 +123,7 @@ window.ZukaVerification = {
         if (reqUpdateError) throw reqUpdateError;
 
         // 3. Grant verified status (Blue Tick) in the 'users' table
-        const { error: userUpdateError } = await window.supabase
+        const { error: userUpdateError } = await window.supabaseClient
             .from('users')
             .update({ is_verified: true })
             .eq('id', req.user_id);
@@ -137,11 +137,11 @@ window.ZukaVerification = {
      * Reject a verification request
      */
     async rejectRequest(requestId) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('verification_requests')
             .update({ status: 'rejected' })
             .eq('id', requestId);

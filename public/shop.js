@@ -10,11 +10,11 @@ window.ZukaShop = {
      * Fetch all product items uploaded by a specific seller ID from Supabase
      */
     async getUserShopItems(userId) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: products, error } = await window.supabase
+        const { data: products, error } = await window.supabaseClient
             .from('products')
             .select('*')
             .eq('seller_id', userId)
@@ -32,7 +32,7 @@ window.ZukaShop = {
      * Process product orders by logging transactions directly into the remote database table
      */
     async checkout(productId, shippingAddress, phone) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -40,7 +40,7 @@ window.ZukaShop = {
         if (!currentUser) throw new Error('Please log in first to checkout.');
 
         // 1. Fetch current product details to verify price and availability
-        const { data: prod, error: fetchError } = await window.supabase
+        const { data: prod, error: fetchError } = await window.supabaseClient
             .from('products')
             .select('title, price, is_sold')
             .eq('id', productId)
@@ -70,14 +70,14 @@ window.ZukaShop = {
         };
 
         // 2. Commit transaction row record to the live remote orders table
-        const { error: orderError } = await window.supabase
+        const { error: orderError } = await window.supabaseClient
             .from('orders')
             .insert([newOrder]);
 
         if (orderError) throw orderError;
 
         // 3. Perform an atomic update flag check to mark product listing state as sold
-        await window.supabase
+        await window.supabaseClient
             .from('products')
             .update({ is_sold: true })
             .eq('id', productId);

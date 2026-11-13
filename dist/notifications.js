@@ -15,14 +15,14 @@ class ZukaNotificationsEngine {
     }
 
     async getNotifications() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) return [];
 
-        const { data: notifications, error } = await window.supabase
+        const { data: notifications, error } = await window.supabaseClient
             .from('notifications')
             .select('*')
             .eq('user_id', currentUser.id)
@@ -37,12 +37,12 @@ class ZukaNotificationsEngine {
     }
 
     async getUnreadCount() {
-        if (!window.supabase) return 0;
+        if (!window.supabaseClient) return 0;
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) return 0;
 
-        const { count, error } = await window.supabase
+        const { count, error } = await window.supabaseClient
             .from('notifications')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', currentUser.id)
@@ -57,12 +57,12 @@ class ZukaNotificationsEngine {
     }
 
     async markAllAsRead() {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) return;
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('notifications')
             .update({ is_read: true })
             .eq('user_id', currentUser.id)
@@ -74,7 +74,7 @@ class ZukaNotificationsEngine {
     }
 
     async send({ userId, actorName, actorAvatar, type, content }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -88,7 +88,7 @@ class ZukaNotificationsEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('notifications')
             .insert([newNotif])
             .select()

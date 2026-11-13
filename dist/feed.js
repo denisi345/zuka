@@ -15,14 +15,14 @@ class ZukaFeedEngine {
     }
 
     async getFeedPosts() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
 
         // 1. Fetch active posts from Supabase that are not hidden
-        let query = window.supabase
+        let query = window.supabaseClient
             .from('posts')
             .select('*')
             .eq('is_hidden', false);
@@ -59,7 +59,7 @@ class ZukaFeedEngine {
     }
 
     async createPost({ content, mediaUrl, mediaType, feeling, locationTag, musicTitle, privacy, isAnonymous, pollData, groupId }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -107,7 +107,7 @@ class ZukaFeedEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('posts')
             .insert([newPost])
             .select()
@@ -123,9 +123,9 @@ class ZukaFeedEngine {
     }
 
     async reactToPost(postId, reactionType = 'like') {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { data: post, error: fetchError } = await window.supabase
+        const { data: post, error: fetchError } = await window.supabaseClient
             .from('posts')
             .select('user_reaction, likes_count')
             .eq('id', postId)
@@ -146,7 +146,7 @@ class ZukaFeedEngine {
             nextReaction = reactionType;
         }
 
-        const { data: updatedPost, error: updateError } = await window.supabase
+        const { data: updatedPost, error: updateError } = await window.supabaseClient
             .from('posts')
             .update({ user_reaction: nextReaction, likes_count: nextLikes })
             .eq('id', postId)
@@ -158,7 +158,7 @@ class ZukaFeedEngine {
     }
 
     async addComment(postId, commentText, mediaUrl = null) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) return;
@@ -170,7 +170,7 @@ class ZukaFeedEngine {
             }
         }
 
-        const { data: post, error: postError } = await window.supabase
+        const { data: post, error: postError } = await window.supabaseClient
             .from('posts')
             .select('comments_list, comments_count, user_id')
             .eq('id', postId)
@@ -192,7 +192,7 @@ class ZukaFeedEngine {
         currentComments.push(comment);
         const nextCommentsCount = (post.comments_count || 0) + 1;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('posts')
             .update({ comments_list: currentComments, comments_count: nextCommentsCount })
             .eq('id', postId);
@@ -213,9 +213,9 @@ class ZukaFeedEngine {
     }
 
     async votePoll(postId, optionIndex) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { data: post, error: fetchError } = await window.supabase
+        const { data: post, error: fetchError } = await window.supabaseClient
             .from('posts')
             .select('poll_data')
             .eq('id', postId)
@@ -230,7 +230,7 @@ class ZukaFeedEngine {
         poll.total_votes += 1;
         poll.user_voted = optionIndex;
 
-        const { data: updatedPost, error: updateError } = await window.supabase
+        const { data: updatedPost, error: updateError } = await window.supabaseClient
             .from('posts')
             .update({ poll_data: poll })
             .eq('id', postId)
@@ -242,12 +242,12 @@ class ZukaFeedEngine {
     }
 
     async deletePost(postId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) return false;
 
-        const { data: post, error: fetchError } = await window.supabase
+        const { data: post, error: fetchError } = await window.supabaseClient
             .from('posts')
             .select('user_id')
             .eq('id', postId)
@@ -259,7 +259,7 @@ class ZukaFeedEngine {
             throw new Error('You do not have permission to delete this post.');
         }
 
-        const { error: deleteError } = await window.supabase
+        const { error: deleteError } = await window.supabaseClient
             .from('posts')
             .delete()
             .eq('id', postId);
@@ -269,12 +269,12 @@ class ZukaFeedEngine {
     }
 
     async savePost(postId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) return false;
 
-        const { data: existingSave, error: fetchError } = await window.supabase
+        const { data: existingSave, error: fetchError } = await window.supabaseClient
             .from('saved_items')
             .select('id')
             .eq('item_id', postId)
@@ -291,4 +291,4 @@ class ZukaFeedEngine {
                 created_at: new Date().toISOString()
             };
 
-            const { error: insertError } = await window.supabase
+            const { error: insertError } = await window.supabaseClient

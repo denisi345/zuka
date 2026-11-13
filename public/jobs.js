@@ -15,11 +15,11 @@ class ZukaJobsEngine {
     }
 
     async getJobs() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: jobs, error } = await window.supabase
+        const { data: jobs, error } = await window.supabaseClient
             .from('jobs')
             .select('*')
             .order('created_at', { ascending: false });
@@ -33,7 +33,7 @@ class ZukaJobsEngine {
     }
 
     async apply(jobId, cvNote) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) throw new Error('Please log in first to apply for a job.');
@@ -46,7 +46,7 @@ class ZukaJobsEngine {
         };
 
         // 1. Log the application submission directly into the relational 'job_applications' table
-        const { error: applicationError } = await window.supabase
+        const { error: applicationError } = await window.supabaseClient
             .from('job_applications')
             .insert([applicationData]);
 
@@ -56,7 +56,7 @@ class ZukaJobsEngine {
         }
 
         // 2. Perform an atomic update flag check to toggle applicant metrics state
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('jobs')
             .update({ applied: true })
             .eq('id', jobId);
@@ -70,7 +70,7 @@ class ZukaJobsEngine {
     }
 
     async postJob(jobData) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -85,7 +85,7 @@ class ZukaJobsEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('jobs')
             .insert([newJob])
             .select()

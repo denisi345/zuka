@@ -15,11 +15,11 @@ class ZukaMarketplaceEngine {
     }
 
     async getProducts(category = 'All') {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        let query = window.supabase
+        let query = window.supabaseClient
             .from('products')
             .select('*')
             .eq('is_sold', false)
@@ -39,7 +39,7 @@ class ZukaMarketplaceEngine {
     }
 
     async postProduct({ title, price, category, location, description, photoUrl }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -76,7 +76,7 @@ class ZukaMarketplaceEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('products')
             .insert([newProd])
             .select()
@@ -87,13 +87,13 @@ class ZukaMarketplaceEngine {
     }
 
     async makeOffer(productId, offerAmount) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) return false;
 
         // Fetch seller details from the remote products row
-        const { data: prod, error } = await window.supabase
+        const { data: prod, error } = await window.supabaseClient
             .from('products')
             .select('title, seller_id, seller_name')
             .eq('id', productId)

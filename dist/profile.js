@@ -9,7 +9,7 @@ class ZukaProfileEngine {
     constructor() {}
 
     async getProfileData(userId) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -18,7 +18,7 @@ class ZukaProfileEngine {
 
         // 1. Fetch target user profile from Supabase if a specific userId is provided
         if (userId && (!currentUser || currentUser.id !== userId)) {
-            const { data: fetchedUser, error: userError } = await window.supabase
+            const { data: fetchedUser, error: userError } = await window.supabaseClient
                 .from('users')
                 .select('*')
                 .eq('id', userId)
@@ -33,7 +33,7 @@ class ZukaProfileEngine {
         }
 
         // 2. Fetch all posts belonging to the target user from Supabase
-        const { data: posts, error: postsError } = await window.supabase
+        const { data: posts, error: postsError } = await window.supabaseClient
             .from('posts')
             .select('*')
             .eq('user_id', targetUser.id)
@@ -72,7 +72,7 @@ class ZukaProfileEngine {
     }
 
     async requestVerification(category, reason, documentUrl) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -92,7 +92,7 @@ class ZukaProfileEngine {
         };
 
         // Insert the blue tick verification request directly into the remote database table
-        const { error: insertError } = await window.supabase
+        const { error: insertError } = await window.supabaseClient
             .from('verification_requests')
             .insert([newReq]);
 

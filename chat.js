@@ -21,12 +21,12 @@ class ZukaChatEngine {
     }
 
     async getContacts() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         // Fetch dynamic chat contacts row data from the remote database
-        const { data: contacts, error } = await window.supabase
+        const { data: contacts, error } = await window.supabaseClient
             .from('chat_contacts')
             .select('*')
             .order('last_time', { ascending: false });
@@ -66,9 +66,9 @@ class ZukaChatEngine {
             }));
         }
 
-        if (!window.supabase) return [];
+        if (!window.supabaseClient) return [];
 
-        const { data: messages, error } = await window.supabase
+        const { data: messages, error } = await window.supabaseClient
             .from('messages')
             .select('*')
             .eq('chat_id', contactId)
@@ -83,7 +83,7 @@ class ZukaChatEngine {
     }
 
     async sendMessage({ contactId, text, mediaUrl, voiceUrl, isPay = false, payAmount = 0 }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -115,7 +115,7 @@ class ZukaChatEngine {
         };
 
         // 1. Insert message record directly into the live remote database table
-        const { data: savedMsg, error: msgError } = await window.supabase
+        const { data: savedMsg, error: msgError } = await window.supabaseClient
             .from('messages')
             .insert([newMsg])
             .select()
@@ -126,7 +126,7 @@ class ZukaChatEngine {
         // 2. Perform an atomic update on the contact summary tracking entry row cells
         const lastMessageSnippet = isPay ? `Sent TZS ${Number(payAmount).toLocaleString()}` : (text || 'File / Photo');
         
-        await window.supabase
+        await window.supabaseClient
             .from('chat_contacts')
             .update({
                 last_msg: lastMessageSnippet,
@@ -142,9 +142,9 @@ class ZukaChatEngine {
     }
 
     async deleteMessage(msgId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('messages')
             .delete()
             .eq('id', msgId);

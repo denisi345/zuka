@@ -26,10 +26,10 @@ class ZukaAuthService {
 
     async setCurrentUser(user) {
         localStorage.setItem('zuka_current_user', JSON.stringify(user));
-        if (user && user.id && window.supabase) {
+        if (user && user.id && window.supabaseClient) {
             try {
                 // Sync user profile data to the Supabase 'users' table
-                await window.supabase
+                await window.supabaseClient
                     .from('users')
                     .update(user)
                     .eq('id', user.id);
@@ -44,14 +44,14 @@ class ZukaAuthService {
             throw new Error('Please fill in all required fields. Email is mandatory for Supabase Auth.');
         }
 
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const cleanUsername = username.replace('@', '').toLowerCase();
 
         // 1. Check if username is already taken in the Supabase database
-        const { data: existingUser, error: checkError } = await window.supabase
+        const { data: existingUser, error: checkError } = await window.supabaseClient
             .from('users')
             .select('username')
             .eq('username', cleanUsername)
@@ -105,7 +105,7 @@ class ZukaAuthService {
         }
 
         // Store profile data into the remote database
-        const { error: dbError } = await window.supabase
+        const { error: dbError } = await window.supabaseClient
             .from('users')
             .insert([newUser]);
 
@@ -116,7 +116,7 @@ class ZukaAuthService {
     }
 
     async login(identifier, password, twoFactorCode) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -125,7 +125,7 @@ class ZukaAuthService {
 
         // 1. Resolve identifier to email if the user enters a username or phone
         if (!cleanId.includes('@')) {
-            const { data: profile, error: searchError } = await window.supabase
+            const { data: profile, error: searchError } = await window.supabaseClient
                 .from('users')
                 .select('email')
                 .or(`username.eq.${cleanId},phone.eq.${cleanId}`)
@@ -147,7 +147,7 @@ class ZukaAuthService {
         if (authError) throw authError;
 
         // 3. Retrieve full user profile records from the 'users' table
-        const { data: userProfile, error: profileError } = await window.supabase
+        const { data: userProfile, error: profileError } = await window.supabaseClient
             .from('users')
             .select('*')
             .eq('id', authData.user.id)
@@ -180,7 +180,7 @@ class ZukaAuthService {
 
     async logout() {
         localStorage.removeItem('zuka_current_user');
-        if (window.supabase) {
+        if (window.supabaseClient) {
             await window.supabaseClient.auth.signOut();
         }
         window.location.href = '/index.html';
@@ -226,8 +226,8 @@ class ZukaAuthService {
             user.blocked_users.push(userId);
             await this.setCurrentUser(user);
             
-            if (window.supabase) {
-                await window.supabase
+            if (window.supabaseClient) {
+                await window.supabaseClient
                     .from('blocks')
                     .insert([{ blocker_id: user.id, blocked_id: userId }]);
             }

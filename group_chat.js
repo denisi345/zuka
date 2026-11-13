@@ -15,11 +15,11 @@ class ZukaGroupChatEngine {
     }
 
     async getGroupChats() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: chats, error } = await window.supabase
+        const { data: chats, error } = await window.supabaseClient
             .from('group_chats')
             .select('*')
             .order('name', { ascending: true });
@@ -33,9 +33,9 @@ class ZukaGroupChatEngine {
     }
 
     async getGroupChatByCommunity(groupId) {
-        if (!window.supabase) return null;
+        if (!window.supabaseClient) return null;
 
-        const { data: chat, error } = await window.supabase
+        const { data: chat, error } = await window.supabaseClient
             .from('group_chats')
             .select('*')
             .eq('group_id', groupId)
@@ -50,10 +50,10 @@ class ZukaGroupChatEngine {
     }
 
     async createGroupChatForCommunity(group) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         try {
-            const { data: exists, error: checkError } = await window.supabase
+            const { data: exists, error: checkError } = await window.supabaseClient
                 .from('group_chats')
                 .select('id')
                 .eq('group_id', group.id)
@@ -72,7 +72,7 @@ class ZukaGroupChatEngine {
                     created_at: new Date().toISOString()
                 };
 
-                const { data: chatData, error: insertError } = await window.supabase
+                const { data: chatData, error: insertError } = await window.supabaseClient
                     .from('group_chats')
                     .insert([newChat])
                     .select()
@@ -89,7 +89,7 @@ class ZukaGroupChatEngine {
                     created_at: new Date().toISOString()
                 };
 
-                await window.supabase
+                await window.supabaseClient
                     .from('group_messages')
                     .insert([initMsg]);
             }
@@ -99,7 +99,7 @@ class ZukaGroupChatEngine {
     }
 
     async sendGroupMessage(chatId, text) {
-        if (!window.supabase) throw new Error('Supabase client is not initialized.');
+        if (!window.supabaseClient) throw new Error('Supabase client is not initialized.');
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
 
@@ -118,7 +118,7 @@ class ZukaGroupChatEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('group_messages')
             .insert([newMsg])
             .select()
@@ -129,9 +129,9 @@ class ZukaGroupChatEngine {
     }
 
     async toggleMute(chatId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: chat, error: fetchError } = await window.supabase
+        const { data: chat, error: fetchError } = await window.supabaseClient
             .from('group_chats')
             .select('is_muted')
             .eq('id', chatId)
@@ -141,7 +141,7 @@ class ZukaGroupChatEngine {
 
         const nextMuteState = !chat.is_muted;
 
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('group_chats')
             .update({ is_muted: nextMuteState })
             .eq('id', chatId);
@@ -151,9 +151,9 @@ class ZukaGroupChatEngine {
     }
 
     async deleteMessageInGroup(chatId, msgId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('group_messages')
             .delete()
             .eq('id', msgId)

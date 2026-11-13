@@ -10,7 +10,7 @@ window.ZukaSaved = {
      * Fetch all saved bookmarks for the current user and resolve linked data structures asynchronously
      */
     async getSavedItems() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -19,7 +19,7 @@ window.ZukaSaved = {
 
         try {
             // 1. Fetch user specific items from the remote 'saved_items' repository table
-            const { data: savedItems, error: savedError } = await window.supabase
+            const { data: savedItems, error: savedError } = await window.supabaseClient
                 .from('saved_items')
                 .select('*')
                 .eq('user_id', currentUser.id)
@@ -31,11 +31,11 @@ window.ZukaSaved = {
             if (itemsList.length === 0) return [];
 
             // 2. Fetch comprehensive lists of posts and products in parallel streams to resolve relation lookups
-            const { data: posts, error: postsError } = await window.supabase
+            const { data: posts, error: postsError } = await window.supabaseClient
                 .from('posts')
                 .select('*');
 
-            const { data: products, error: productsError } = await window.supabase
+            const { data: products, error: productsError } = await window.supabaseClient
                 .from('products')
                 .select('*');
 
@@ -75,10 +75,10 @@ window.ZukaSaved = {
      * Remove an entry row reference permanently from the server database
      */
     async removeItem(savedId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
         try {
-            const { error } = await window.supabase
+            const { error } = await window.supabaseClient
                 .from('saved_items')
                 .delete()
                 .eq('id', savedId);

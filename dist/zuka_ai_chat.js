@@ -29,12 +29,12 @@ class ZukaAIChatService {
      */
     async getMessages() {
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
-        if (!window.supabase || !currentUser) {
+        if (!window.supabaseClient || !currentUser) {
             return [this.defaultWelcomeMessage];
         }
 
         try {
-            const { data: messages, error } = await window.supabase
+            const { data: messages, error } = await window.supabaseClient
                 .from('ai_chat_messages')
                 .select('*')
                 .eq('user_id', currentUser.id)
@@ -58,10 +58,10 @@ class ZukaAIChatService {
      */
     async clearHistory() {
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
-        if (!window.supabase || !currentUser) return;
+        if (!window.supabaseClient || !currentUser) return;
 
         try {
-            const { error } = await window.supabase
+            const { error } = await window.supabaseClient
                 .from('ai_chat_messages')
                 .delete()
                 .eq('user_id', currentUser.id);
@@ -88,8 +88,8 @@ class ZukaAIChatService {
         };
 
         // 1. Save user message to Supabase if authenticated
-        if (window.supabase && currentUser) {
-            const { error: userMsgError } = await window.supabase
+        if (window.supabaseClient && currentUser) {
+            const { error: userMsgError } = await window.supabaseClient
                 .from('ai_chat_messages')
                 .insert([userMsg]);
 
@@ -129,8 +129,8 @@ class ZukaAIChatService {
         };
 
         // 3. Save AI response to Supabase and return the saved record
-        if (window.supabase && currentUser) {
-            const { data: savedAiMsg, error: aiMsgError } = await window.supabase
+        if (window.supabaseClient && currentUser) {
+            const { data: savedAiMsg, error: aiMsgError } = await window.supabaseClient
                 .from('ai_chat_messages')
                 .insert([aiMsg])
                 .select()

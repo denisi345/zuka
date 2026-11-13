@@ -15,11 +15,11 @@ class ZukaFundraiserEngine {
     }
 
     async getFundraisers() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: fundraisers, error } = await window.supabase
+        const { data: fundraisers, error } = await window.supabaseClient
             .from('fundraisers')
             .select('*')
             .order('created_at', { ascending: false });
@@ -33,7 +33,7 @@ class ZukaFundraiserEngine {
     }
 
     async donate(fundId, amount, donorName, method = 'M-Pesa') {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -43,7 +43,7 @@ class ZukaFundraiserEngine {
         }
 
         // 1. Fetch current fundraiser totals and donor sub-arrays from Supabase
-        const { data: f, error: fetchError } = await window.supabase
+        const { data: f, error: fetchError } = await window.supabaseClient
             .from('fundraisers')
             .select('raised_amount, donors_count, donors_list')
             .eq('id', fundId)
@@ -68,7 +68,7 @@ class ZukaFundraiserEngine {
         const nextDonorsCount = (f.donors_count || 0) + 1;
 
         // 2. Perform transaction cell update to live remote row columns
-        const { data: updatedFund, error: updateError } = await window.supabase
+        const { data: updatedFund, error: updateError } = await window.supabaseClient
             .from('fundraisers')
             .update({
                 raised_amount: nextRaisedAmount,
@@ -84,7 +84,7 @@ class ZukaFundraiserEngine {
     }
 
     async createFundraiser(data) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -101,7 +101,7 @@ class ZukaFundraiserEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data: createdData, error } = await window.supabase
+        const { data: createdData, error } = await window.supabaseClient
             .from('fundraisers')
             .insert([newFund])
             .select()

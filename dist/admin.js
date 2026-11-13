@@ -28,11 +28,11 @@ class ZukaOwnerAdminEngine {
      * Authenticate Owner against remote `zuka_owners` table
      */
     async loginOwner(username, password) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: owner, error } = await window.supabase
+        const { data: owner, error } = await window.supabaseClient
             .from('zuka_owners')
             .select('*')
             .eq('owner_username', username)
@@ -50,7 +50,7 @@ class ZukaOwnerAdminEngine {
         }
 
         const nowIso = new Date().toISOString();
-        await window.supabase
+        await window.supabaseClient
             .from('zuka_owners')
             .update({ last_login: nowIso })
             .eq('id', owner.id);
@@ -73,7 +73,7 @@ class ZukaOwnerAdminEngine {
     }
 
     async getStats() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             return {
                 totalUsers: 0,
                 totalPosts: 0,
@@ -116,8 +116,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getReports() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('reports')
             .select('*')
             .order('created_at', { ascending: false });
@@ -125,8 +125,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getUsers() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('users')
             .select('*')
             .order('created_at', { ascending: false });
@@ -134,8 +134,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getPosts() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('posts')
             .select('*')
             .order('created_at', { ascending: false });
@@ -143,8 +143,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getGroups() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('groups')
             .select('*')
             .order('created_at', { ascending: false });
@@ -152,8 +152,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getPages() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('pages')
             .select('*')
             .order('created_at', { ascending: false });
@@ -161,8 +161,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getLives() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('lives')
             .select('*')
             .order('started_at', { ascending: false });
@@ -170,8 +170,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getVerificationRequests() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('verification_requests')
             .select('*')
             .order('created_at', { ascending: false });
@@ -179,8 +179,8 @@ class ZukaOwnerAdminEngine {
     }
 
     async getActionLogs() {
-        if (!window.supabase) return [];
-        const { data } = await window.supabase
+        if (!window.supabaseClient) return [];
+        const { data } = await window.supabaseClient
             .from('owner_actions')
             .select('*')
             .order('created_at', { ascending: false })
@@ -190,9 +190,9 @@ class ZukaOwnerAdminEngine {
 
     // Owner Moderation Actions with AI Learning
     async ownerResolveReport(reportId, action, termToLearn = '') {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { data: rep } = await window.supabase
+        const { data: rep } = await window.supabaseClient
             .from('reports')
             .select('*')
             .eq('id', reportId)
@@ -200,7 +200,7 @@ class ZukaOwnerAdminEngine {
 
         if (!rep) return;
 
-        await window.supabase
+        await window.supabaseClient
             .from('reports')
             .update({ status: 'resolved', action_taken: action })
             .eq('id', reportId);
@@ -210,7 +210,7 @@ class ZukaOwnerAdminEngine {
         }
 
         if (action === 'DELETE' && rep.content_id) {
-            await window.supabase
+            await window.supabaseClient
                 .from('posts')
                 .delete()
                 .eq('id', rep.content_id);
@@ -221,9 +221,9 @@ class ZukaOwnerAdminEngine {
 
     // User Controls
     async toggleBanUser(userId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: u } = await window.supabase
+        const { data: u } = await window.supabaseClient
             .from('users')
             .select('username, is_banned')
             .eq('id', userId)
@@ -232,7 +232,7 @@ class ZukaOwnerAdminEngine {
         if (!u) return false;
 
         const nextBanStatus = !u.is_banned;
-        await window.supabase
+        await window.supabaseClient
             .from('users')
             .update({ is_banned: nextBanStatus })
             .eq('id', userId);
@@ -246,9 +246,9 @@ class ZukaOwnerAdminEngine {
     }
 
     async toggleVerifyUser(userId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { data: u } = await window.supabase
+        const { data: u } = await window.supabaseClient
             .from('users')
             .select('username, is_verified')
             .eq('id', userId)
@@ -257,7 +257,7 @@ class ZukaOwnerAdminEngine {
         if (!u) return false;
 
         const nextVerifyStatus = !u.is_verified;
-        await window.supabase
+        await window.supabaseClient
             .from('users')
             .update({ is_verified: nextVerifyStatus })
             .eq('id', userId);
@@ -271,10 +271,10 @@ class ZukaOwnerAdminEngine {
     }
 
     async deleteUserAccount(userId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
         if (!confirm('Are you sure you want to permanently delete this user account from ZUKA?')) return;
 
-        await window.supabase
+        await window.supabaseClient
             .from('users')
             .delete()
             .eq('id', userId);
@@ -284,9 +284,9 @@ class ZukaOwnerAdminEngine {
 
     // Content Controls
     async ownerDeletePost(postId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        await window.supabase
+        await window.supabaseClient
             .from('posts')
             .delete()
             .eq('id', postId);
@@ -295,9 +295,9 @@ class ZukaOwnerAdminEngine {
     }
 
     async ownerHidePost(postId) {
-        if (!window.supabase) return;
+        if (!window.supabaseClient) return;
 
-        const { data: p } = await window.supabase
+        const { data: p } = await window.supabaseClient
             .from('posts')
             .select('is_hidden')
             .eq('id', postId)
@@ -305,7 +305,7 @@ class ZukaOwnerAdminEngine {
 
         if (p) {
             const nextHidden = !p.is_hidden;
-            await window.supabase
+            await window.supabaseClient
                 .from('posts')
                 .update({ is_hidden: nextHidden })
                 .eq('id', postId);

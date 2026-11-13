@@ -64,10 +64,10 @@ window.ZukaSettings = {
         if (confirmText === 'DELETE') {
             const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
             
-            if (currentUser && currentUser.id && window.supabase) {
+            if (currentUser && currentUser.id && window.supabaseClient) {
                 try {
                     // Perform an asynchronous row deletion query directly on your remote Postgres table
-                    const { error } = await window.supabase
+                    const { error } = await window.supabaseClient
                         .from('users')
                         .delete()
                         .eq('id', currentUser.id);

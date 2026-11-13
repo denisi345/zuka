@@ -16,11 +16,11 @@ class ZukaEventsEngine {
     }
 
     async getEvents() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
-        const { data: events, error } = await window.supabase
+        const { data: events, error } = await window.supabaseClient
             .from('events')
             .select('*')
             .order('created_at', { ascending: false });
@@ -34,10 +34,10 @@ class ZukaEventsEngine {
     }
 
     async rsvp(eventId, status = 'going') {
-        if (!window.supabase) return null;
+        if (!window.supabaseClient) return null;
 
         // 1. Fetch current status matrices from the remote event row
-        const { data: ev, error: fetchError } = await window.supabase
+        const { data: ev, error: fetchError } = await window.supabaseClient
             .from('events')
             .select('user_status, going_count, interested_count')
             .eq('id', eventId)
@@ -65,7 +65,7 @@ class ZukaEventsEngine {
         }
 
         // 2. Perform an atomic update on the event tracking fields
-        const { data: updatedEv, error: updateError } = await window.supabase
+        const { data: updatedEv, error: updateError } = await window.supabaseClient
             .from('events')
             .update({
                 user_status: nextStatus,
@@ -81,7 +81,7 @@ class ZukaEventsEngine {
     }
 
     async createEvent({ title, description, date, location, coverUrl }) {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
@@ -101,7 +101,7 @@ class ZukaEventsEngine {
             created_at: new Date().toISOString()
         };
 
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('events')
             .insert([newEvt])
             .select()

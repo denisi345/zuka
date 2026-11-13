@@ -15,14 +15,14 @@ class ZukaFriendsEngine {
     }
 
     async getRequests() {
-        if (!window.supabase) {
+        if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) return [];
 
-        const { data: requests, error } = await window.supabase
+        const { data: requests, error } = await window.supabaseClient
             .from('friend_requests')
             .select('*')
             .eq('recipient_id', currentUser.id)
@@ -38,10 +38,10 @@ class ZukaFriendsEngine {
     }
 
     async acceptRequest(requestId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
         // 1. Fetch request details to resolve the sender's identity
-        const { data: req, error: fetchError } = await window.supabase
+        const { data: req, error: fetchError } = await window.supabaseClient
             .from('friend_requests')
             .select('sender_id, status')
             .eq('id', requestId)
@@ -50,7 +50,7 @@ class ZukaFriendsEngine {
         if (fetchError || !req) return false;
 
         // 2. Perform an atomic database status change
-        const { error: updateError } = await window.supabase
+        const { error: updateError } = await window.supabaseClient
             .from('friend_requests')
             .update({ status: 'accepted' })
             .eq('id', requestId);
@@ -69,9 +69,9 @@ class ZukaFriendsEngine {
     }
 
     async declineRequest(requestId) {
-        if (!window.supabase) return false;
+        if (!window.supabaseClient) return false;
 
-        const { error } = await window.supabase
+        const { error } = await window.supabaseClient
             .from('friend_requests')
             .delete()
             .eq('id', requestId);
@@ -84,21 +84,21 @@ class ZukaFriendsEngine {
     }
 
     async getSuggestions() {
-        if (!window.supabase) return [];
+        if (!window.supabaseClient) return [];
 
         const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
         if (!currentUser) return [];
 
         try {
             // 1. Fetch all users from Supabase
-            const { data: allUsers, error: usersError } = await window.supabase
+            const { data: allUsers, error: usersError } = await window.supabaseClient
                 .from('users')
                 .select('id, full_name, username, avatar_url, work');
 
             if (usersError) throw usersError;
 
             // 2. Fetch relevant friend requests to calculate exclusions
-            const { data: requests, error: requestsError } = await window.supabase
+            const { data: requests, error: requestsError } = await window.supabaseClient
                 .from('friend_requests')
                 .select('sender_id, recipient_id')
                 .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`);
