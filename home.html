@@ -1219,7 +1219,7 @@
                         </div>
                     </div>
                 `;
-            }
+            
             } else if (tab === 'reels') {
                 renderFacebookVideoTab('reels');
             } else if (tab === 'profile') {
@@ -1317,8 +1317,7 @@
                     </div>
                 `;
             }
-        }
-
+        
         function promptPostProduct() {
             const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
             const title = prompt(isSwahili ? 'Kichwa cha bidhaa:' : 'Product Title:');
@@ -1363,6 +1362,8 @@
                     caption: cap
                 });
                 switchMainTab('reels');
+            }
+        }
         function promptEditBio() {
             const b = prompt('Edit your bio:', window.ZukaAuth.getCurrentUser().bio);
             if (b) {
@@ -1852,7 +1853,7 @@
             const list = document.getElementById('sheet-comments-list');
             if (list) list.scrollTop = list.scrollHeight;
         }
-    </script>
-    <script type="module" src="/src/auth.js"></script>
+  </script>
+<script type="module" src="/src/auth.js"></script>
 </body>
 </html>
