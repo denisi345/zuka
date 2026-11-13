@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZUKA - Connect, Share and Discover</title>
+    <meta name="description" content="ZUKA - Facebook-like social super app. Connect with friends and the world around you on ZUKA.">
+    <meta property="og:title" content="ZUKA - Connect, Share and Discover">
+    <meta property="og:description" content="ZUKA helps you connect, buy, watch, and share with the people in your life.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    
+    <!-- Tailwind CSS CDN (Restores full layout, colors, and modal hiding) -->
+    <script src="https://jsdelivr.net"></script>
+    
+    <!-- Supabase JS SDK (Required for window.supabase to initialize) -->
+    <script src="https://jsdelivr.net"></script>
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+    
+    <!-- Eruda Test Tool -->
+    <script src="https://jsdelivr.net"></script>
+    <script>eruda.init();</script>
+</head>
+<body class="bg-[#f0f2f5] min-h-screen flex flex-col justify-between font-sans">
+
+    <div class="flex-1 flex items-center justify-center px-4 py-8 lg:py-16">
+        <div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+
+            <div class="text-center lg:text-left space-y-3">
+                <h1 class="text-5xl sm:text-6xl font-black text-[#1877F2] tracking-tight">zuka</h1>
+                <p data-i18n="login_header_tagline" class="text-xl sm:text-2xl text-gray-800 leading-snug font-normal max-w-md mx-auto lg:mx-0">
+                    ZUKA helps you connect, buy, watch, and share with the people in your life.
+                </p>
+                <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs text-gray-500">
+                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">AI Moderation Protected</span>
+                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">Real-time News Feeds</span>
+                    <span class="bg-blue-50 text-[#1877F2] font-bold px-2.5 py-1 rounded-full border border-blue-200">ZUKA AI Assistant</span>
+                </div>
+            </div>
+
+            <div class="w-full max-w-md mx-auto">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-200 space-y-4">
+                    <form id="zuka-login-form" class="space-y-3.5">
+                        <div>
+                            <input type="text" id="login-identifier" required data-i18n-placeholder="login_input_identifier" placeholder="Email or phone number" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#1877F2] text-sm text-gray-900">
+                        </div>
+                        <div>
+                            <input type="password" id="login-password" required data-i18n-placeholder="login_input_password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#1877F2] text-sm text-gray-900">
+                        </div>
+                        <div id="login-error-alert" class="text-xs text-red-500 font-semibold hidden"></div>
+
+                        <button type="submit" data-i18n="btn_login" class="w-full bg-[#1877F2] hover:bg-blue-600 text-white font-bold py-3 rounded-lg text-base shadow-sm transition cursor-pointer">
+                            Log In
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <a href="javascript:void(0)" data-i18n="link_forgot_password" class="text-xs text-[#1877F2] hover:underline">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <hr class="border-gray-200 my-2">
+
+                    <div class="space-y-2">
+                        <button type="button" onclick="openSignupModal()" data-i18n="btn_create_account" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-2.5 rounded-lg text-xs transition border border-gray-300 cursor-pointer">
+                            Create new account
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center text-xs text-gray-500" data-i18n="create_page_notice">
+                    <strong>Create a Page</strong> for a celebrity, brand or business.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="signup-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl border border-gray-200 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3 border-gray-200">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900" data-i18n="signup_modal_title">Sign Up</h2>
+                    <p class="text-xs text-gray-500" data-i18n="signup_modal_subtitle">It's quick and easy.</p>
+                </div>
+                <button type="button" onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">X</button>
+            </div>
+
+            <form id="zuka-signup-form" class="space-y-3">
+                <div>
+                    <input type="text" id="reg-name" required data-i18n-placeholder="reg_full_name" placeholder="Full Name" class="w-full px-3 py-2 border rounded-lg text-xs">
+                </div>
+                <div>
+                    <input type="text" id="reg-username" required data-i18n-placeholder="reg_username" placeholder="Username (e.g. john_doe)" class="w-full px-3 py-2 border rounded-lg text-xs font-mono">
+                </div>
+                <div>
+                    <input type="email" id="reg-email" required data-i18n-placeholder="reg_email" placeholder="Email address" class="w-full px-3 py-2 border rounded-lg text-xs">
+                </div>
+                <div>
+                    <input type="tel" id="reg-phone" data-i18n-placeholder="reg_phone" placeholder="Mobile phone number" class="w-full px-3 py-2 border rounded-lg text-xs">
+                </div>
+                <div>
+                    <input type="password" id="reg-password" required data-i18n-placeholder="reg_password" placeholder="New password" class="w-full px-3 py-2 border rounded-lg text-xs">
+                </div>
+
+                <p class="text-[10px] text-gray-500 leading-tight" data-i18n="signup_terms_notice">
+                    By clicking Sign Up, you agree to our ZUKA Terms and Community AI Moderation Standards.
+                </p>
+
+                <button type="submit" data-i18n="btn_signup_submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-sm transition cursor-pointer">
+                    Sign Up
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-gray-200 py-6 px-4 text-xs text-gray-500">
+        <div class="max-w-5xl mx-auto space-y-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="cursor-pointer hover:underline font-semibold text-gray-900">English (US)</span>
+            </div>
+
+            <hr class="border-gray-200">
+
+            <div class="flex flex-wrap gap-4 text-[11px] text-gray-500">
+                <span>ZUKA © 2026</span>
+                <a href="javascript:void(0)" class="hover:underline">Privacy</a>
+                <a href="javascript:void(0)" class="hover:underline">Terms</a>
+                <a href="javascript:void(0)" class="hover:underline">Advertising</a>
+                <a href="javascript:void(0)" class="hover:underline">Cookies</a>
+                <a href="javascript:void(0)" class="hover:underline">Help Center</a>
+                <button type="button" onclick="window.ZukaI18n.openLanguageModal()" class="text-[#1877F2] font-semibold hover:underline flex items-center gap-1">
+                    <span data-i18n="menu_language">Language</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core App Scripts -->
+    <script src="/i18n.js"></script>
+    <script src="/supabase.js"></script>
+    <script src="/ai_moderation.js"></script>
+    <script src="/auth.js"></script>
+    
+    <script>
+        const loginForm = document.getElementById('zuka-login-form');
+        const errorAlert = document.getElementById('login-error-alert');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorAlert.classList.add('hidden');
+            const ident = document.getElementById('login-identifier').value;
+            const pass = document.getElementById('login-password').value;
+
+            try {
+                await window.ZukaAuth.login(ident, pass);
+                window.location.href = '/home.html';
+            } catch (err) {
+                errorAlert.innerText = err.message;
+                errorAlert.classList.remove('hidden');
+            }
+        });
+
+        function openSignupModal() {
+            document.getElementById('signup-modal').classList.remove('hidden');
+        }
+
+        function closeSignupModal() {
+            document.getElementById('signup-modal').classList.add('hidden');
+     }
+ 
+         document.getElementById('zuka-signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const full_name = document.getElementById('reg-name').value;
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                await window.ZukaAuth.signup({ full_name, username, email, phone, password });
+                alert('Success! Your ZUKA account has been created.');
+                window.location.href = '/home.html';
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    </script>
+</body>
+</html>
+       

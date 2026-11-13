@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZUKA - Social Super App</title>
+    <!-- Tailwind CSS Browser Bundle -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://jsdelivr.net"></script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] antialiased">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="zuka-top-nav">
+        <!-- Left: Logo & Search -->
+        <div class="flex items-center gap-2">
+            <a href="/home.html" class="zuka-logo-text">
+                <span class="w-10 h-10 bg-[#1877F2] text-white rounded-full flex items-center justify-center font-black text-2xl shadow-sm">Z</span>
+                <span class="hidden sm:inline font-black tracking-tight text-[#1877F2]">ZUKA</span>
+            </a>
+            <div class="relative ml-2">
+                <div class="zuka-search-bar cursor-pointer" onclick="openSearchModal()">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" id="top-search-input" data-i18n-placeholder="search_placeholder" placeholder="Search ZUKA..." class="bg-transparent border-none outline-none w-28 sm:w-48 text-xs sm:text-sm">
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Primary Navigation Tabs (Desktop) -->
+        <div class="zuka-desktop-nav-center hidden md:flex items-center justify-center gap-1 flex-1 max-w-xl mx-4">
+            <div class="zuka-nav-tab active" id="nav-tab-feed" data-i18n-title="nav_feed" title="Home" onclick="switchMainTab('feed')">
+                <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+            <div class="zuka-nav-tab" id="nav-tab-watch" data-i18n-title="nav_watch" title="Watch" onclick="switchMainTab('watch')">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="zuka-nav-tab" id="nav-tab-marketplace" data-i18n-title="nav_marketplace" title="Marketplace" onclick="switchMainTab('marketplace')">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <div class="zuka-nav-tab" id="nav-tab-groups" data-i18n-title="nav_groups" title="Groups" onclick="switchMainTab('groups')">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            </div>
+            <div class="zuka-nav-tab" id="nav-tab-gaming" data-i18n-title="nav_gaming" title="Gaming" onclick="switchMainTab('gaming')">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
+            </div>
+        </div>
+
+        <!-- Right: Icons Only (Messenger + Bell + Profile) -->
+        <div class="flex items-center gap-2">
+            <div class="action-circle-btn" onclick="toggleMessengerDrawer()" title="Messenger">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.909 1.458 5.517 3.738 7.185v3.557l3.418-1.876c.905.251 1.862.388 2.844.388 5.523 0 10-4.145 10-9.254C22 6.145 17.523 2 12 2zm1.054 12.457l-2.709-2.888-5.289 2.888 5.818-6.177 2.774 2.888 5.225-2.888-5.819 6.177z"/></svg>
+                <div class="unread-badge" id="messenger-unread-badge">1</div>
+            </div>
+
+            <div class="action-circle-btn" onclick="toggleNotificationDrawer()" title="Notifications">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <div class="unread-badge" id="notif-badge-count">2</div>
+            </div>
+
+            <div class="relative cursor-pointer" onclick="toggleProfileMenu()">
+                <img id="nav-user-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" alt="Profile">
+            </div>
+        </div>
+    </header>
+    <!-- MAIN BODY GRID (DESKTOP 3 COLUMNS / MOBILE 1 COLUMN) -->
+    <div class="max-w-[1600px] mx-auto px-0 md:px-4 py-4 flex gap-6">
+
+        <!-- LEFT SIDEBAR (DESKTOP) -->
+        <aside class="hidden lg:block w-72 shrink-0 space-y-1 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto pr-2">
+            <div class="zuka-sidebar-link" onclick="switchMainTab('profile')">
+                <img id="left-sidebar-avatar" src="https://unsplash.com" class="w-9 h-9 rounded-full object-cover">
+                <div class="flex-1 truncate">
+                    <div id="left-sidebar-name" class="font-bold text-sm text-gray-900 dark:text-white truncate">John Miller</div>
+                    <div class="text-[11px] text-gray-500" data-i18n="view_your_profile">View your profile</div>
+                </div>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('friends')">
+                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">👥</div>
+                <span data-i18n="menu_friends">Friends</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('groups')">
+                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">🏛️</div>
+                <span data-i18n="menu_groups">Groups</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('marketplace')">
+                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">🏪</div>
+                <span data-i18n="menu_marketplace">Marketplace</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('watch')">
+                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">📺</div>
+                <span data-i18n="menu_watch">Watch & Video</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('reels')">
+                <div class="zuka-sidebar-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600">🎬</div>
+                <span data-i18n="menu_reels">ZUKA Reels</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('memories')">
+                <div class="zuka-sidebar-icon bg-sky-100 dark:bg-sky-900/40 text-sky-600">⏰</div>
+                <span data-i18n="menu_memories">Memories</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('saved')">
+                <div class="zuka-sidebar-icon bg-purple-100 dark:bg-purple-900/40 text-purple-600">🔖</div>
+                <span data-i18n="menu_saved">Saved</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('pages')">
+                <div class="zuka-sidebar-icon bg-amber-100 dark:bg-amber-900/40 text-amber-600">📄</div>
+                <span data-i18n="menu_pages">Pages</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('events')">
+                <div class="zuka-sidebar-icon bg-red-100 dark:bg-red-900/40 text-red-600">📅</div>
+                <span data-i18n="menu_events">Events</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('dating')">
+                <div class="zuka-sidebar-icon bg-pink-100 dark:bg-pink-900/40 text-pink-600">❤️</div>
+                <span data-i18n="menu_dating">ZUKA Dating</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('jobs')">
+                <div class="zuka-sidebar-icon bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600">💼</div>
+                <span data-i18n="menu_jobs">Jobs</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('fundraiser')">
+                <div class="zuka-sidebar-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600">🤝</div>
+                <span data-i18n="menu_fundraiser">Fundraisers</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('ads')">
+                <div class="zuka-sidebar-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600">📢</div>
+                <span data-i18n="menu_ads">Ads Manager</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="window.ZukaI18n.openLanguageModal()">
+                <div class="zuka-sidebar-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600">🌐</div>
+                <span data-i18n="menu_language">Language</span>
+            </div>
+
+            <div class="zuka-sidebar-link" onclick="switchMainTab('settings')">
+                <div class="zuka-sidebar-icon bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">⚙️</div>
+                <span data-i18n="menu_settings">Settings & Privacy</span>
+            </div>
+
+            <hr class="border-gray-300 dark:border-gray-800 my-2">
+
+            <!-- Creator Mode Card -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 rounded-xl shadow-sm text-xs space-y-1">
+                <div class="font-bold flex items-center justify-between">
+                    <span data-i18n="creator_mode_title">Creator Mode</span>
+                    <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded" data-i18n="creator_mode_active">Active</span>
+                </div>
+                <p class="text-white/80 text-[11px]"><span data-i18n="stars_balance">Stars Balance</span>: <span id="sidebar-stars-balance" class="font-bold text-yellow-300">450 ⭐</span></p>
+                <button onclick="openStarsModal()" data-i18n="btn_buy_stars" class="w-full mt-1 bg-white text-blue-600 font-bold py-1 rounded text-center text-[11px] cursor-pointer">
+                    Buy Stars / Cash Out
+                </button>
+            </div>
+        </aside>
+        <!-- CENTER FEED CONTAINER -->
+        <main class="flex-1 max-w-3xl mx-auto px-2 sm:px-3 w-full min-w-0" id="main-view-container">
+
+            <!-- 1. STORIES CAROUSEL -->
+            <div class="mb-4">
+                <div class="stories-container" id="stories-tray">
+                    <!-- Stories injected by stories.js -->
+                </div>
+            </div>
+
+            <!-- 2. CREATE POST BOX -->
+            <div class="zuka-card p-4">
+                <div class="flex items-center gap-3">
+                    <img id="create-post-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover">
+                    <div onclick="openCreatePostModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full py-2.5 px-4 text-xs sm:text-sm text-gray-500 cursor-pointer transition">
+                        <span id="create-post-prompt">What's on your mind, John?</span>
+                    </div>
+                </div>
+
+                <hr class="border-gray-200 dark:border-gray-800 my-3">
+
+                <div class="flex items-center justify-around text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    <button onclick="openLiveModal()" class="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition text-red-500 cursor-pointer">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        <span data-i18n="btn_live_video">Live video</span>
+                    </button>
+                    <button onclick="openCreatePostModal('image')" class="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition text-emerald-500 cursor-pointer">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                        <span data-i18n="btn_photo_video">Photo/video</span>
+                    </button>
+                    <button onclick="openCreatePostModal('feeling')" class="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition text-amber-500 cursor-pointer">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                        <span data-i18n="btn_feeling_activity">Feeling/activity</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. FEED POSTS LIST -->
+            <div id="feed-posts-container" class="space-y-4">
+                <!-- Posts rendered here -->
+            </div>
+        </main>
+
+        <!-- RIGHT SIDEBAR (DESKTOP) -->
+        <aside class="hidden xl:block w-80 shrink-0 space-y-4 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto pl-2">
+            <!-- Sponsored Section -->
+            <div class="zuka-card p-3">
+                <div class="flex items-center justify-between text-xs text-gray-500 font-bold mb-2">
+                    <span data-i18n="sidebar_sponsored">Sponsored</span>
+                    <button onclick="switchMainTab('ads')" data-i18n="sidebar_create_ad" class="text-blue-600 hover:underline">Create Ad</button>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <img src="https://unsplash.com" class="w-20 h-16 rounded-lg object-cover">
+                    <div>
+                        <div class="font-bold text-xs text-gray-900 dark:text-white leading-tight">Toyota Harrier 2026 Special Edition</div>
+                        <p class="text-[11px] text-gray-500 mt-1">globalmotors.com</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts / Messenger List -->
+            <div class="zuka-card p-3">
+                <div class="flex items-center justify-between text-xs text-gray-500 font-bold mb-3">
+                    <span data-i18n="sidebar_contacts">Contacts (Messenger)</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openChatWith('zuka_ai_contact')" class="text-[11px] text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded font-bold">🤖 ZUKA AI</button>
+                    </div>
+                </div>
+
+                <div class="space-y-1" id="contacts-list-container">
+                    <!-- Contacts rendered by chat.js -->
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="zuka-mobile-bottom-bar">
+        <button onclick="switchMainTab('feed')" class="mob-nav-item active" id="mob-tab-feed" title="Home" aria-label="Home">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        </button>
+        <button onclick="switchMainTab('watch')" class="mob-nav-item" id="mob-tab-watch" title="Video" aria-label="Video">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </button>
+        <button onclick="switchMainTab('marketplace')" class="mob-nav-item" id="mob-tab-marketplace" title="Shop" aria-label="Shop">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </button>
+        <button onclick="switchMainTab('groups')" class="mob-nav-item" id="mob-tab-groups" title="Groups" aria-label="Groups">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </button>
+        <button onclick="toggleNotificationDrawer()" class="mob-nav-item" id="mob-tab-notifications" title="Notifications" aria-label="Notifications">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        </button>
+        <button onclick="switchMainTab('profile')" class="mob-nav-item" id="mob-tab-profile" title="Menu" aria-label="Menu">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+    </nav>
+    <!-- CREATE POST MODAL -->
+    <div id="create-post-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                <h3 class="font-bold text-base text-gray-900 dark:text-white text-center flex-1" data-i18n="create_post_modal_title">Create post</h3>
+                <button onclick="closeModal('create-post-modal')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">✕</button>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <div class="flex items-center gap-3">
+                    <img id="modal-post-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover">
+                    <div>
+                        <div id="modal-post-name" class="font-bold text-sm text-gray-900 dark:text-white">John Miller</div>
+                        <select id="post-privacy-select" class="text-[11px] bg-gray-100 dark:bg-gray-800 border-none rounded px-2 py-0.5 mt-0.5 text-gray-600 dark:text-gray-300">
+                            <option value="public" data-i18n="privacy_public">🌍 Public</option>
+                            <option value="friends" data-i18n="privacy_friends">👥 Friends</option>
+                            <option value="only_me" data-i18n="privacy_only_me">🔒 Only me</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Textarea -->
+                <textarea id="post-content-textarea" rows="4" data-i18n-placeholder="post_textarea_placeholder" placeholder="What's on your mind? Share your thoughts..." class="w-full bg-transparent border-none outline-none resize-none text-base text-gray-900 dark:text-white placeholder-gray-400"></textarea>
+
+                <!-- AI Helper Button -->
+                <div class="flex items-center gap-2">
+                    <button onclick="aiHelpWritePost()" data-i18n="btn_ai_write" class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1.5 hover:bg-blue-100 transition cursor-pointer">
+                        ✨ ZUKA AI Writing Assistant
+                    </button>
+                </div>
+
+                <!-- Media Preview Area -->
+                <div id="post-media-preview" class="relative rounded-lg overflow-hidden hidden max-h-56">
+                    <img id="post-preview-img" src="" class="w-full h-full object-cover">
+                    <button onclick="clearPostMedia()" class="absolute top-2 right-2 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center">✕</button>
+                </div>
+
+                <!-- Media Action Bar -->
+                <div class="border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300" data-i18n="add_to_post">Add to your post:</span>
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer text-emerald-500 hover:scale-110 transition" title="Add Photo">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                            <input type="file" id="post-file-input" accept="image/*" class="hidden" onchange="handlePostMediaSelect(this)">
+                        </label>
+                        <button onclick="promptPollCreate()" class="text-blue-500 hover:scale-110 transition cursor-pointer" title="Create Poll">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </button>
+                        <button onclick="promptFeeling()" class="text-amber-500 hover:scale-110 transition cursor-pointer" title="Feeling/Activity">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm-3.5-9a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm7 0a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm-3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="submitNewPost()" id="submit-post-btn" data-i18n="btn_post_submit" class="w-full bg-[#1877F2] hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow-sm transition cursor-pointer">
+                    Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE STREAM MODAL -->
+    <div id="live-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-950 w-full max-w-2xl rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col">
+            <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-600 animate-pulse"></span>
+                    <h3 class="font-bold text-white text-base">ZUKA Live Studio</h3>
+                    <span id="live-viewers-badge" class="text-xs bg-red-600/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold">👁️ 0 Watching</span>
+                </div>
+                <button onclick="window.ZukaLive.endBroadcast(); closeModal('live-modal');" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg cursor-pointer">
+                    End Live Broadcast
+                </button>
+            </div>
+
+            <!-- Video Feed -->
+            <div class="relative bg-black aspect-video flex items-center justify-center overflow-hidden">
+                <video id="live-broadcast-video" class="w-full h-full object-cover" autoplay playsinline muted></video>
+                <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between pointer-events-none">
+                    <div id="live-comments-stream" class="space-y-1.5 max-h-36 overflow-y-auto pointer-events-auto">
+                        <div class="bg-black/60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">Emily: Welcome to the live stream! 🔥</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="p-4 bg-gray-900 flex items-center gap-3">
+                <input type="text" id="live-comment-input" placeholder="Say something live..." class="flex-1 bg-gray-950 border border-gray-800 rounded-full px-4 py-2 text-xs text-white outline-none">
+                <button onclick="sendLiveCommentBtn()" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-full cursor-pointer">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WEBRTC CALL MODAL (VOICE & VIDEO) -->
+    <div id="zuka-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 hidden">
+        <div class="max-w-md w-full bg-gray-900 border border-gray-800 rounded-3xl p-6 text-center space-y-6 shadow-2xl">
+            <div class="relative w-28 h-28 mx-auto">
+                <img id="call-avatar" src="https://unsplash.com" class="w-28 h-28 rounded-full object-cover border-4 border-blue-500 shadow-xl">
+                <div class="absolute inset-0 rounded-full border-4 border-blue-400 animate-ping opacity-30"></div>
+            </div>
+            <div>
+                <h3 id="call-contact-name" class="text-2xl font-bold text-white">Sarah Jenkins</h3>
+                <p id="call-type-label" class="text-sm text-blue-400 font-mono mt-1">Connecting HD Call...</p>
+            </div>
+
+            <!-- Video Preview Container -->
+            <div class="relative aspect-video bg-black rounded-2xl overflow-hidden border border-gray-800">
+                <video id="local-call-video" class="w-full h-full object-cover" autoplay playsinline></video>
+            </div>
+
+            <!-- Call Controls -->
+            <div class="flex items-center justify-center gap-6 pt-2">
+                <button onclick="window.ZukaCalls.toggleMute()" class="w-12 h-12 rounded-full bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center text-lg shadow-md cursor-pointer">
+                    🎤
+                </button>
+                <button onclick="window.ZukaCalls.endCall()" class="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center text-2xl shadow-xl shadow-red-600/40 cursor-pointer">
+                    ☎️
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- FLOATING ROUND ZUKA AI BUTTON (BOTTOM-RIGHT) -->
+    <button id="zuka-floating-ai-trigger" onclick="toggleZukaAIChat()" class="zuka-floating-ai-btn" title="Chat with ZUKA AI" aria-label="Open ZUKA AI Chat">
+        <span class="text-2xl select-none">🤖</span>
+        <span class="online-indicator" style="bottom: 3px; right: 3px;"></span>
+    </button>
+
+    <!-- ZUKA AI & MESSENGER POPUP -->
+    <div id="messenger-chat-drawer" class="zuka-ai-popup hidden" role="dialog" aria-label="ZUKA AI Chat">
+        <div class="bg-[#1877F2] text-white px-4 py-3 rounded-t-2xl flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="relative">
+                    <img id="chat-header-avatar" src="https://unsplash.com" class="w-8 h-8 rounded-full object-cover border border-white/40">
+                    <span class="online-indicator"></span>
+                </div>
+                <div>
+                    <div id="chat-header-name" class="font-bold text-xs leading-tight">ZUKA AI 🤖</div>
+                    <div id="chat-header-status" class="text-[10px] text-blue-100" data-i18n="chat_online">Active now</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="triggerCallFromChat('video')" title="Video Call" class="hover:bg-blue-600 p-1 rounded cursor-pointer">📹</button>
+                <button onclick="triggerCallFromChat('voice')" title="Voice Call" class="hover:bg-blue-600 p-1 rounded cursor-pointer">📞</button>
+                <button onclick="closeZukaAIChat()" title="Close chat" class="hover:bg-blue-600 p-1 rounded cursor-pointer font-bold text-sm leading-none">✕</button>
+            </div>
+        </div>
+
+        <div class="flex-1 p-3 overflow-y-auto space-y-2 bg-[#f0f2f5] dark:bg-gray-900" id="chat-messages-container">
+            <!-- Messages dynamically rendered here -->
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="p-2 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center gap-1.5">
+            <button onclick="openZukaPayModal()" data-i18n-title="btn_zuka_pay" title="Send Money (ZUKA Pay)" class="text-emerald-500 p-1 text-base cursor-pointer">💸</button>
+            <input type="text" id="chat-input-field" data-i18n-placeholder="chat_input_placeholder" placeholder="Type a message..." class="flex-1 bg-gray-100 dark:bg-gray-800 border-none rounded-full px-3 py-1.5 text-xs outline-none text-gray-900 dark:text-white" onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <button onclick="sendChatMessage()" class="text-blue-600 font-bold p-1 text-sm cursor-pointer">➤</button>
+        </div>
+    </div>
+
+    <!-- ZUKA PAY SEND MONEY MODAL -->
+    <div id="zuka-pay-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-5 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base text-gray-900 dark:text-white">ZUKA Pay - Send Money</h3>
+                <button onclick="closeModal('zuka-pay-modal')">✕</button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Amount ($ / TZS)</label>
+                <input type="number" id="pay-amount-input" placeholder="25" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2.5 font-bold text-lg text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Payment Method</label>
+                <select id="pay-provider-select" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-xs">
+                    <option value="Card">Credit / Debit Card (Visa/Mastercard)</option>
+                    <option value="M-Pesa">Vodacom M-Pesa</option>
+                    <option value="Tigo Pesa">Tigo Pesa</option>
+                    <option value="Airtel Money">Airtel Money</option>
+                </select>
+            </div>
+            <button onclick="executeZukaPay()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-sm cursor-pointer">
+                Confirm & Send Money
+            </button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION DRAWER POPUP -->
+    <div id="notification-drawer" class="fixed top-14 right-4 sm:right-16 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 p-4 hidden max-h-[500px] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
+            <h3 class="font-bold text-base text-gray-900 dark:text-white" data-i18n="notifications_title">Notifications</h3>
+            <button onclick="window.ZukaNotifications.markAllAsRead(); renderNotifications();" data-i18n="btn_mark_all_read" class="text-xs text-blue-600 hover:underline cursor-pointer">Mark all as read</button>
+        </div>
+        <div class="divide-y divide-gray-100 dark:divide-gray-800" id="notification-items-container">
+            <!-- Notifications injected here -->
+        </div>
+    </div>
+
+    <!-- USER PROFILE MENU POPUP -->
+    <div id="profile-menu-popup" class="fixed top-14 right-4 w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 p-3 hidden">
+        <div class="p-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 cursor-pointer" onclick="switchMainTab('profile'); toggleProfileMenu();">
+            <img id="dropdown-avatar" src="https://unsplash.com" class="w-12 h-12 rounded-full object-cover">
+            <div>
+                <div id="dropdown-name" class="font-bold text-sm text-gray-900 dark:text-white">John Miller</div>
+                <div class="text-xs text-blue-600" data-i18n="view_your_profile">View your profile</div>
+            </div>
+        </div>
+        <div class="py-2 space-y-1">
+            <div class="zuka-sidebar-link text-xs" onclick="window.ZukaI18n.openLanguageModal()">
+                <span>🌐</span>
+                <span data-i18n="menu_switch_lang">Language (Lugha)</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="window.ZukaSettings.toggleDarkMode()">
+                <span>🌙</span>
+                <span data-i18n="menu_dark_mode">Dark mode</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="openBlueTickRequestModal()">
+                <span>🎖️</span>
+                <span data-i18n="menu_bluetick">Request Blue Tick Verification</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('settings')">
+                <span>⚙️</span>
+                <span data-i18n="menu_settings">Settings & Privacy</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs text-red-600" onclick="window.ZukaAuth.logout()">
+                <span>🚪</span>
+                <span data-i18n="menu_logout">Log Out</span>
+            </div>
+        </div>
+    </div>
+    <!-- BLUE TICK VERIFICATION MODAL -->
+    <div id="bluetick-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                    🎖️ Request Verified Badge (Blue Tick)
+                </h3>
+                <button onclick="closeModal('bluetick-modal')">✕</button>
+            </div>
+            <p class="text-xs text-gray-500">Confirm you are an authentic creator, public figure, or registered organization.</p>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <select id="verif-cat-select" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-xs">
+                    <option value="Content Creator">Content Creator / Digital Influencer</option>
+                    <option value="Business">Business / Brand</option>
+                    <option value="Public Figure">Public Figure / Leader</option>
+                    <option value="Artist">Artist / Musician</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Reason for Verification</label>
+                <textarea id="verif-reason-textarea" rows="3" placeholder="Explain why your account should be verified..." class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-xs"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Government ID / Business Document</label>
+                <input type="file" id="verif-doc-input" class="text-xs text-gray-500">
+            </div>
+            <button onclick="submitVerificationForm()" class="w-full bg-[#1877F2] text-white font-bold py-2 rounded-lg text-xs cursor-pointer">
+                Submit Request to ZUKA Owner
+            </button>
+        </div>
+    </div>
+
+    <!-- VIDEO / REELS COMMENTS BOTTOM SHEET (70% HEIGHT) -->
+    <div id="video-comments-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl flex flex-col transition-transform duration-300 transform translate-y-full max-w-lg mx-auto border-t border-gray-200 dark:border-gray-800 h-[70%] max-h-[85vh]">
+        <div class="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto my-2.5 shrink-0"></div>
+        <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
+            <h3 class="font-bold text-sm text-gray-900 dark:text-white" id="sheet-comments-count-title">Comments</h3>
+            <button onclick="closeVideoCommentsSheet()" class="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 text-lg font-bold leading-none cursor-pointer">✕</button>
+        </div>
+        <div id="sheet-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3.5"></div>
+        <div class="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 flex items-center gap-2 shrink-0">
+            <img id="sheet-input-avatar" src="https://unsplash.com" class="w-8 h-8 rounded-full object-cover">
+            <input type="text" id="sheet-comment-input" placeholder="Add a comment..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" onkeydown="if(event.key==='Enter') submitVideoComment()">
+            <button onclick="submitVideoComment()" class="text-[#1877F2] font-bold text-xs px-3 py-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/40 cursor-pointer">Post</button>
+        </div>
+    </div>
+    <div id="video-comments-backdrop" onclick="closeVideoCommentsSheet()" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity"></div>
+
+    <!-- ALL APPLICATION JAVASCRIPT MODULES -->
+    <script src="/i18n.js"></script>
+    <script src="/supabase.js"></script>
+    <script src="/ai_moderation.js"></script>
+    <script src="/ai_news.js"></script>
+    <script src="/zuka_ai_chat.js"></script>
+    <script src="/ai.js"></script>
+    <script src="/auth.js"></script>
+    <script src="/feed.js"></script>
+    <script src="/stories.js"></script>
+    <script src="/reels.js"></script>
+    <script src="/watch.js"></script>
+    <script src="/chat.js"></script>
+    <script src="/calls.js"></script>
+    <script src="/group.js"></script>
+    <script src="/group_chat.js"></script>
+    <script src="/pages.js"></script>
+    <script src="/marketplace.js"></script>
+    <script src="/shop.js"></script>
+    <script src="/live.js"></script>
+    <script src="/gaming.js"></script>
+    <script src="/events.js"></script>
+    <script src="/jobs.js"></script>
+    <script src="/fundraiser.js"></script>
+    <script src="/dating.js"></script>
+    <script src="/notifications.js"></script>
+    <script src="/search.js"></script>
+    <script src="/profile.js"></script>
+    <script src="/friends.js"></script>
+    <script src="/saved.js"></script>
+    <script src="/memories.js"></script>
+    <script src="/music.js"></script>
+    <script src="/verification.js"></script>
+    <script src="/monetization.js"></script>
+    <script src="/ads.js"></script>
+    <script src="/settings.js"></script>
+    <!-- CORE UI CONTROLLER -->
+    <script>
+        let attachedMediaUrl = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            syncUserData();
+            updateLangBadge();
+            renderStories();
+            renderFeed();
+            renderContacts();
+            renderNotifications();
+        });
+
+        window.addEventListener('zuka:language_changed', (e) => {
+            updateLangBadge();
+            syncUserData();
+            renderStories();
+            renderFeed();
+            renderContacts();
+            renderNotifications();
+        });
+
+        function updateLangBadge() {
+            const code = window.ZukaI18n ? window.ZukaI18n.getLanguage() : 'en';
+            const badge = document.getElementById('header-current-lang-code');
+            if (badge) badge.innerText = code.toUpperCase();
+        }
+
+        function syncUserData() {
+            const user = window.ZukaAuth.getCurrentUser();
+            if (!user) return;
+
+            const t = (k, p) => window.ZukaI18n ? window.ZukaI18n.t(k, p) : k;
+
+            document.getElementById('nav-user-avatar').src = user.avatar_url;
+            document.getElementById('left-sidebar-avatar').src = user.avatar_url;
+            document.getElementById('left-sidebar-name').innerText = user.full_name;
+            document.getElementById('create-post-avatar').src = user.avatar_url;
+
+            const promptText = t('whats_on_your_mind', { name: user.full_name.split(' ')[0] });
+            const promptEl = document.getElementById('create-post-prompt');
+            if (promptEl) promptEl.innerText = promptText;
+
+            document.getElementById('modal-post-avatar').src = user.avatar_url;
+            document.getElementById('modal-post-name').innerText = user.full_name;
+            document.getElementById('dropdown-avatar').src = user.avatar_url;
+            document.getElementById('dropdown-name').innerText = user.full_name;
+            document.getElementById('sidebar-stars-balance').innerText = `${user.stars_balance || 0} ⭐`;
+        }
+
+        function renderStories() {
+            const stories = window.ZukaStories.getStories();
+            const currentUser = window.ZukaAuth.getCurrentUser();
+            const tray = document.getElementById('stories-tray');
+            if (!tray) return;
+
+            const t = (k) => window.ZukaI18n ? window.ZukaI18n.t(k) : k;
+
+            tray.innerHTML = `
+                <div onclick="openCreateStoryModal()" class="story-card bg-white dark:bg-gray-800 flex flex-col justify-between border border-gray-200 dark:border-gray-800">
+                    <img src="${currentUser ? currentUser.avatar_url : ''}" class="w-full h-32 object-cover">
+                    <div class="relative flex flex-col items-center justify-center p-2 bg-white dark:bg-gray-800 flex-1">
+                        <div class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-bold text-lg -mt-6 border-2 border-white dark:border-gray-800">+</div>
+                        <span class="text-[11px] font-bold text-gray-800 dark:text-white mt-1">${t('story_create_title')}</span>
+                    </div>
+                </div>
+                ${stories.map(s => `
+                    <div onclick="viewStory('${s.id}')" class="story-card" style="background-image: url('${s.media_url}')">
+                        <div class="story-avatar-ring">
+                            <img src="${s.user_avatar}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="story-overlay"></div>
+                        <div class="story-owner-name">${s.user_name}</div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        function renderFeed() {
+            const posts = window.ZukaFeed.getFeedPosts();
+            const container = document.getElementById('feed-posts-container');
+            if (!container) return;
+
+            container.innerHTML = posts.map(p => `
+                <div class="zuka-card" id="post-${p.id}">
+                    <div class="p-3.5 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img src="${p.author_avatar || p.page_avatar}" class="w-10 h-10 rounded-full object-cover">
+                            <div>
+                                <div class="zuka-post-author-name flex items-center gap-1">
+                                    <span>${p.author_name || p.page_name}</span>
+                                    ${p.is_verified ? '<span class="blue-tick-badge" title="Verified Account">✓</span>' : ''}
+                                    ${p.feeling ? `<span class="text-xs font-normal text-gray-500">${p.feeling}</span>` : ''}
+                                </div>
+                                <div class="zuka-post-meta flex items-center gap-1">
+                                    <span>${p.location_tag ? `${p.location_tag} • ` : ''}${new Date(p.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    <span>•</span>
+                                    <span>${p.source_attribution || '🌍'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="openPostOptions('${p.id}')" class="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full cursor-pointer">•••</button>
+                    </div>
+
+                    <div class="px-3.5 pb-2.5 zuka-post-body-text whitespace-pre-line leading-relaxed">
+                        ${p.content}
+                    </div>
+
+                    ${p.media_url ? `
+                        <div class="zuka-post-media-container">
+                            ${p.media_type === 'video' ? `
+                                <video src="${p.media_url}" controls class="w-full max-h-[540px] object-cover"></video>
+                            ` : `
+                                <img src="${p.media_url}" class="w-full max-h-[540px] object-cover">
+                            `}
+                        </div>
+                    ` : ''}
+
+                    ${p.poll_data ? `
+                        <div class="p-4 mx-3 my-2 bg-gray-50 dark:bg-gray-800/60 rounded-xl space-y-2 border border-gray-200 dark:border-gray-700">
+                            <div class="font-bold text-xs uppercase tracking-wider text-blue-600">${p.poll_data.question}</div>
+                            ${p.poll_data.options.map((opt, idx) => {
+                                const pct = p.poll_data.total_votes > 0 ? Math.round((opt.votes / p.poll_data.total_votes) * 100) : 0;
+                                return `
+                                    <div onclick="votePollOption('${p.id}', ${idx})" class="cursor-pointer relative overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2.5 flex items-center justify-between text-xs font-semibold">
+                                        <div class="absolute inset-0 bg-blue-500/15" style="width: ${pct}%"></div>
+                                        <span class="relative z-10">${opt.text}</span>
+                                        <span class="relative z-10 font-bold">${pct}% (${opt.votes})</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                            <div class="text-[11px] text-gray-500 text-right">${p.poll_data.total_votes || 0} votes</div>
+                        </div>
+                    ` : ''}
+
+                    <div class="px-3.5 py-2 flex items-center justify-between text-xs text-gray-500 border-b border-gray-100 dark:border-gray-800">
+                        <div class="flex items-center gap-1">
+                            <span>👍❤️</span>
+                            <span id="likes-count-${p.id}">${p.likes_count || 0}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span onclick="openPostCommentsSheet('${p.id}')" class="cursor-pointer hover:underline">${p.comments_count || 0} Comments</span>
+                            <span>${p.shares_count || 0} Shares</span>
+                        </div>
+                    </div>
+
+                    <div class="zuka-post-actions-row">
+                        <div class="relative like-btn-container flex-1">
+                            <div class="reaction-popover">
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'like')">👍</span>
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'love')">❤️</span>
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'care')">🥰</span>
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'haha')">😆</span>
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'wow')">😮</span>
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'sad')">😢</span>
+                                <span class="reaction-icon" onclick="reactTo('${p.id}', 'angry')">😡</span>
+                            </div>
+                            <button onclick="reactTo('${p.id}', 'like')" class="zuka-post-action-btn ${p.user_reaction ? '!text-[#1877F2]' : ''}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/></svg>
+                                <span>${p.user_reaction ? p.user_reaction.toUpperCase() : 'Like'}</span>
+                            </button>
+                        </div>
+
+                        <button onclick="openPostCommentsSheet('${p.id}')" class="zuka-post-action-btn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                            <span>Comment</span>
+                        </button>
+
+                        <button onclick="sharePost('${p.id}')" class="zuka-post-action-btn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function renderContacts() {
+            const contacts = window.ZukaChat.getContacts();
+            const container = document.getElementById('contacts-list-container');
+            if (!container) return;
+
+            container.innerHTML = contacts.map(c => `
+                <div onclick="openChatWith('${c.id}')" class="zuka-sidebar-link !py-2 !px-2 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <div class="relative shrink-0">
+                            <img src="${c.avatar}" class="w-8 h-8 rounded-full object-cover">
+                            ${c.is_online ? '<span class="online-indicator"></span>' : ''}
+                        </div>
+                        <div class="truncate">
+                            <div class="font-bold text-xs truncate text-gray-900 dark:text-white">${c.name}</div>
+                            <div class="text-[10px] text-gray-500 truncate">${c.last_msg}</div>
+                        </div>
+                    </div>
+                    ${c.unread ? `<span class="bg-[#1877F2] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">${c.unread}</span>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderNotifications() {
+            const notifs = window.ZukaNotifications.getNotifications();
+            const unread = window.ZukaNotifications.getUnreadCount();
+            const badge = document.getElementById('notif-badge-count');
+            if (badge) badge.innerText = unread;
+
+            const container = document.getElementById('notification-items-container');
+            if (!container) return;
+
+            container.innerHTML = notifs.map(n => `
+                <div class="py-2.5 flex items-start gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1.5 rounded-lg ${!n.is_read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}">
+                    <img src="${n.actor_avatar}" class="w-9 h-9 rounded-full object-cover">
+                    <div class="flex-1 text-xs">
+                        <p class="text-gray-900 dark:text-gray-200">
+                            <span class="font-bold">${n.actor_name}</span> ${n.content}
+                        </p>
+                        <span class="text-[10px] text-blue-500 font-semibold">${n.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openCreatePostModal(type) {
+            document.getElementById('create-post-modal').classList.remove('hidden');
+            if (type === 'image') {
+                document.getElementById('post-file-input').click();
+            } else if (type === 'feeling') {
+                promptFeeling();
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function handlePostMediaSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    attachedMediaUrl = e.target.result;
+                    document.getElementById('post-preview-img').src = attachedMediaUrl;
+                    document.getElementById('post-media-preview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function clearPostMedia() {
+            attachedMediaUrl = null;
+            document.getElementById('post-media-preview').classList.add('hidden');
+        }
+
+        async function aiHelpWritePost() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const promptQ = isSwahili 
+                ? 'Unataka chapisho lako lizungumzie nini? (Mfano: Biashara, Mafanikio, Ushauri, Michezo)'
+                : 'What should your post be about? (e.g., Tech, Daily Motivation, Business, Sports)';
+            const defaultTopic = isSwahili ? 'Mafanikio maishani' : 'Building success together';
+            
+            const topic = prompt(promptQ, defaultTopic);
+            if (!topic) return;
+            const caption = await window.ZukaAI.generatePostCaption(topic, 'energetic');
+            document.getElementById('post-content-textarea').value = caption;
+        }
+
+        function promptPollCreate() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const q = prompt(isSwahili ? 'Weka swali la kura (Poll Question):' : 'Enter poll question:', isSwahili ? 'Ni jambo gani la kwanza unalofanya asubuhi?' : 'What is your favorite weekend activity?');
+            if (!q) return;
+            const opt1 = prompt(isSwahili ? 'Chaguo la 1:' : 'Option 1:', isSwahili ? 'Kusali / Kushukuru' : 'Exploring nature / Outdoors');
+            const opt2 = prompt(isSwahili ? 'Chaguo la 2:' : 'Option 2:', isSwahili ? 'Kuangalia ZUKA!' : 'Relaxing with friends on ZUKA');
+            if (opt1 && opt2) {
+                window.currentPollDraft = {
+                    question: q,
+                    options: [
+                        { text: opt1, votes: 0 },
+                        { text: opt2, votes: 0 }
+                    ],
+                    total_votes: 0
+                };
+                document.getElementById('post-content-textarea').value += `\n[📊 POLL: ${q}]`;
+            }
+        }
+
+        function promptFeeling() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const f = prompt(isSwahili ? 'Una hisia gani leo?' : 'How are you feeling today?', isSwahili ? '😊 akiwa na furaha tele' : '😊 feeling energized and happy');
+            if (f) {
+                window.currentFeelingDraft = f;
+            }
+        }
+
+        async function submitNewPost() {
+            const content = document.getElementById('post-content-textarea').value.trim();
+            const privacy = document.getElementById('post-privacy-select').value;
+
+            if (!content && !attachedMediaUrl) {
+                const alertMsg = (window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw')
+                    ? 'Tafadhali andika maneno au weka picha.'
+                    : 'Please enter text or upload a photo to post.';
+                alert(alertMsg);
+                return;
+            }
+
+            try {
+                await window.ZukaFeed.createPost({
+                    content,
+                    mediaUrl: attachedMediaUrl,
+                    privacy,
+                    feeling: window.currentFeelingDraft || null,
+                    pollData: window.currentPollDraft || null
+                });
+
+                document.getElementById('post-content-textarea').value = '';
+                clearPostMedia();
+                window.currentFeelingDraft = null;
+                window.currentPollDraft = null;
+                closeModal('create-post-modal');
+                renderFeed();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+        function reactTo(postId, reactionType) {
+            window.ZukaFeed.reactToPost(postId, reactionType);
+            renderFeed();
+        }
+
+        function submitComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            if (!input || !input.value.trim()) return;
+
+            try {
+                window.ZukaFeed.addComment(postId, input.value.trim());
+                input.value = '';
+                renderFeed();
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        function votePollOption(postId, optionIdx) {
+            window.ZukaFeed.votePoll(postId, optionIdx);
+            renderFeed();
+        }
+
+        async function sharePost(postId) {
+            const msg = (window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw')
+                ? 'Chapisho limeshirikiwa kwenye ukuta wako wa ZUKA!'
+                : 'Post shared to your ZUKA timeline!';
+            
+            if (window.ZukaFeed && typeof window.ZukaFeed.sharePost === 'function') {
+                await window.ZukaFeed.sharePost(postId);
+            } else if (window.supabaseClient) {
+                const posts = window.ZukaFeed.getFeedPosts();
+                const p = posts.find(item => item.id === postId);
+                if (p) {
+                    const newCount = (p.shares_count || 0) + 1;
+                    p.shares_count = newCount;
+                    await window.supabaseClient.from('posts').update({ shares_count: newCount }).eq('id', postId);
+                }
+            }
+            alert(msg);
+            renderFeed();
+        }
+
+        function openPostOptions(postId) {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const choicePrompt = isSwahili 
+                ? 'Chagua hatua:\n1. Hifadhi (Save Post)\n2. Ripoti kwa Mmiliki (Report Post)\n3. Futa (Delete)'
+                : 'Choose action:\n1. Save Post\n2. Report to ZUKA Owner\n3. Delete Post';
+
+            const choice = prompt(choicePrompt, '1');
+            if (choice === '1') {
+                window.ZukaFeed.savePost(postId);
+                alert(isSwahili ? 'Chapisho limehifadhiwa kwenye "Saved"!' : 'Post saved to your bookmarks!');
+            } else if (choice === '2') {
+                const reason = prompt(isSwahili ? 'Sababu ya kuripoti:' : 'Reason for report:');
+                if (reason) window.ZukaFeed.reportPost(postId, reason);
+                alert(isSwahili ? 'Ripoti imetumwa kwa siri kwa Mmiliki wa ZUKA!' : 'Secret report delivered to ZUKA Owner!');
+            } else if (choice === '3') {
+                try {
+                    window.ZukaFeed.deletePost(postId);
+                    renderFeed();
+                } catch (e) {
+                    alert(e.message);
+                }
+            }
+        }
+
+        async function openLiveModal() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const title = prompt(
+                isSwahili ? 'Kichwa cha Mubashara (Live Broadcast Title):' : 'Live Broadcast Title:',
+                isSwahili ? 'Mazungumzo ya Moja kwa Moja na Wadau wa ZUKA' : 'Live Community Stream - Let\'s chat!'
+            );
+            if (!title) return;
+            try {
+                await window.ZukaLive.startBroadcast(title);
+                document.getElementById('live-modal').classList.remove('hidden');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        function sendLiveCommentBtn() {
+            const input = document.getElementById('live-comment-input');
+            if (!input || !input.value.trim()) return;
+            const newC = window.ZukaLive.sendLiveComment(input.value.trim());
+            const stream = document.getElementById('live-comments-stream');
+            if (stream) {
+                stream.innerHTML += `<div class="bg-black/60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">${newC.name}: ${newC.text}</div>`;
+            }
+            input.value = '';
+        }
+
+        function openChatWith(contactId) {
+            window.activeContact = contactId;
+            const contacts = window.ZukaChat.getContacts();
+            const contact = contacts.find(c => c.id === contactId) || { name: 'User', avatar: '' };
+
+            const nameEl = document.getElementById('chat-header-name');
+            const avatarEl = document.getElementById('chat-header-avatar');
+            if (nameEl) nameEl.innerText = contact.name;
+            if (avatarEl) avatarEl.src = contact.avatar;
+
+            const drawer = document.getElementById('messenger-chat-drawer');
+            if (drawer) drawer.classList.remove('hidden');
+            renderChatMessages();
+        }
+
+        function closeZukaAIChat() {
+            const drawer = document.getElementById('messenger-chat-drawer');
+            if (drawer) drawer.classList.add('hidden');
+        }
+
+        function toggleZukaAIChat() {
+            const drawer = document.getElementById('messenger-chat-drawer');
+            if (!drawer) return;
+            if (drawer.classList.contains('hidden')) {
+                openChatWith('zuka_ai_contact');
+            } else {
+                closeZukaAIChat();
+            }
+        }
+
+        function toggleMessengerDrawer() {
+            toggleZukaAIChat();
+        }
+
+        function renderChatMessages() {
+            const messages = window.ZukaChat.getMessages(window.activeContact || 'zuka_ai_contact');
+            const container = document.getElementById('chat-messages-container');
+            if (!container) return;
+
+            container.innerHTML = messages.map(m => {
+                const isMe = m.sender_id === 'me';
+                return `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        <div class="max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-[#1877F2] text-white rounded-br-xs' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-xs'}">
+                            ${m.is_pay ? `<div class="font-bold text-amber-300">💸 Sent $${Number(m.pay_amount).toLocaleString()}</div>` : ''}
+                            ${m.text}
+                        </div>
+                        <span class="text-[9px] text-gray-400 mt-0.5 px-1">${m.time || ''}</span>
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input-field');
+            if (!input || !input.value.trim()) return;
+            const text = input.value.trim();
+            input.value = '';
+
+            try {
+                await window.ZukaChat.sendMessage({
+                    contactId: window.activeContact || 'zuka_ai_contact',
+                    text
+                });
+                renderChatMessages();
+                renderContacts();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function triggerCallFromChat(type) {
+            const name = document.getElementById('chat-header-name').innerText;
+            window.ZukaCalls.startCall(name, type);
+        }
+
+        function openZukaPayModal() {
+            document.getElementById('zuka-pay-modal').classList.remove('hidden');
+        }
+
+        function executeZukaPay() {
+            const amount = document.getElementById('pay-amount-input').value;
+            const provider = document.getElementById('pay-provider-select').value;
+            if (!amount) return;
+
+            window.ZukaChat.sendMessage({
+                contactId: window.activeContact || 'usr_sarah_02',
+                text: `Sent payment of $${Number(amount).toLocaleString()} via ${provider}.`,
+                isPay: true,
+                payAmount: amount
+            });
+
+            closeModal('zuka-pay-modal');
+            renderChatMessages();
+            alert(`✅ Payment of $${Number(amount).toLocaleString()} sent successfully via ${provider}!`);
+        }
+
+        function toggleNotificationDrawer() {
+            document.getElementById('notification-drawer').classList.toggle('hidden');
+        }
+
+        function toggleProfileMenu() {
+            document.getElementById('profile-menu-popup').classList.toggle('hidden');
+        }
+
+        function openBlueTickRequestModal() {
+            document.getElementById('bluetick-modal').classList.remove('hidden');
+        }
+
+        function submitVerificationForm() {
+            const cat = document.getElementById('verif-cat-select').value;
+            const reason = document.getElementById('verif-reason-textarea').value;
+            if (!reason) {
+                alert('Please provide a brief reason for your verification request.');
+                return;
+            }
+            window.ZukaVerification.submitRequest({ category: cat, reason });
+            closeModal('bluetick-modal');
+            alert('Your Blue Tick verification request has been delivered to the ZUKA Owner for review!');
+        }
+
+        function openStarsModal() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const qty = prompt(
+                isSwahili ? 'Weka idadi ya Stars unazotaka kununua (Kila Star 1 = TZS 100):' : 'Enter amount of Stars to buy (1 Star = $0.05):',
+                '500'
+            );
+            if (qty) {
+                window.ZukaMonetization.buyStars(Number(qty), Number(qty) * 100, 'Card');
+                syncUserData();
+            }
+        }
+        // TAB SWITCHER CONTROLLER (Feed, Watch, Marketplace, Groups, Profile, etc.)
+        function switchMainTab(tab) {
+            document.querySelectorAll('.zuka-nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.mob-nav-item').forEach(m => m.classList.remove('active'));
+            const activeMob = document.getElementById(`mob-tab-${tab}`);
+            if (activeMob) activeMob.classList.add('active');
+            const activeNav = document.getElementById(`nav-tab-${tab}`);
+            if (activeNav) activeNav.classList.add('active');
+            const container = document.getElementById('main-view-container') || document.getElementById('main-content-flow');
+            const t = (k, p) => window.ZukaI18n ? window.ZukaI18n.t(k, p) : k;
+            const currentUser = window.ZukaAuth.getCurrentUser();
+
+            if (tab === 'feed') {
+                container.innerHTML = `
+                    <div class="mb-4"><div class="stories-container" id="stories-tray"></div></div>
+                    <div class="zuka-card p-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${currentUser.avatar_url}" class="w-10 h-10 rounded-full object-cover">
+                            <div onclick="openCreatePostModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full py-2.5 px-4 text-xs sm:text-sm text-gray-500 cursor-pointer">
+                                ${t('whats_on_your_mind', { name: currentUser.full_name.split(' ')[0] })}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="feed-posts-container" class="space-y-4"></div>
+                `;
+                renderStories();
+                renderFeed();
+            } else if (tab === 'watch') {
+                renderFacebookVideoTab('for_you');
+            } else if (tab === 'marketplace') {
+                const prods = window.ZukaMarketplace.getProducts();
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="zuka-card p-4 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-xl font-bold">${t('mkt_header')}</h2>
+                                <p class="text-xs text-gray-500">${t('mkt_subtitle')}</p>
+                            </div>
+                            <button onclick="promptPostProduct()" class="bg-[#1877F2] text-white font-bold text-xs px-4 py-2 rounded-lg cursor-pointer">
+                                ${t('mkt_sell_btn')}
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            ${prods.map(p => `
+                                <div class="zuka-card overflow-hidden flex flex-col justify-between">
+                                    <div>
+                                        <img src="${p.photo_url}" class="w-full h-40 object-cover">
+                                        <div class="p-3">
+                                            <div class="font-black text-[#1877F2] text-base">$${Number(p.price).toLocaleString()}</div>
+                                            <div class="font-bold text-xs text-gray-900 dark:text-white line-clamp-1 mt-0.5">${p.title}</div>
+                                            <div class="text-[11px] text-gray-500 mt-1">${p.location}</div>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 pt-0 flex gap-2">
+                                        <button onclick="openChatWith('${p.seller_id}')" class="flex-1 bg-[#1877F2] text-white text-xs font-bold py-1.5 rounded cursor-pointer">${t('mkt_msg_seller')}</button>
+                                        <button onclick="promptMakeOffer('${p.id}')" class="bg-gray-100 dark:bg-gray-800 text-xs px-2.5 py-1.5 rounded font-bold cursor-pointer">${t('mkt_make_offer')}</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'groups') {
+                const grps = window.ZukaGroups.getGroups();
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="zuka-card p-4 flex items-center justify-between">
+                            <div>
+                                <h2 class="text-xl font-bold">${t('groups_header')}</h2>
+                                <p class="text-xs text-gray-500">${t('groups_subtitle')}</p>
+                            </div>
+                            <button onclick="promptCreateGroup()" class="bg-[#1877F2] text-white text-xs font-bold px-3 py-2 rounded-lg cursor-pointer">${t('groups_create_btn')}</button>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4">
+                            ${grps.map(g => `
+                                <div class="zuka-card overflow-hidden">
+                                    <img src="${g.cover_url}" class="w-full h-36 object-cover">
+                                    <div class="p-4 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="font-bold text-base text-gray-900 dark:text-white">${g.name}</h3>
+                                            <span class="text-xs text-gray-500">${g.members_count} Members</span>
+                                        </div>
+                                        <p class="text-xs text-gray-600 dark:text-gray-300">${g.description}</p>
+                                        <div class="pt-2 flex items-center gap-2">
+                                            <button onclick="window.ZukaGroups.joinGroup('${g.id}'); switchMainTab('groups');" class="bg-[#1877F2] text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">
+                                                ${g.is_member ? t('groups_joined_btn') : t('groups_join_btn')}
+                                            </button>
+                                            <button onclick="openChatWith('gc_${g.id}')" class="bg-gray-100 dark:bg-gray-800 text-xs px-3 py-2 rounded-lg font-bold cursor-pointer">
+                                                ${t('groups_chat_btn')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            
+            } else if (tab === 'reels') {
+                renderFacebookVideoTab('reels');
+            } else if (tab === 'profile') {
+                const u = window.ZukaAuth.getCurrentUser();
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="zuka-card overflow-hidden">
+                            <div class="relative h-48 sm:h-64 bg-gray-300">
+                                <img src="${u.cover_url}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="px-6 pb-6 pt-0 relative">
+                                <div class="flex flex-col sm:flex-row items-center sm:items-end justify-between -mt-16 sm:-mt-20 gap-4">
+                                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                                        <img src="${u.avatar_url}" class="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-gray-900 shadow-xl">
+                                        <div class="text-center sm:text-left mt-2">
+                                            <h1 class="text-2xl font-black text-gray-900 dark:text-white flex items-center justify-center sm:justify-start gap-1.5">
+                                                ${u.full_name}
+                                                ${u.is_verified ? '<span class="blue-tick-badge">✓</span>' : ''}
+                                            </h1>
+                                            <p class="text-xs text-blue-600 font-bold">@${u.username}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${t('profile_followers', { count: u.followers_count || 1240 })} • ${t('profile_following', { count: u.following_count || 380 })}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="promptEditBio()" class="bg-[#1877F2] text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">${t('profile_edit_bio')}</button>
+                                        <button onclick="window.ZukaAuth.toggleProfileLock(); switchMainTab('profile');" class="bg-gray-100 dark:bg-gray-800 text-xs px-3 py-2 rounded-lg font-bold cursor-pointer">
+                                            ${u.is_locked ? t('profile_unlock') : t('profile_lock')}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-300 space-y-2">
+                                    <p class="font-medium text-sm">"${u.bio}"</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-500 mt-2">
+                                        <div>📍 Location: <strong class="text-gray-800 dark:text-gray-200">${u.location}</strong></div>
+                                        <div>💼 Work: <strong class="text-gray-800 dark:text-gray-200">${u.work}</strong></div>
+                                        <div>🎓 Education: <strong class="text-gray-800 dark:text-gray-200">${u.education || 'University'}</strong></div>
+                                        <div>❤️ Relationship: <strong class="text-gray-800 dark:text-gray-200">${u.relationship}</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="feed-posts-container" class="space-y-4"></div>
+                    </div>
+                `;
+                renderFeed();
+            } else if (tab === 'settings') {
+                const currentLangName = window.ZukaI18n ? window.ZukaI18n.languages.find(l => l.code === window.ZukaI18n.getLanguage()).name : 'English (US)';
+                container.innerHTML = `
+                    <div class="zuka-card p-6 space-y-6">
+                        <h2 class="text-xl font-bold" data-i18n="settings_title">${t('settings_title')}</h2>
+                        <div class="space-y-4 text-xs">
+                            <div class="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🌐</span>
+                                    <div>
+                                        <div class="font-bold text-sm text-gray-900 dark:text-white">${t('settings_lang_title')}</div>
+                                        <div class="text-gray-500">${t('settings_lang_desc')}: <strong class="text-blue-600">${currentLangName}</strong></div>
+                                    </div>
+                                </div>
+                                <button onclick="window.ZukaI18n.openLanguageModal()" class="bg-[#1877F2] hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm transition cursor-pointer">
+                                    Change Language
+                                </button>
+                            </div>
+
+                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-sm" data-i18n="menu_dark_mode">Dark mode</div>
+                                    <div class="text-gray-500" data-i18n="settings_dark_mode_desc">Adjust the visual appearance of ZUKA</div>
+                                </div>
+                                <button onclick="window.ZukaSettings.toggleDarkMode()" class="bg-[#1877F2] text-white px-3 py-1.5 rounded font-bold cursor-pointer">Toggle</button>
+                            </div>
+
+                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                                <div class="font-bold text-sm">${t('settings_news_pref_title')}</div>
+                                <p class="text-gray-500">${t('settings_news_pref_desc')}</p>
+                                <div class="flex flex-wrap gap-2 pt-1">
+                                    <label class="flex items-center gap-1.5"><input type="checkbox" checked> World News</label>
+                                    <label class="flex items-center gap-1.5"><input type="checkbox" checked> Sports</label>
+                                    <label class="flex items-center gap-1.5"><input type="checkbox" checked> Politics</label>
+                                    <label class="flex items-center gap-1.5"><input type="checkbox" checked> Entertainment</label>
+                                    <label class="flex items-center gap-1.5"><input type="checkbox" checked> Technology</label>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-red-600 text-sm">${t('settings_delete_account')}</div>
+                                    <div class="text-gray-500">${t('settings_delete_desc')}</div>
+                                </div>
+                                <button onclick="window.ZukaSettings.deleteMyAccount()" class="bg-red-600 text-white px-3 py-1.5 rounded font-bold cursor-pointer">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        
+        function promptPostProduct() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const title = prompt(isSwahili ? 'Kichwa cha bidhaa:' : 'Product Title:');
+            const price = prompt(isSwahili ? 'Bei ($):' : 'Price ($):');
+            if (title && price) {
+                window.ZukaMarketplace.postProduct({
+                    title,
+                    price,
+                    location: 'San Francisco, CA',
+                    category: 'Electronics',
+                    description: 'Brand new, sealed in box.'
+                });
+                switchMainTab('marketplace');
+            }
+        }
+
+        function promptMakeOffer(prodId) {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const amt = prompt(isSwahili ? 'Weka kiasi cha ofa yako:' : 'Enter your offer amount ($):');
+            if (amt) {
+                window.ZukaMarketplace.makeOffer(prodId, amt);
+                alert(isSwahili ? 'Ofa yako imetumwa moja kwa moja!' : 'Offer dispatched directly to seller via Messenger!');
+            }
+        }
+
+        function promptCreateGroup() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const name = prompt(isSwahili ? 'Jina la Kundi:' : 'Group Name:');
+            const desc = prompt(isSwahili ? 'Maelezo ya Kundi:' : 'Group Description:');
+            if (name) {
+                window.ZukaGroups.createGroup({ name, description: desc });
+                switchMainTab('groups');
+            }
+        }
+
+        function promptCreateReel() {
+            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
+            const cap = prompt(isSwahili ? 'Maelezo ya Reel yako:' : 'Reel caption:');
+            if (cap) {
+                window.ZukaReels.createReel({
+                    videoUrl: 'https://mixkit.co',
+                    caption: cap
+                });
+                switchMainTab('reels');
+            }
+        }
+        function promptEditBio() {
+            const b = prompt('Edit your bio:', window.ZukaAuth.getCurrentUser().bio);
+            if (b) {
+                window.ZukaProfile.updateBio(b);
+                syncUserData();
+                switchMainTab('profile');
+            }
+        }
+        // ==========================================================================
+        // VIDEO & REELS CONTROLLER
+        // ==========================================================================
+        let currentVideoSubtab = 'for_you';
+        let currentVideoSearchQuery = '';
+        window.zukaVideoMuted = true;
+        let videoIntersectionObserver = null;
+        let currentCommentVideoId = null;
+        let currentCommentVideoType = 'for_you';
+        let lastVideoTapTimestamp = 0;
+
+        function formatCount(num) {
+            if (!num && num !== 0) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function renderFacebookVideoTab(subtab = currentVideoSubtab, query = currentVideoSearchQuery) {
+            currentVideoSubtab = subtab;
+            currentVideoSearchQuery = query;
+
+            const container = document.getElementById('main-view-container') || document.getElementById('main-content-flow');
+            if (!container) return;
+
+            let items = [];
+            if (subtab === 'for_you') {
+                items = window.ZukaWatch.getVideos();
+            } else {
+                items = window.ZukaReels.getReels();
+            }
+
+            if (query && query.trim()) {
+                const q = query.toLowerCase().trim();
+                items = items.filter(v => 
+                    (v.title && v.title.toLowerCase().includes(q)) ||
+                    (v.caption && v.caption.toLowerCase().includes(q)) ||
+                    (v.creator_name && v.creator_name.toLowerCase().includes(q)) ||
+                    (v.audio_track && v.audio_track.toLowerCase().includes(q))
+                );
+            }
+
+            container.innerHTML = `
+                <div class="zuka-video-tab-root w-full bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[calc(100vh-100px)]">
+                    <div class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-5 pt-2.5 pb-0 flex items-center justify-between shrink-0 z-30">
+                        <div class="flex items-center gap-8">
+                            <button onclick="switchVideoSubtab('for_you')" id="subtab-btn-for-you" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'for_you' ? 'border-b-2 border-[#1877F2] text-[#1877F2] dark:text-[#1877F2] font-bold' : 'text-gray-900 dark:text-white hover:text-[#1877F2]'}">
+                                For You
+                            </button>
+                            <button onclick="switchVideoSubtab('reels')" id="subtab-btn-reels" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'reels' ? 'border-b-2 border-[#1877F2] text-[#1877F2] dark:text-[#1877F2] font-bold' : 'text-gray-900 dark:text-white hover:text-[#1877F2]'}">
+                                Reels
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 pb-2">
+                            <button onclick="toggleVideoSearchInput()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-200 cursor-pointer transition shadow-2xs" title="Search videos">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="video-search-bar" class="${query ? '' : 'hidden'} bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 shrink-0 z-20">
+                        <input type="text" id="video-search-input" value="${query}" placeholder="Search videos, creators, or music..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" oninput="handleVideoSearchInput(this.value)">
+                        <button onclick="clearVideoSearch()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-semibold px-2 cursor-pointer">Clear</button>
+                    </div>
+                    <div id="video-feed-scroll" class="zuka-video-feed-wrapper flex-1">
+                        ${items.length === 0 ? `
+                            <div class="w-full h-full flex flex-col items-center justify-center text-white space-y-3 p-6 text-center select-none">
+                                <span class="text-5xl">🎬</span>
+                                <h3 class="font-bold text-base text-white">No videos matching "${query}"</h3>
+                                <p class="text-xs text-white/70">Try searching for another term or switch between For You and Reels.</p>
+                                <button onclick="clearVideoSearch()" class="px-4 py-2 rounded-full bg-[#1877F2] text-white text-xs font-bold cursor-pointer">View All Videos</button>
+                            </div>
+                        ` : items.map((v, idx) => `
+                            <div class="zuka-video-snap-item" data-video-id="${v.id}" data-video-type="${subtab}" onclick="handleVideoTapOrDoubleTap(event, '${v.id}', '${subtab}')">
+                                <div class="absolute inset-0 bg-black"></div>
+
+                                <video 
+                                    id="video-player-${v.id}"
+                                    src="${v.video_url}" 
+                                    poster="${v.thumbnail_url || ''}"
+                                    loop 
+                                    playsinline 
+                                    ${window.zukaVideoMuted ? 'muted' : ''} 
+                                    preload="${idx < 2 ? 'auto' : 'metadata'}"
+                                    class="w-full h-full object-cover sm:object-contain sm:max-w-md mx-auto relative z-10"
+                                    ontimeupdate="onVideoTimeUpdate(this, '${v.id}')"
+                                ></video>
+
+                                <div class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/60 via-black/20 to-transparent z-15 pointer-events-none"></div>
+                                <div class="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-15 pointer-events-none"></div>
+
+                                <div class="absolute top-4 right-4 z-25">
+                                    <button onclick="event.stopPropagation(); toggleVideoAudioMute();" class="w-10 h-10 rounded-full bg-black/45 backdrop-blur-md flex items-center justify-center text-white text-base shadow-lg border border-white/20 hover:scale-105 active:scale-95 transition cursor-pointer" title="Toggle Sound">
+                                        <span class="video-global-mute-icon">${window.zukaVideoMuted ? '🔇' : '🔊'}</span>
+                                    </button>
+                                </div>
+
+                                <div class="absolute right-3 sm:right-6 bottom-14 sm:bottom-18 z-25 flex flex-col items-center gap-4 sm:gap-5 select-none">
+                                    <div onclick="event.stopPropagation(); triggerVideoLikeAction('${v.id}', '${subtab}');" class="video-action-btn" title="Like">
+                                        <div class="video-action-icon-circle ${v.is_liked ? '!bg-rose-600/90' : ''}">
+                                            <span class="text-2xl drop-shadow">${v.is_liked ? '❤️' : '🤍'}</span>
+                                        </div>
+                                        <span id="v-like-cnt-${v.id}" class="video-action-label">${formatCount(v.likes_count)}</span>
+                                    </div>
+
+                                    <div onclick="event.stopPropagation(); openVideoCommentsSheet('${v.id}', '${subtab}');" class="video-action-btn" title="Comments">
+                                        <div class="video-action-icon-circle">
+                                            <span class="text-2xl drop-shadow">💬</span>
+                                        </div>
+                                        <span id="v-comm-cnt-${v.id}" class="video-action-label">${formatCount(v.comments_count)}</span>
+                                    </div>
+
+                                    <div onclick="event.stopPropagation(); shareVideoItem('${v.id}');" class="video-action-btn" title="Share">
+                                        <div class="video-action-icon-circle">
+                                            <span class="text-2xl drop-shadow">↗️</span>
+                                        </div>
+                                        <span class="video-action-label">${formatCount(v.shares_count || 1400)}</span>
+                                    </div>
+
+                                    <div onclick="event.stopPropagation(); toggleVideoSaveItem('${v.id}', '${subtab}');" class="video-action-btn" title="Save Video">
+                                        <div class="video-action-icon-circle ${v.is_saved ? '!bg-amber-500/90' : ''}">
+                                            <span class="text-2xl drop-shadow">${v.is_saved ? '🔖' : '📑'}</span>
+                                        </div>
+                                        <span id="v-save-lbl-${v.id}" class="video-action-label">${v.is_saved ? 'Saved' : 'Save'}</span>
+                                    </div>
+
+                                    <div onclick="event.stopPropagation(); showVideoMoreMenu('${v.id}');" class="video-action-btn" title="More options">
+                                        <div class="video-action-icon-circle">
+                                            <span class="text-2xl drop-shadow">•••</span>
+                                        </div>
+                                        <span class="video-action-label">More</span>
+                                    </div>
+                                </div>
+
+                                <div class="absolute left-3 sm:left-6 bottom-5 right-20 sm:right-24 z-20 text-white select-none">
+                                    <div class="flex items-center gap-2.5">
+                                        <img src="${v.creator_avatar}" class="w-10 h-10 rounded-full border-2 border-white object-cover shadow-md shrink-0">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="font-bold text-sm sm:text-base text-white drop-shadow">${v.creator_name}</span>
+                                            <span class="blue-tick-badge !w-3.5 !h-3.5 !text-[9px]">✓</span>
+                                            <button onclick="event.stopPropagation(); toggleVideoFollowCreator('${v.id}', '${subtab}');" id="v-follow-btn-${v.id}" class="ml-2 px-3 py-0.5 text-xs font-bold rounded-full border ${v.is_following ? 'bg-white/20 border-white text-white' : 'bg-[#1877F2] border-transparent text-white'} backdrop-blur-sm cursor-pointer hover:opacity-90 active:scale-95 transition">
+                                                ${v.is_following ? 'Following' : 'Follow'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <p class="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow mt-1.5 font-normal leading-snug">
+                                        ${v.title || v.caption}
+                                    </p>
+
+                                    <div class="flex items-center gap-2 text-xs text-white/90 font-medium mt-1.5 overflow-hidden max-w-[240px] sm:max-w-[280px]">
+                                        <span class="text-sm">🎵</span>
+                                        <div class="music-marquee-container">
+                                            <span class="music-marquee-text font-medium">${v.audio_track || 'Original Audio - Trending Sound'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-white/25 z-25 pointer-events-none">
+                                    <div id="video-progress-${v.id}" class="h-full bg-white transition-[width] duration-100" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            initVideoFeedObserver();
+        }
+        function switchVideoSubtab(subtab) {
+            renderFacebookVideoTab(subtab, currentVideoSearchQuery);
+        }
+
+        function toggleVideoSearchInput() {
+            const bar = document.getElementById('video-search-bar');
+            if (!bar) return;
+            bar.classList.toggle('hidden');
+            if (!bar.classList.contains('hidden')) {
+                const inp = document.getElementById('video-search-input');
+                if (inp) inp.focus();
+            }
+        }
+
+        function handleVideoSearchInput(val) {
+            renderFacebookVideoTab(currentVideoSubtab, val);
+        }
+
+        function clearVideoSearch() {
+            renderFacebookVideoTab(currentVideoSubtab, '');
+        }
+
+        function onVideoTimeUpdate(videoEl, videoId) {
+            const bar = document.getElementById(`video-progress-${videoId}`);
+            if (bar && videoEl.duration) {
+                const pct = (videoEl.currentTime / videoEl.duration) * 100;
+                bar.style.width = pct + '%';
+            }
+        }
+
+        function handleVideoTapOrDoubleTap(e, videoId, subtab) {
+            const now = Date.now();
+            const timeDiff = now - lastVideoTapTimestamp;
+            const container = e.currentTarget;
+            const videoEl = container.querySelector('video');
+
+            if (timeDiff < 300) {
+                lastVideoTapTimestamp = 0;
+                triggerBigHeartAnimation(container);
+                triggerVideoLikeAction(videoId, subtab, true);
+            } else {
+                lastVideoTapTimestamp = now;
+                setTimeout(() => {
+                    if (lastVideoTapTimestamp === now && videoEl) {
+                        toggleVideoPlay(videoEl, container);
+                    }
+                }, 300);
+            }
+        }
+
+        function toggleVideoPlay(videoEl, container) {
+            if (videoEl.paused) {
+                videoEl.play();
+                showPlayPauseFlash(container, '▶');
+            } else {
+                videoEl.pause();
+                showPlayPauseFlash(container, '❚❚');
+            }
+        }
+
+        function showPlayPauseFlash(container, symbol) {
+            const ind = document.createElement('div');
+            ind.className = 'play-pause-indicator select-none';
+            ind.innerText = symbol;
+            container.appendChild(ind);
+            setTimeout(() => ind.remove(), 500);
+        }
+
+        function triggerBigHeartAnimation(container) {
+            const heart = document.createElement('div');
+            heart.className = 'heart-pop-anim select-none';
+            heart.innerText = '❤️';
+            container.appendChild(heart);
+            setTimeout(() => heart.remove(), 850);
+        }
+
+        function toggleVideoAudioMute() {
+            window.zukaVideoMuted = !window.zukaVideoMuted;
+            document.querySelectorAll('#video-feed-scroll video').forEach(v => {
+                v.muted = window.zukaVideoMuted;
+            });
+            document.querySelectorAll('.video-global-mute-icon').forEach(icon => {
+                icon.innerText = window.zukaVideoMuted ? '🔇' : '🔊';
+            });
+        }
+        function triggerVideoLikeAction(videoId, subtab, forceLike = false) {
+            let item = null;
+            if (subtab === 'for_you') {
+                if (forceLike) {
+                    const videos = window.ZukaWatch.getVideos();
+                    const v = videos.find(x => x.id === videoId);
+                    if (v && !v.is_liked) {
+                        item = window.ZukaWatch.toggleLikeVideo(videoId);
+                    } else {
+                        item = v;
+                    }
+                } else {
+                    item = window.ZukaWatch.toggleLikeVideo(videoId);
+                }
+            } else {
+                if (forceLike) {
+                    const reels = window.ZukaReels.getReels();
+                    const r = reels.find(x => x.id === videoId);
+                    if (r && !r.is_liked) {
+                        item = window.ZukaReels.toggleLikeReel(videoId);
+                    } else {
+                        item = r;
+                    }
+                } else {
+                    item = window.ZukaReels.toggleLikeReel(videoId);
+                }
+            }
+            if (item) {
+                const countEl = document.getElementById(`v-like-cnt-${videoId}`);
+                if (countEl) countEl.innerText = formatCount(item.likes_count);
+                const btnCircle = countEl ? countEl.parentElement.querySelector('.video-action-icon-circle') : null;
+                if (btnCircle) {
+                    btnCircle.innerHTML = `<span class="text-2xl drop-shadow">${item.is_liked ? '❤️' : '🤍'}</span>`;
+                    btnCircle.classList.toggle('!bg-rose-600/90', item.is_liked);
+                }
+            }
+        }
+
+        function toggleVideoFollowCreator(videoId, subtab) {
+            let isFollowing = false;
+            if (subtab === 'for_you') {
+                isFollowing = window.ZukaWatch.toggleFollow(videoId);
+            } else {
+                isFollowing = window.ZukaReels.toggleFollowCreator(videoId);
+            }
+            const btn = document.getElementById(`v-follow-btn-${videoId}`);
+            if (btn) {
+                btn.innerText = isFollowing ? 'Following' : 'Follow';
+                btn.className = `ml-2 px-3 py-0.5 text-xs font-bold rounded-full border ${isFollowing ? 'bg-white/20 border-white text-white' : 'bg-[#1877F2] border-transparent text-white'} backdrop-blur-sm cursor-pointer hover:opacity-90 active:scale-95 transition`;
+            }
+        }
+
+        function toggleVideoSaveItem(videoId, subtab) {
+            let isSaved = false;
+            if (subtab === 'for_you') {
+                isSaved = window.ZukaWatch.toggleSave(videoId);
+            } else {
+                isSaved = window.ZukaReels.toggleSave(videoId);
+            }
+            const lbl = document.getElementById(`v-save-lbl-${videoId}`);
+            if (lbl) {
+                lbl.innerText = isSaved ? 'Saved' : 'Save';
+                const circle = lbl.parentElement.querySelector('.video-action-icon-circle');
+                if (circle) {
+                    circle.innerHTML = `<span class="text-2xl drop-shadow">${isSaved ? '🔖' : '📑'}</span>`;
+                    circle.classList.toggle('!bg-amber-500/90', isSaved);
+                }
+            }
+            alert(isSaved ? 'Video saved to your collection!' : 'Video removed from saved collection.');
+        }
+
+        function shareVideoItem(videoId) {
+            navigator.clipboard?.writeText(window.location.origin + '/home.html?video=' + videoId);
+            alert('Video link copied to clipboard! Shared to Feed.');
+        }
+
+        function showVideoMoreMenu(videoId) {
+            const act = confirm('Save this video to your collection?');
+            if (act) {
+                toggleVideoSaveItem(videoId, currentVideoSubtab);
+            }
+        }
+
+        function initVideoFeedObserver() {
+            if (videoIntersectionObserver) {
+                videoIntersectionObserver.disconnect();
+            }
+            const container = document.getElementById('video-feed-scroll');
+            if (!container) return;
+
+            videoIntersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (!video) return;
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+                        video.muted = window.zukaVideoMuted;
+                        video.play().catch(() => {});
+                    } else {
+                        video.pause();
+                    }
+                });
+            }, {
+                root: container,
+                threshold: 0.6
+            });
+
+            document.querySelectorAll('.zuka-video-snap-item').forEach(item => {
+                videoIntersectionObserver.observe(item);
+            });
+        }
+        // ==========================================================================
+        // COMMENTS BOTTOM SHEET HANDLERS (Videos, Reels, Feed Posts)
+        // ==========================================================================
+        function openPostCommentsSheet(postId) {
+            openVideoCommentsSheet(postId, 'post');
+        }
+
+        function toggleCommentsDrawer(postId) {
+            openPostCommentsSheet(postId);
+        }
+
+        function openVideoCommentsSheet(targetId, type) {
+            currentCommentVideoId = targetId;
+            currentCommentVideoType = type;
+
+            const sheet = document.getElementById('video-comments-sheet');
+            const backdrop = document.getElementById('video-comments-backdrop');
+            const avatar = document.getElementById('sheet-input-avatar');
+            const user = window.ZukaAuth.getCurrentUser();
+            if (avatar && user) avatar.src = user.avatar_url;
+
+            renderVideoCommentsContent();
+
+            if (sheet) sheet.classList.remove('translate-y-full');
+            if (backdrop) backdrop.classList.remove('hidden');
+        }
+
+        function closeVideoCommentsSheet() {
+            const sheet = document.getElementById('video-comments-sheet');
+            const backdrop = document.getElementById('video-comments-backdrop');
+            if (sheet) sheet.classList.add('translate-y-full');
+            if (backdrop) backdrop.classList.add('hidden');
+        }
+
+        function renderVideoCommentsContent() {
+            let comments = [];
+
+            if (currentCommentVideoType === 'for_you') {
+                const videos = window.ZukaWatch.getVideos();
+                const item = videos.find(v => v.id === currentCommentVideoId);
+                if (item) comments = item.comments || [];
+            } else if (currentCommentVideoType === 'reels') {
+                const reels = window.ZukaReels.getReels();
+                const item = reels.find(r => r.id === currentCommentVideoId);
+                if (item) comments = item.comments || [];
+            } else if (currentCommentVideoType === 'post') {
+                const posts = window.ZukaFeed.getFeedPosts();
+                const item = posts.find(p => p.id === currentCommentVideoId);
+                if (item) comments = (item.comments_list || []).map(c => ({
+                    user_name: c.user_name,
+                    user_avatar: c.user_avatar,
+                    text: c.text,
+                    time: c.created_at || 'Just now'
+                }));
+            }
+
+            const title = document.getElementById('sheet-comments-count-title');
+            const list = document.getElementById('sheet-comments-list');
+            if (!list) return;
+
+            if (title) title.innerText = `Comments (${comments.length})`;
+
+            if (comments.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 text-gray-400 text-xs">
+                        No comments yet. Be the first to comment!
+                    </div>
+                `;
+            } else {
+                list.innerHTML = comments.map(c => `
+                    <div class="flex items-start gap-3">
+                        <img src="${c.user_avatar}" class="w-8 h-8 rounded-full object-cover shrink-0">
+                        <div class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl px-3.5 py-2 text-xs">
+                            <div class="font-bold text-gray-900 dark:text-white leading-tight">${c.user_name}</div>
+                            <div class="text-gray-800 dark:text-gray-200 mt-0.5">${c.text}</div>
+                            <div class="text-[10px] text-gray-400 mt-1">${c.time || 'Just now'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function submitVideoComment() {
+            const inp = document.getElementById('sheet-comment-input');
+            if (!inp || !inp.value.trim() || !currentCommentVideoId) return;
+
+            const text = inp.value.trim();
+            if (currentCommentVideoType === 'for_you') {
+                window.ZukaWatch.addComment(currentCommentVideoId, text);
+                const cntEl = document.getElementById(`v-comm-cnt-${currentCommentVideoId}`);
+                if (cntEl) {
+                    let current = parseInt(cntEl.innerText.replace(/[^0-9]/g, '')) || 0;
+                    cntEl.innerText = formatCount(current + 1);
+                }
+            } else if (currentCommentVideoType === 'reels') {
+                window.ZukaReels.addComment(currentCommentVideoId, text);
+                const cntEl = document.getElementById(`v-comm-cnt-${currentCommentVideoId}`);
+                if (cntEl) {
+                    let current = parseInt(cntEl.innerText.replace(/[^0-9]/g, '')) || 0;
+                    cntEl.innerText = formatCount(current + 1);
+                }
+            } else if (currentCommentVideoType === 'post') {
+                try {
+                    window.ZukaFeed.addComment(currentCommentVideoId, text);
+                    renderFeed();
+                } catch(e) {
+                    alert(e.message);
+                    return;
+                }
+            }
+
+            inp.value = '';
+            renderVideoCommentsContent();
+
+            const list = document.getElementById('sheet-comments-list');
+            if (list) list.scrollTop = list.scrollHeight;
+        }
+  </script>
+</body>
+</html>
