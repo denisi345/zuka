@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#111;color:#fff;font-family:sans-serif;padding:20px;">
+  <h2>ZUKA SYSTEM CHECK</h2>
+  <pre id="out">Inapima mfumo...</pre>
+  <script src="/supabase.js"></script>
+  <script src="/auth.js"></script>
+  <script>
+    const out = document.getElementById('out');
+    let log = "";
+    log += "1. supabase.js: " + (window.supabaseClient ? "SAWA ✅" : "HAIJAPAKIA ❌") + "\n";
+    log += "2. auth.js: " + (window.ZukaAuth ? "SAWA ✅" : "HAIJAPAKIA ❌") + "\n";
+    out.textContent = log + "3. Inapima muunganisho wa Supabase...";
+
+    if (window.supabaseClient) {
+      window.supabaseClient.from('posts').select('id').limit(1)
+        .then(res => {
+          out.textContent = log + "3. Supabase Database: " + (res.error ? "KOSA ❌ -> " + res.error.message : "INAFANYA KAZI 100% ✅");
+        })
+        .catch(err => {
+          out.textContent = log + "3. Supabase Imekwama ❌ -> " + err.message;
+        });
+    }
+  </script>
+</body>
+</html>
