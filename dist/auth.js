@@ -30,7 +30,7 @@ class ZukaAuthService {
             try {
                 // Sync user profile data to the Supabase 'users' table
                 await window.supabaseClient
-                    .from('users')
+                    .from('profiles')
                     .update(user)
                     .eq('id', user.id);
             } catch (e) {
@@ -52,7 +52,7 @@ class ZukaAuthService {
 
         // 1. Check if username is already taken in the Supabase database
         const { data: existingUser, error: checkError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('username')
             .eq('username', cleanUsername)
             .maybeSingle();
@@ -106,7 +106,7 @@ class ZukaAuthService {
 
         // Store profile data into the remote database
         const { error: dbError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .insert([newUser]);
 
         if (dbError) throw dbError;
@@ -126,7 +126,7 @@ class ZukaAuthService {
         // 1. Resolve identifier to email if the user enters a username or phone
         if (!cleanId.includes('@')) {
             const { data: profile, error: searchError } = await window.supabaseClient
-                .from('users')
+                .from('profiles')
                 .select('email')
                 .or(`username.eq.${cleanId},phone.eq.${cleanId}`)
                 .maybeSingle();
@@ -148,7 +148,7 @@ class ZukaAuthService {
 
         // 3. Retrieve full user profile records from the 'users' table
         const { data: userProfile, error: profileError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('*')
             .eq('id', authData.user.id)
             .maybeSingle();

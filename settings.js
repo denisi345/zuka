@@ -68,7 +68,7 @@ window.ZukaSettings = {
                 try {
                     // Perform an asynchronous row deletion query directly on your remote Postgres table
                     const { error } = await window.supabaseClient
-                        .from('users')
+                        .from('profiles')
                         .delete()
                         .eq('id', currentUser.id);
 

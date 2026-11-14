@@ -93,7 +93,7 @@ class ZukaOwnerAdminEngine {
             livesRes,
             flagsRes
         ] = await Promise.all([
-            window.supabaseClient.from('users').select('*', { count: 'exact', head: true }),
+            window.supabaseClient.from('profiles').select('*', { count: 'exact', head: true }),
             window.supabaseClient.from('posts').select('*', { count: 'exact', head: true }),
             window.supabaseClient.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
             window.supabaseClient.from('groups').select('*', { count: 'exact', head: true }),
@@ -127,7 +127,7 @@ class ZukaOwnerAdminEngine {
     async getUsers() {
         if (!window.supabaseClient) return [];
         const { data } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('*')
             .order('created_at', { ascending: false });
         return data || [];
@@ -224,7 +224,7 @@ class ZukaOwnerAdminEngine {
         if (!window.supabaseClient) return false;
 
         const { data: u } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('username, is_banned')
             .eq('id', userId)
             .maybeSingle();
@@ -233,7 +233,7 @@ class ZukaOwnerAdminEngine {
 
         const nextBanStatus = !u.is_banned;
         await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .update({ is_banned: nextBanStatus })
             .eq('id', userId);
 
@@ -249,7 +249,7 @@ class ZukaOwnerAdminEngine {
         if (!window.supabaseClient) return false;
 
         const { data: u } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('username, is_verified')
             .eq('id', userId)
             .maybeSingle();
@@ -258,7 +258,7 @@ class ZukaOwnerAdminEngine {
 
         const nextVerifyStatus = !u.is_verified;
         await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .update({ is_verified: nextVerifyStatus })
             .eq('id', userId);
 
@@ -275,7 +275,7 @@ class ZukaOwnerAdminEngine {
         if (!confirm('Are you sure you want to permanently delete this user account from ZUKA?')) return;
 
         await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .delete()
             .eq('id', userId);
 

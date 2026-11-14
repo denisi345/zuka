@@ -19,7 +19,7 @@ class ZukaProfileEngine {
         // 1. Fetch target user profile from Supabase if a specific userId is provided
         if (userId && (!currentUser || currentUser.id !== userId)) {
             const { data: fetchedUser, error: userError } = await window.supabaseClient
-                .from('users')
+                .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .maybeSingle();

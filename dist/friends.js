@@ -92,7 +92,7 @@ class ZukaFriendsEngine {
         try {
             // 1. Fetch all users from Supabase
             const { data: allUsers, error: usersError } = await window.supabaseClient
-                .from('users')
+                .from('profiles')
                 .select('id, full_name, username, avatar_url, work');
 
             if (usersError) throw usersError;

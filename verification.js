@@ -124,7 +124,7 @@ window.ZukaVerification = {
 
         // 3. Grant verified status (Blue Tick) in the 'users' table
         const { error: userUpdateError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .update({ is_verified: true })
             .eq('id', req.user_id);
 

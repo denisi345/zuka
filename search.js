@@ -28,7 +28,7 @@ window.ZukaSearch = {
                 postsResult,
                 productsResult
             ] = await Promise.all([
-                window.supabaseClient.from('users').select('id, full_name, username, avatar_url'),
+                window.supabaseClient.from('profiles').select('id, full_name, username, avatar_url'),
                 window.supabaseClient.from('groups').select('*'),
                 window.supabaseClient.from('pages').select('*'),
                 window.supabaseClient.from('posts').select('*').eq('is_hidden', false),

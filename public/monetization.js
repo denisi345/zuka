@@ -19,7 +19,7 @@ window.ZukaMonetization = {
 
         // 1. Fetch current live balance from database to prevent manipulation anomalies
         const { data: userProfile, error: balanceError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('stars_balance')
             .eq('id', currentUser.id)
             .maybeSingle();
@@ -37,7 +37,7 @@ window.ZukaMonetization = {
 
         // 2. Perform atomic subtraction cell update on the user profile record
         const { error: userUpdateError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .update({ stars_balance: updatedBalance })
             .eq('id', currentUser.id);
 
@@ -78,7 +78,7 @@ window.ZukaMonetization = {
         if (!currentUser) return 0;
 
         const { data: userProfile, error: balanceError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .select('stars_balance')
             .eq('id', currentUser.id)
             .maybeSingle();
@@ -88,7 +88,7 @@ window.ZukaMonetization = {
         const nextBalance = (userProfile.stars_balance || 0) + packageAmount;
 
         const { error: updateError } = await window.supabaseClient
-            .from('users')
+            .from('profiles')
             .update({ stars_balance: nextBalance })
             .eq('id', currentUser.id);
 
