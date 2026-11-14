@@ -83,3 +83,8 @@ window.ZukaSupabase = {
         window.addEventListener('zuka:realtime:' + channelName, (e) => callback(e.detail));
     }
 };
+
+window.ZukaDB = window.ZukaSupabase;
+window.ZukaDB.get = (t, f) => window.ZukaSupabase.select(t, f);
+window.ZukaDB.set = (t, r) => window.ZukaSupabase.insert(t, r);
+window.ZukaDB.add = (t, r) => window.ZukaSupabase.insert(t, r);
