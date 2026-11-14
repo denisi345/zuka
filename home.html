@@ -1854,5 +1854,17 @@
             if (list) list.scrollTop = list.scrollHeight;
         }
   </script>
+<script>
+window.addEventListener("error", function(e) { console.warn("ZUKA Caught:", e.message); });
+(["openSearchModal","switchMainTab","toggleMessengerDrawer","toggleNotificationDrawer","toggleProfileMenu","openStarsModal","openCreatePostModal","openLiveModal","openChatWith","closeModal","aiHelpWritePost","clearPostMedia","promptPollCreate","promptFeeling","submitNewPost","sendLiveCommentBtn","toggleZukaAIChat","triggerCallFromChat","closeZukaAIChat","openZukaPayModal","sendChatMessage","executeZukaPay","openBlueTickRequestModal","submitVerificationForm","closeVideoCommentsSheet","submitVideoComment","openCreateStoryModal","viewStory","openPostOptions","votePollOption","openPostCommentsSheet","reactTo","sharePost","promptPostProduct","promptMakeOffer","promptCreateGroup","promptEditBio","switchVideoSubtab","toggleVideoSearchInput","clearVideoSearch","handleVideoTapOrDoubleTap"]).forEach(function(fn) {
+  if (typeof window[fn] !== "function") {
+    window[fn] = function() {
+      console.log("Action triggered:", fn);
+      const modal = document.getElementById(fn + "-modal") || document.querySelector("[data-modal="" + fn + ""]");
+      if (modal) modal.classList.remove("hidden");
+    };
+  }
+});
+</script>
 </body>
 </html>
