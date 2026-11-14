@@ -20,7 +20,7 @@ class ZukaGroupChatEngine {
         }
 
         const { data: chats, error } = await window.supabaseClient
-            .from('group_chats')
+            .from('messages')
             .select('*')
             .order('name', { ascending: true });
 
@@ -36,7 +36,7 @@ class ZukaGroupChatEngine {
         if (!window.supabaseClient) return null;
 
         const { data: chat, error } = await window.supabaseClient
-            .from('group_chats')
+            .from('messages')
             .select('*')
             .eq('group_id', groupId)
             .maybeSingle();
@@ -54,7 +54,7 @@ class ZukaGroupChatEngine {
 
         try {
             const { data: exists, error: checkError } = await window.supabaseClient
-                .from('group_chats')
+                .from('messages')
                 .select('id')
                 .eq('group_id', group.id)
                 .maybeSingle();
@@ -73,7 +73,7 @@ class ZukaGroupChatEngine {
                 };
 
                 const { data: chatData, error: insertError } = await window.supabaseClient
-                    .from('group_chats')
+                    .from('messages')
                     .insert([newChat])
                     .select()
                     .single();
@@ -132,7 +132,7 @@ class ZukaGroupChatEngine {
         if (!window.supabaseClient) return false;
 
         const { data: chat, error: fetchError } = await window.supabaseClient
-            .from('group_chats')
+            .from('messages')
             .select('is_muted')
             .eq('id', chatId)
             .maybeSingle();
@@ -142,7 +142,7 @@ class ZukaGroupChatEngine {
         const nextMuteState = !chat.is_muted;
 
         const { error: updateError } = await window.supabaseClient
-            .from('group_chats')
+            .from('messages')
             .update({ is_muted: nextMuteState })
             .eq('id', chatId);
 

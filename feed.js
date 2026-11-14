@@ -275,7 +275,7 @@ class ZukaFeedEngine {
         if (!currentUser) return false;
 
         const { data: existingSave, error: fetchError } = await window.supabaseClient
-            .from('saved_items')
+            .from('saved_posts')
             .select('id')
             .eq('item_id', postId)
             .eq('user_id', currentUser.id)

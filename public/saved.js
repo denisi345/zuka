@@ -18,9 +18,9 @@ window.ZukaSaved = {
         if (!currentUser) return [];
 
         try {
-            // 1. Fetch user specific items from the remote 'saved_items' repository table
+            // 1. Fetch user specific items from the remote 'saved_posts' repository table
             const { data: savedItems, error: savedError } = await window.supabaseClient
-                .from('saved_items')
+                .from('saved_posts')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
@@ -79,7 +79,7 @@ window.ZukaSaved = {
 
         try {
             const { error } = await window.supabaseClient
-                .from('saved_items')
+                .from('saved_posts')
                 .delete()
                 .eq('id', savedId);
 

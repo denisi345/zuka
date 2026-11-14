@@ -33,7 +33,7 @@ class ZukaOwnerAdminEngine {
         }
 
         const { data: owner, error } = await window.supabaseClient
-            .from('zuka_owners')
+            .from('ceo_settings')
             .select('*')
             .eq('owner_username', username)
             .eq('role', 'owner')
@@ -51,7 +51,7 @@ class ZukaOwnerAdminEngine {
 
         const nowIso = new Date().toISOString();
         await window.supabaseClient
-            .from('zuka_owners')
+            .from('ceo_settings')
             .update({ last_login: nowIso })
             .eq('id', owner.id);
 
@@ -181,7 +181,7 @@ class ZukaOwnerAdminEngine {
     async getActionLogs() {
         if (!window.supabaseClient) return [];
         const { data } = await window.supabaseClient
-            .from('owner_actions')
+            .from('ceo_panel')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(50);

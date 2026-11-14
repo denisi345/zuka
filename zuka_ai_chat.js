@@ -35,7 +35,7 @@ class ZukaAIChatService {
 
         try {
             const { data: messages, error } = await window.supabaseClient
-                .from('ai_chat_messages')
+                .from('ai_messages')
                 .select('*')
                 .eq('user_id', currentUser.id)
                 .order('created_at', { ascending: true });
@@ -62,7 +62,7 @@ class ZukaAIChatService {
 
         try {
             const { error } = await window.supabaseClient
-                .from('ai_chat_messages')
+                .from('ai_messages')
                 .delete()
                 .eq('user_id', currentUser.id);
 
@@ -90,7 +90,7 @@ class ZukaAIChatService {
         // 1. Save user message to Supabase if authenticated
         if (window.supabaseClient && currentUser) {
             const { error: userMsgError } = await window.supabaseClient
-                .from('ai_chat_messages')
+                .from('ai_messages')
                 .insert([userMsg]);
 
             if (userMsgError) {
@@ -131,7 +131,7 @@ class ZukaAIChatService {
         // 3. Save AI response to Supabase and return the saved record
         if (window.supabaseClient && currentUser) {
             const { data: savedAiMsg, error: aiMsgError } = await window.supabaseClient
-                .from('ai_chat_messages')
+                .from('ai_messages')
                 .insert([aiMsg])
                 .select()
                 .single();
