@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name TEXT NOT NULL,
     avatar_url TEXT DEFAULT 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
     cover_url TEXT DEFAULT 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200',
-    bio TEXT DEFAULT 'Karibu kwenye ZUKA yangu!',
+    bio TEXT DEFAULT 'Welcome to my ZUKA profile!',
     location TEXT DEFAULT 'Dar es Salaam, Tanzania',
     work TEXT DEFAULT 'Creator at ZUKA',
     education TEXT DEFAULT 'University of Dar es Salaam',
@@ -688,7 +688,7 @@ ON CONFLICT (handle) DO NOTHING;
 -- Initial Owner Seed (Owner of ZUKA)
 -- Password for initial secret panel demo is "ZukaOwner1974!"
 INSERT INTO users (id, username, full_name, email, is_verified, bio) VALUES
-('a0000000-0000-0000-0000-000000000001', 'zuka_founder', 'ZUKA Founder & Owner', 'owner@zuka.com', TRUE, 'Mimi ni Mmiliki wa ZUKA. Karibu kwenye mtandao huru wa kijamii.')
+('a0000000-0000-0000-0000-000000000001', 'zuka_founder', 'ZUKA Founder & Owner', 'owner@zuka.com', TRUE, 'I am the Owner of ZUKA. Welcome to the open social network.')
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO zuka_owners (id, user_id, owner_username, password_hash, role, secret_key) VALUES

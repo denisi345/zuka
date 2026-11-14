@@ -250,3 +250,12 @@ class ZukaAIModeration {
             this.learnedPatterns.allowed = this.learnedPatterns.allowed.filter(t => t !== term);
         } else if (action === 'KEEP') {
             if (!this.learnedPatterns.allowed.includes(term)) {
+                this.learnedPatterns.allowed.push(term);
+            }
+            this.learnedPatterns.blocked = this.learnedPatterns.blocked.filter(t => t !== term);
+        }
+        return this.learnedPatterns;
+    }
+}
+
+window.ZukaAIModeration = new ZukaAIModeration();

@@ -292,3 +292,12 @@ class ZukaFeedEngine {
             };
 
             const { error: insertError } = await window.supabaseClient
+                .from('posts')
+                .insert([newPost]);
+            if (insertError) throw new Error(insertError.message);
+        }
+        return newPost;
+    }
+}
+
+window.ZukaFeed = new ZukaFeed();

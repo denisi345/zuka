@@ -315,3 +315,12 @@ class ZukaOwnerAdminEngine {
     }
 
     // Group Controls
+    async deleteGroup(groupId) {
+        if (window.supabaseClient) {
+            await window.supabaseClient.from('groups').delete().eq('id', groupId);
+        }
+        await this.logOwnerAction('OWNER_DELETE_GROUP', groupId, 'Group removed by Owner');
+    }
+}
+
+window.ZukaAdmin = new ZukaAdmin();
