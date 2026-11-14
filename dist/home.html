@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZUKA - Social Super App</title>
     <!-- Tailwind CSS Browser Bundle -->
-    <script src="https://://tailwindcss.com"></script>
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" crossorigin href="./assets/style-ohyS9_89.css">
@@ -60,7 +59,7 @@
             </div>
 
             <div class="relative cursor-pointer" onclick="toggleProfileMenu()">
-                <img id="nav-user-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" alt="Profile">
+                <img id="nav-user-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" alt="Profile">
             </div>
         </div>
     </header>
@@ -70,7 +69,7 @@
         <!-- LEFT SIDEBAR (DESKTOP) -->
         <aside class="hidden lg:block w-72 shrink-0 space-y-1 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto pr-2">
             <div class="zuka-sidebar-link" onclick="switchMainTab('profile')">
-                <img id="left-sidebar-avatar" src="https://unsplash.com" class="w-9 h-9 rounded-full object-cover">
+                <img id="left-sidebar-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-9 h-9 rounded-full object-cover">
                 <div class="flex-1 truncate">
                     <div id="left-sidebar-name" class="font-bold text-sm text-gray-900 dark:text-white truncate">John Miller</div>
                     <div class="text-[11px] text-gray-500" data-i18n="view_your_profile">View your profile</div>
@@ -179,7 +178,7 @@
             <!-- 2. CREATE POST BOX -->
             <div class="zuka-card p-4">
                 <div class="flex items-center gap-3">
-                    <img id="create-post-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover">
+                    <img id="create-post-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover">
                     <div onclick="openCreatePostModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full py-2.5 px-4 text-xs sm:text-sm text-gray-500 cursor-pointer transition">
                         <span id="create-post-prompt">What's on your mind, John?</span>
                     </div>
@@ -218,7 +217,7 @@
                     <button onclick="switchMainTab('ads')" data-i18n="sidebar_create_ad" class="text-blue-600 hover:underline">Create Ad</button>
                 </div>
                 <div class="flex gap-3 items-center">
-                    <img src="https://unsplash.com" class="w-20 h-16 rounded-lg object-cover">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-20 h-16 rounded-lg object-cover">
                     <div>
                         <div class="font-bold text-xs text-gray-900 dark:text-white leading-tight">Toyota Harrier 2026 Special Edition</div>
                         <p class="text-[11px] text-gray-500 mt-1">globalmotors.com</p>
@@ -273,7 +272,7 @@
 
             <div class="p-4 space-y-3">
                 <div class="flex items-center gap-3">
-                    <img id="modal-post-avatar" src="https://unsplash.com" class="w-10 h-10 rounded-full object-cover">
+                    <img id="modal-post-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover">
                     <div>
                         <div id="modal-post-name" class="font-bold text-sm text-gray-900 dark:text-white">John Miller</div>
                         <select id="post-privacy-select" class="text-[11px] bg-gray-100 dark:bg-gray-800 border-none rounded px-2 py-0.5 mt-0.5 text-gray-600 dark:text-gray-300">
@@ -360,7 +359,7 @@
     <div id="zuka-call-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4 hidden">
         <div class="max-w-md w-full bg-gray-900 border border-gray-800 rounded-3xl p-6 text-center space-y-6 shadow-2xl">
             <div class="relative w-28 h-28 mx-auto">
-                <img id="call-avatar" src="https://unsplash.com" class="w-28 h-28 rounded-full object-cover border-4 border-blue-500 shadow-xl">
+                <img id="call-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-28 h-28 rounded-full object-cover border-4 border-blue-500 shadow-xl">
                 <div class="absolute inset-0 rounded-full border-4 border-blue-400 animate-ping opacity-30"></div>
             </div>
             <div>
@@ -395,7 +394,7 @@
         <div class="bg-[#1877F2] text-white px-4 py-3 rounded-t-2xl flex items-center justify-between shrink-0">
             <div class="flex items-center gap-2">
                 <div class="relative">
-                    <img id="chat-header-avatar" src="https://unsplash.com" class="w-8 h-8 rounded-full object-cover border border-white/40">
+                    <img id="chat-header-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-8 h-8 rounded-full object-cover border border-white/40">
                     <span class="online-indicator"></span>
                 </div>
                 <div>
@@ -462,7 +461,7 @@
     <!-- USER PROFILE MENU POPUP -->
     <div id="profile-menu-popup" class="fixed top-14 right-4 w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 p-3 hidden">
         <div class="p-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 cursor-pointer" onclick="switchMainTab('profile'); toggleProfileMenu();">
-            <img id="dropdown-avatar" src="https://unsplash.com" class="w-12 h-12 rounded-full object-cover">
+            <img id="dropdown-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-12 h-12 rounded-full object-cover">
             <div>
                 <div id="dropdown-name" class="font-bold text-sm text-gray-900 dark:text-white">John Miller</div>
                 <div class="text-xs text-blue-600" data-i18n="view_your_profile">View your profile</div>
@@ -533,7 +532,7 @@
         </div>
         <div id="sheet-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3.5"></div>
         <div class="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 flex items-center gap-2 shrink-0">
-            <img id="sheet-input-avatar" src="https://unsplash.com" class="w-8 h-8 rounded-full object-cover">
+            <img id="sheet-input-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-8 h-8 rounded-full object-cover">
             <input type="text" id="sheet-comment-input" placeholder="Add a comment..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" onkeydown="if(event.key==='Enter') submitVideoComment()">
             <button onclick="submitVideoComment()" class="text-[#1877F2] font-bold text-xs px-3 py-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/40 cursor-pointer">Post</button>
         </div>
@@ -1317,7 +1316,8 @@
                     </div>
                 `;
             }
-        
+        }
+
         function promptPostProduct() {
             const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
             const title = prompt(isSwahili ? 'Kichwa cha bidhaa:' : 'Product Title:');
@@ -1854,14 +1854,15 @@
             if (list) list.scrollTop = list.scrollHeight;
         }
   </script>
+
 <script>
 window.addEventListener("error", function(e) { console.warn("ZUKA Caught:", e.message); });
-(["openSearchModal","switchMainTab","toggleMessengerDrawer","toggleNotificationDrawer","toggleProfileMenu","openStarsModal","openCreatePostModal","openLiveModal","openChatWith","closeModal","aiHelpWritePost","clearPostMedia","promptPollCreate","promptFeeling","submitNewPost","sendLiveCommentBtn","toggleZukaAIChat","triggerCallFromChat","closeZukaAIChat","openZukaPayModal","sendChatMessage","executeZukaPay","openBlueTickRequestModal","submitVerificationForm","closeVideoCommentsSheet","submitVideoComment","openCreateStoryModal","viewStory","openPostOptions","votePollOption","openPostCommentsSheet","reactTo","sharePost","promptPostProduct","promptMakeOffer","promptCreateGroup","promptEditBio","switchVideoSubtab","toggleVideoSearchInput","clearVideoSearch","handleVideoTapOrDoubleTap"]).forEach(function(fn) {
+const zukaBtns = ["openSearchModal","switchMainTab","toggleMessengerDrawer","toggleNotificationDrawer","toggleProfileMenu","openStarsModal","openCreatePostModal","openLiveModal","openChatWith","closeModal","aiHelpWritePost","clearPostMedia","promptPollCreate","promptFeeling","submitNewPost","sendLiveCommentBtn","toggleZukaAIChat","triggerCallFromChat","closeZukaAIChat","openZukaPayModal","sendChatMessage","executeZukaPay","openBlueTickRequestModal","submitVerificationForm","closeVideoCommentsSheet","submitVideoComment","openCreateStoryModal","viewStory","openPostOptions","votePollOption","openPostCommentsSheet","reactTo","sharePost","promptPostProduct","promptMakeOffer","promptCreateGroup","promptEditBio","switchVideoSubtab","toggleVideoSearchInput","clearVideoSearch","handleVideoTapOrDoubleTap"];
+zukaBtns.forEach(function(fn) {
   if (typeof window[fn] !== "function") {
     window[fn] = function() {
-      console.log("Action triggered:", fn);
-      const modal = document.getElementById(fn + "-modal") || document.querySelector("[data-modal="" + fn + ""]");
-      if (modal) modal.classList.remove("hidden");
+      const m = document.getElementById(fn + "-modal") || document.querySelector("[data-modal=\"" + fn + "\"]");
+      if (m) m.classList.remove("hidden");
     };
   }
 });
