@@ -207,28 +207,28 @@ class ZukaI18nEngine {
     }
 
     openLanguageModal() {
-        let modal = document.getElementById('zuka-language-selector-modal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'zuka-language-selector-modal';
-            modal.className = 'fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4';
-            document.body.appendChild(modal);
+        const modal = document.getElementById("zuka-language-modal");
+        if (!modal) return;
+        const list = document.getElementById("zuka-language-list");
+        if (list && Array.isArray(this.languages)) {
+            list.innerHTML = this.languages.map(l => {
+                const isSelected = this.currentLang === l.code;
+                return "<label onclick=\"window.ZukaI18n.selectLanguageRadio('" + l.code + "')\" class=\"flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all " + (isSelected ? "border-[#1877F2] bg-blue-50/70" : "border-gray-200 hover:bg-gray-50") + "\"><div class=\"flex items-center gap-3\"><span class=\"text-lg\">" + (l.flag || "🌐") + "</span><div><div class=\"text-sm font-bold text-gray-900\">" + l.name + "</div><div class=\"text-[11px] text-gray-500\">" + (l.native || l.code.toUpperCase()) + "</div></div></div><input type=\"radio\" name=\"zuka-lang-radio\" value=\"" + l.code + "\" " + (isSelected ? "checked" : "") + " class=\"w-4 h-4 text-[#1877F2]\"></label>";
+            }).join("");
         }
-
-        modal.innerHTML = `
-            <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-gray-200 dark:border-gray-800 space-y-4">
-                <div class="flex items-center justify-between border-b pb-3 border-gray-100 dark:border-gray-800">
-                    <div>
-                        <h3 class="font-black text-lg text-gray-900 dark:text-white flex items-center gap-2">
-                            <span>${this.t('lang_modal_title')}</span>
-                        </h3>
-                        <p class="text-xs text-gray-500 mt-0.5">${this.t('lang_modal_subtitle')}</p>
-                    </div>
-                    <button onclick="window.ZukaI18n.closeLanguageModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white font-bold">X</button>
-                </div>
-
-                <div class="space-y-2 py-1 max-h-72 overflow-y-auto">
-                    ${this.languages.map(l => {
-                        const isSelected = this.currentLang === l.code;
-                        return `
-                            <label onclick="window.ZukaI18n.selectLanguageRadio('${l.code}')" class="flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all ${isSelected ? 'border-[#1877F2] bg-blue-50/70 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/60'}">
+        modal.classList.remove("hidden");
+    }
+    selectLanguageRadio(code) {
+        this.pendingLang = code;
+    }
+    confirmLanguageSelection() {
+        const chosen = this.pendingLang || this.currentLang;
+        this.setLanguage(chosen);
+        const modal = document.getElementById("zuka-language-modal");
+        if (modal) modal.classList.add("hidden");
+    }
+}
+window.ZukaI18n = new ZukaI18n();
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.ZukaI18n && typeof window.ZukaI18n.init === "function") window.ZukaI18n.init();
+});
