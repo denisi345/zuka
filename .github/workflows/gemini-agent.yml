@@ -1,4 +1,4 @@
-name: ZUKA Gemini AI Agent
+name: ZUKA Forever-Free AI Agent
 on:
   issue_comment:
     types: [created]
@@ -11,32 +11,26 @@ permissions:
   pull-requests: write
 
 jobs:
-  gemini-autonomous-dev:
-    if: contains(github.event.issue.body, '@gemini-cli') || contains(github.event.comment.body, '@gemini-cli')
+  zuka-autonomous-dev:
+    if: contains(github.event.issue.body, '@zuka-ai') || contains(github.event.comment.body, '@zuka-ai')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ZUKA repository
         uses: actions/checkout@v4
 
-      - name: Trust ZUKA workspace for Gemini CLI
-        run: |
-          mkdir -p ~/.gemini
-          echo "{\"$GITHUB_WORKSPACE\": \"TRUST_FOLDER\"}" > ~/.gemini/trustedFolders.json
+      - name: Install OpenCode AI Agent
+        run: npm install -g opencode-ai
 
-      - name: Run Gemini AI Developer Agent
-        uses: google-github-actions/run-gemini-cli@v0
-        with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          gemini_model: 'gemini-3.8-flash'
-          settings: |
-            {
-              "security": {
-                "folderTrust": {
-                  "enabled": false
-                }
-              }
-            }
-          prompt: |
-            You are the lead full-stack developer for the ZUKA app.
-            Read the user's request in the GitHub issue/comment, inspect the relevant HTML, CSS, and JS files in the repository, make all necessary code edits cleanly, run `npm run build` to verify zero syntax or build errors, and create a Pull Request with your changes.
-            User request: ${{ github.event.comment.body || github.event.issue.body }}
+      - name: Run OpenRouter Free Coding Agent
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "ZUKA AI Agent"
+          git config user.email "agent@zuka.app"
+          git checkout -b ai-fix-${{ github.run_number }}
+          opencode run --model openrouter/free "Read the user's request, inspect ONLY the necessary files in this repo, make clean edits to complete the task, run npm run build to verify zero errors, and save your edits. Request: ${{ github.event.comment.body || github.event.issue.body }}"
+          git add .
+          git commit -m "AI update for ZUKA" || exit 0
+          git push -u origin ai-fix-${{ github.run_number }}
+          gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Automated changes requested in issue." --base main
