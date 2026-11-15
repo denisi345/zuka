@@ -14,7 +14,7 @@ jobs:
   zuka-autonomous-dev:
     if: contains(github.event.issue.body, '@zuka-ai') || contains(github.event.comment.body, '@zuka-ai')
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 350
     steps:
       - name: Checkout ZUKA repository
         uses: actions/checkout@v4
@@ -22,7 +22,7 @@ jobs:
       - name: Install OpenCode AI Agent
         run: npm install -g opencode-ai
 
-      - name: Run High-Speed Coding Agent
+      - name: Run Autonomous Coding Agent
         env:
           OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -33,15 +33,15 @@ jobs:
           BRANCH="ai-fix-${{ github.run_number }}"
           git checkout -b "$BRANCH"
 
-          TASK="You MUST edit the files directly to fulfill this ZUKA Facebook-style request: $ISSUE_BODY. Never use hardcoded personal names, run npm run build once, and finish."
+          TASK="You are building ZUKA, a social network designed to look and work like Facebook. Complete this request thoroughly: $ISSUE_BODY. Never use hardcoded personal names (use generic labels like ZUKA Member), run npm run build to confirm zero errors, and finish cleanly."
 
-          timeout 300 opencode run -m "openrouter/openrouter/free" "$TASK"
+          opencode run -m "openrouter/openrouter/free" "$TASK" || true
 
           git add .
           if git diff --cached --quiet; then
-            gh issue comment "${{ github.event.issue.number }}" --body "ZUKA AI Agent checked the files and verified the build."
+            gh issue comment "${{ github.event.issue.number }}" --body "ZUKA AI Agent completed check with no pending file changes."
             exit 0
           fi
-          git commit -m "ZUKA Phase 1 AI update #${{ github.run_number }}"
+          git commit -m "ZUKA AI update #${{ github.run_number }}"
           git push -u origin "$BRANCH"
-          gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Automated Phase 1 Facebook-style update." --base main
+          gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Automated Facebook-style update." --base main
