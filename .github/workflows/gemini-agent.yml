@@ -26,9 +26,9 @@ jobs:
       - name: Run Gemini AI Developer Agent
         uses: google-github-actions/run-gemini-cli@v0
         with:
-        gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-        gemini_model: 'gemini-3.8-flash'
-        settings: |  
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          gemini_model: 'gemini-3.8-flash'
+          settings: |
             {
               "security": {
                 "folderTrust": {
