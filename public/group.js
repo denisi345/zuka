@@ -25,7 +25,7 @@ class ZukaGroupsEngine {
                     privacy: 'public', // public, private, hidden
                     created_by: 'usr_juma_01',
                     admin_id: 'usr_juma_01',
-                    admin_name: 'Juma Salum',
+                    admin_name: 'Member Salum',
                     members_count: 3420,
                     is_member: true,
                     is_admin: true,
