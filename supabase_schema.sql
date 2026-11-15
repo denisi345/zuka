@@ -6,7 +6,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. USERS & PROFILES
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT UNIQUE,
     phone TEXT UNIQUE,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- 2. ZUKA OWNERS (Mark Zuckerberg level - controls all ZUKA)
 CREATE TABLE IF NOT EXISTS zuka_owners (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     owner_username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT DEFAULT 'owner',
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS zuka_owners (
 -- 3. POSTS
 CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     page_id UUID,
     group_id UUID,
     content TEXT,
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE TABLE IF NOT EXISTS comments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     media_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS comments (
 CREATE TABLE IF NOT EXISTS likes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     reaction_type TEXT DEFAULT 'like', -- 'like', 'love', 'haha', 'wow', 'sad', 'angry'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(post_id, user_id)
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS likes (
 -- 6. STORIES
 CREATE TABLE IF NOT EXISTS stories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     media_url TEXT NOT NULL,
     media_type TEXT DEFAULT 'image',
     caption TEXT,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS stories (
 -- 7. REELS
 CREATE TABLE IF NOT EXISTS reels (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     video_url TEXT NOT NULL,
     caption TEXT,
     audio_track TEXT,
@@ -118,8 +118,8 @@ CREATE TABLE IF NOT EXISTS reels (
 -- 8. MESSAGES & CHATS
 CREATE TABLE IF NOT EXISTS messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    receiver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     content TEXT,
     media_url TEXT,
     voice_note_url TEXT,
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS group_chats (
     name TEXT NOT NULL,
     icon_url TEXT,
     group_id UUID, -- Optional link to community Group
-    created_by UUID REFERENCES users(id),
+    created_by UUID REFERENCES profiles(id),
     is_muted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS group_chats (
 CREATE TABLE IF NOT EXISTS group_chat_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     chat_id UUID REFERENCES group_chats(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     role TEXT DEFAULT 'member', -- 'admin', 'member'
     joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(chat_id, user_id)
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS group_chat_members (
 CREATE TABLE IF NOT EXISTS group_chat_messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     chat_id UUID REFERENCES group_chats(id) ON DELETE CASCADE,
-    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     content TEXT,
     media_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS groups (
     description TEXT,
     cover_url TEXT DEFAULT 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800',
     privacy TEXT DEFAULT 'public', -- 'public', 'private', 'hidden'
-    created_by UUID REFERENCES users(id) ON DELETE CASCADE,
+    created_by UUID REFERENCES profiles(id) ON DELETE CASCADE,
     post_approval_enabled BOOLEAN DEFAULT FALSE,
     slow_mode_seconds INTEGER DEFAULT 0,
     commenting_disabled BOOLEAN DEFAULT FALSE,
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS groups (
 CREATE TABLE IF NOT EXISTS group_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     role TEXT DEFAULT 'member', -- 'admin', 'moderator', 'member'
     is_preapproved BOOLEAN DEFAULT FALSE,
     suspended_until TIMESTAMP WITH TIME ZONE,
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS group_questions (
 CREATE TABLE IF NOT EXISTS group_answers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     question_id UUID REFERENCES group_questions(id) ON DELETE CASCADE,
     answer_text TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS group_answers (
 CREATE TABLE IF NOT EXISTS pending_posts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     content TEXT,
     media_url TEXT,
     status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'declined'
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS pending_posts (
 CREATE TABLE IF NOT EXISTS pending_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     status TEXT DEFAULT 'pending',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS moderation_alerts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
     keyword TEXT NOT NULL,
-    triggered_by UUID REFERENCES users(id),
+    triggered_by UUID REFERENCES profiles(id),
     content_snippet TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS spam_posts (
 CREATE TABLE IF NOT EXISTS suspensions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     duration_days INTEGER NOT NULL,
     ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS suspensions (
 CREATE TABLE IF NOT EXISTS group_experts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     badge_title TEXT DEFAULT 'Group Expert',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS group_guides (
 CREATE TABLE IF NOT EXISTS group_files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_id REFERENCES groups(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id),
+    user_id UUID REFERENCES profiles(id),
     file_name TEXT NOT NULL,
     file_url TEXT NOT NULL,
     file_size_kb INTEGER,
@@ -298,14 +298,14 @@ CREATE TABLE IF NOT EXISTS pages (
     is_verified BOOLEAN DEFAULT TRUE,
     is_news_source BOOLEAN DEFAULT FALSE,
     followers_count INTEGER DEFAULT 0,
-    created_by UUID REFERENCES users(id),
+    created_by UUID REFERENCES profiles(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS page_likes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     page_id UUID REFERENCES pages(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(page_id, user_id)
 );
@@ -313,7 +313,7 @@ CREATE TABLE IF NOT EXISTS page_likes (
 -- 12. MARKETPLACE & SHOP
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    seller_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    seller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     price NUMERIC(12,2) NOT NULL,
     currency TEXT DEFAULT 'TZS',
@@ -327,8 +327,8 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS seller_ratings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    seller_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    buyer_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    seller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    buyer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     review TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -337,7 +337,7 @@ CREATE TABLE IF NOT EXISTS seller_ratings (
 CREATE TABLE IF NOT EXISTS offers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-    buyer_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    buyer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     offer_amount NUMERIC(12,2) NOT NULL,
     status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'rejected'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -346,7 +346,7 @@ CREATE TABLE IF NOT EXISTS offers (
 -- 13. LIVE BROADCASTS
 CREATE TABLE IF NOT EXISTS lives (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    host_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    host_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     category TEXT DEFAULT 'General',
     viewers_count INTEGER DEFAULT 0,
@@ -359,7 +359,7 @@ CREATE TABLE IF NOT EXISTS lives (
 -- 14. EVENTS
 CREATE TABLE IF NOT EXISTS events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    creator_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    creator_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
     cover_url TEXT,
@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS event_attendees (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     status TEXT DEFAULT 'going', -- 'going', 'interested'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(event_id, user_id)
@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS event_attendees (
 -- 15. JOBS
 CREATE TABLE IF NOT EXISTS jobs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    employer_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    employer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     company TEXT NOT NULL,
     location TEXT NOT NULL,
@@ -392,7 +392,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 CREATE TABLE IF NOT EXISTS job_applications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     job_id UUID REFERENCES jobs(id) ON DELETE CASCADE,
-    applicant_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    applicant_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     cv_summary TEXT,
     status TEXT DEFAULT 'applied',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -401,7 +401,7 @@ CREATE TABLE IF NOT EXISTS job_applications (
 -- 16. FUNDRAISERS
 CREATE TABLE IF NOT EXISTS fundraisers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    creator_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    creator_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
     target_amount NUMERIC(12,2) NOT NULL,
@@ -412,7 +412,7 @@ CREATE TABLE IF NOT EXISTS fundraisers (
 CREATE TABLE IF NOT EXISTS donations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     fundraiser_id UUID REFERENCES fundraisers(id) ON DELETE CASCADE,
-    donor_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    donor_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     amount NUMERIC(12,2) NOT NULL,
     donor_name TEXT,
     payment_method TEXT DEFAULT 'M-Pesa',
@@ -422,7 +422,7 @@ CREATE TABLE IF NOT EXISTS donations (
 -- 17. DATING
 CREATE TABLE IF NOT EXISTS dating_profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE UNIQUE,
     display_name TEXT NOT NULL,
     age INTEGER,
     bio TEXT,
@@ -434,8 +434,8 @@ CREATE TABLE IF NOT EXISTS dating_profiles (
 
 CREATE TABLE IF NOT EXISTS matches (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user1_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    user2_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user1_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    user2_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     status TEXT DEFAULT 'matched',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -443,8 +443,8 @@ CREATE TABLE IF NOT EXISTS matches (
 -- 18. NOTIFICATIONS, FOLLOWS & FRIEND REQUESTS
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    actor_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    actor_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     type TEXT NOT NULL, -- 'like', 'comment', 'friend_req', 'live', 'mention'
     content TEXT NOT NULL,
     target_id UUID,
@@ -454,8 +454,8 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE TABLE IF NOT EXISTS follows (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    following_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    follower_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    following_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     is_close_friend BOOLEAN DEFAULT FALSE,
     see_first BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -464,8 +464,8 @@ CREATE TABLE IF NOT EXISTS follows (
 
 CREATE TABLE IF NOT EXISTS friend_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    receiver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'rejected'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(sender_id, receiver_id)
@@ -473,7 +473,7 @@ CREATE TABLE IF NOT EXISTS friend_requests (
 
 CREATE TABLE IF NOT EXISTS saved_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     item_type TEXT NOT NULL, -- 'post', 'reel', 'product', 'video'
     item_id UUID NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -482,7 +482,7 @@ CREATE TABLE IF NOT EXISTS saved_items (
 -- 19. MONETIZATION, ADS & TRANSACTIONS
 CREATE TABLE IF NOT EXISTS ads (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
     budget NUMERIC(10,2) NOT NULL,
     payment_method TEXT DEFAULT 'M-Pesa',
@@ -495,7 +495,7 @@ CREATE TABLE IF NOT EXISTS ads (
 
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     amount NUMERIC(12,2) NOT NULL,
     type TEXT NOT NULL, -- 'stars_buy', 'ad_spend', 'send_money', 'donation'
     payment_provider TEXT, -- 'M-Pesa', 'Tigo Pesa', 'Airtel Money', 'Card'
@@ -505,8 +505,8 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 CREATE TABLE IF NOT EXISTS stars (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    recipient_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    recipient_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
     stars_amount INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -514,8 +514,8 @@ CREATE TABLE IF NOT EXISTS stars (
 
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    subscriber_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    creator_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    subscriber_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    creator_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     monthly_price NUMERIC(10,2) DEFAULT 5000.00,
     status TEXT DEFAULT 'active',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -523,7 +523,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 
 CREATE TABLE IF NOT EXISTS verification_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     document_url TEXT NOT NULL,
     category TEXT NOT NULL,
     reason TEXT NOT NULL,
@@ -534,7 +534,7 @@ CREATE TABLE IF NOT EXISTS verification_requests (
 
 CREATE TABLE IF NOT EXISTS reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    reporter_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    reporter_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
     content_type TEXT NOT NULL, -- 'post', 'comment', 'user', 'group', 'live'
     content_id UUID NOT NULL,
     reason TEXT NOT NULL,
@@ -545,8 +545,8 @@ CREATE TABLE IF NOT EXISTS reports (
 
 CREATE TABLE IF NOT EXISTS blocks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    blocker_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    blocked_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    blocker_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    blocked_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(blocker_id, blocked_id)
 );
@@ -603,7 +603,7 @@ CREATE TABLE IF NOT EXISTS news_posts (
 -- 22. ZUKA AI CHATS (Messenger contact "ZUKA AI")
 CREATE TABLE IF NOT EXISTS ai_chats (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT DEFAULT 'Mazungumzo na ZUKA AI',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -618,8 +618,8 @@ CREATE TABLE IF NOT EXISTS ai_chat_messages (
 
 CREATE TABLE IF NOT EXISTS chat_themes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    contact_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    contact_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     theme_color TEXT DEFAULT '#1877F2',
     background_url TEXT,
     UNIQUE(user_id, contact_id)
@@ -642,7 +642,7 @@ CREATE TABLE IF NOT EXISTS polls (
 CREATE TABLE IF NOT EXISTS poll_votes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     poll_id UUID REFERENCES polls(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     option_index INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(poll_id, user_id)
@@ -650,7 +650,7 @@ CREATE TABLE IF NOT EXISTS poll_votes (
 
 CREATE TABLE IF NOT EXISTS memories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     original_post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
     years_ago INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -666,7 +666,7 @@ CREATE TABLE IF NOT EXISTS admin_assist_rules (
 
 CREATE TABLE IF NOT EXISTS activity_log (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     action TEXT NOT NULL,
     ip_address TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -687,10 +687,114 @@ ON CONFLICT (handle) DO NOTHING;
 
 -- Initial Owner Seed (Owner of ZUKA)
 -- Password for initial secret panel demo is "ZukaOwner1974!"
-INSERT INTO users (id, username, full_name, email, is_verified, bio) VALUES
+INSERT INTO profiles (id, username, full_name, email, is_verified, bio) VALUES
 ('a0000000-0000-0000-0000-000000000001', 'zuka_founder', 'ZUKA Founder & Owner', 'owner@zuka.com', TRUE, 'I am the Owner of ZUKA. Welcome to the open social network.')
 ON CONFLICT (username) DO NOTHING;
 
 INSERT INTO zuka_owners (id, user_id, owner_username, password_hash, role, secret_key) VALUES
 ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'zuka_owner', 'ZukaOwner1974!', 'owner', 'zuka-mother-1974-key')
 ON CONFLICT (owner_username) DO NOTHING;
+
+-- ============================================================================
+-- ADDITIONAL TABLES USED BY ZUKA APP SCRIPTS
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS watch_videos (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    creator_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    creator_name TEXT,
+    creator_avatar TEXT,
+    title TEXT,
+    caption TEXT,
+    video_url TEXT,
+    thumbnail_url TEXT,
+    audio_track TEXT,
+    category TEXT DEFAULT 'General',
+    likes_count INTEGER DEFAULT 0,
+    comments_count INTEGER DEFAULT 0,
+    shares_count INTEGER DEFAULT 0,
+    is_liked BOOLEAN DEFAULT FALSE,
+    is_saved BOOLEAN DEFAULT FALSE,
+    is_following BOOLEAN DEFAULT FALSE,
+    comments JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS live_streams (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    title TEXT,
+    stream_url TEXT,
+    is_active BOOLEAN DEFAULT FALSE,
+    viewers_count INTEGER DEFAULT 0,
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS live_comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    stream_id UUID REFERENCES live_streams(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    user_name TEXT,
+    text TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS saved_posts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    item_type TEXT DEFAULT 'post',
+    item_id UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS chat_contacts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT,
+    avatar TEXT,
+    is_ai BOOLEAN DEFAULT FALSE,
+    is_online BOOLEAN DEFAULT FALSE,
+    last_msg TEXT,
+    last_time TIMESTAMP WITH TIME ZONE,
+    unread INTEGER DEFAULT 0,
+    theme TEXT DEFAULT '#1877F2'
+);
+
+CREATE TABLE IF NOT EXISTS ai_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sender TEXT,
+    message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS group_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    chat_id UUID,
+    sender_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    text TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    product_id UUID,
+    amount DECIMAL,
+    status TEXT DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ceo_panel (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    action TEXT,
+    target_id UUID,
+    details TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS ceo_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    owner_username TEXT UNIQUE,
+    password_hash TEXT,
+    role TEXT DEFAULT 'owner',
+    last_login TIMESTAMP WITH TIME ZONE
+);

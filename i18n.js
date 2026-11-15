@@ -98,7 +98,7 @@ const ZUKA_TRANSLATIONS = {
         signup_modal_title: "Sign Up",
         signup_modal_subtitle: "It's quick and easy.",
         reg_full_name: "Full Name",
-        reg_username: "Username (e.g. john_doe)",
+        reg_username: "Username (e.g. zuka_member)",
         reg_email: "Email address",
         reg_phone: "Mobile phone number",
         reg_password: "New password",
@@ -206,7 +206,37 @@ class ZukaI18nEngine {
         });
     }
 
+    init() {
+        this.ensureLanguageModal();
+        this.applyDomTranslations();
+    }
+
+    ensureLanguageModal() {
+        if (document.getElementById('zuka-language-modal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'zuka-language-modal';
+        modal.className = 'fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 hidden';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900 dark:text-white" data-i18n="lang_modal_title">Select Your Language</h3>
+                        <p class="text-[11px] text-gray-500" data-i18n="lang_modal_subtitle">Choose your preferred language for the ZUKA interface.</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('zuka-language-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
+                </div>
+                <div class="p-3 space-y-2" id="zuka-language-list"></div>
+                <div class="p-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('zuka-language-modal').classList.add('hidden')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200" data-i18n="btn_cancel">Cancel</button>
+                    <button type="button" onclick="window.ZukaI18n.confirmLanguageSelection()" class="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-[#1877F2] hover:bg-blue-600" data-i18n="btn_save_language">Save Language</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
     openLanguageModal() {
+        this.ensureLanguageModal();
         const modal = document.getElementById("zuka-language-modal");
         if (!modal) return;
         const list = document.getElementById("zuka-language-list");

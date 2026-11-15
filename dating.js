@@ -1,6 +1,7 @@
 /**
  * ZUKA - Dating Engine (dating.js)
  * 100% English - No Fake Profiles, No Fake Matches
+ * Fully Integrated with Supabase Client & Cloudflare Deploys
  */
 
 class ZukaDatingEngine {
@@ -8,43 +9,72 @@ class ZukaDatingEngine {
         this.initDatingProfiles();
     }
 
-    initDatingProfiles() {
-        let profiles = window.ZukaDB.get('dating_profiles');
-        if (!profiles) {
-            profiles = [];
-            window.ZukaDB.set('dating_profiles', profiles);
+    async initDatingProfiles() {
+        if (!window.supabaseClient) return;
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('dating_profiles')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            this.profiles = data || [];
+        } catch (e) {
+            console.error("Error initializing dating profiles:", e);
+            this.profiles = [];
         }
     }
 
-    getProfiles() {
-        return window.ZukaDB.get('dating_profiles') || [];
+    async getProfiles() {
+        if (!window.supabaseClient) return [];
+        try {
+            const { data, error } = await window.supabaseClient
+                .from('dating_profiles')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            console.error("Error fetching dating profiles:", e);
+            return [];
+        }
     }
 
-    likeProfile(profileId) {
-        const profiles = this.getProfiles();
-        const p = profiles.find(item => item.id === profileId);
-        if (!p) return null;
-
-        const matches = window.ZukaDB.get('dating_matches') || [];
-        const existing = matches.find(m => m.profile_id === profileId);
-        if (existing) return existing;
-
-        const newMatch = {
-            id: 'match_' + Date.now().toString(36),
-            profile_id: profileId,
-            name: p.name || '',
-            created_at: new Date().toISOString()
-        };
-        matches.unshift(newMatch);
-        window.ZukaDB.set('dating_matches', matches);
-        return newMatch;
+    async likeProfile(profileId) {
+        if (!window.supabaseClient) return null;
+        try {
+            const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+            const { data, error } = await window.supabaseClient
+                .from('matches')
+                .insert([{
+                    user1_id: currentUser ? currentUser.id : null,
+                    user2_id: profileId,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.error("Error liking dating profile:", e);
+            return null;
+        }
     }
 
-    passProfile(profileId) {
-        const passed = window.ZukaDB.get('dating_passed') || [];
-        if (!passed.includes(profileId)) {
-            passed.push(profileId);
-            window.ZukaDB.set('dating_passed', passed);
+    async passProfile(profileId) {
+        if (!window.supabaseClient) return false;
+        try {
+            const currentUser = window.ZukaAuth ? window.ZukaAuth.getCurrentUser() : null;
+            if (!currentUser) return false;
+            const { error } = await window.supabaseClient
+                .from('dating_profiles')
+                .update({ is_passed: true })
+                .eq('id', profileId);
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            console.error("Error passing dating profile:", e);
+            return false;
         }
     }
 }
