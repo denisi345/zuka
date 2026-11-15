@@ -1,4 +1,4 @@
-name: ZUKA Forever-Free AI Agent
+name: ZUKA Autonomous AI Agent
 on:
   issue_comment:
     types: [created]
@@ -21,16 +21,27 @@ jobs:
       - name: Install OpenCode AI Agent
         run: npm install -g opencode-ai
 
-      - name: Run OpenRouter Free Coding Agent
+      - name: Run Verified OpenRouter Coding Agent
         env:
           OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "ZUKA AI Agent"
           git config user.email "agent@zuka.app"
-          git checkout -b ai-fix-${{ github.run_number }}
-          opencode run --model openrouter/free "Read the user's request, inspect ONLY the necessary files in this repo, make clean edits to complete the task, run npm run build to verify zero errors, and save your edits. Request: ${{ github.event.comment.body || github.event.issue.body }}"
+          BRANCH="ai-fix-${{ github.run_number }}"
+          git checkout -b "$BRANCH"
+
+          TASK="Complete this request cleanly: ${{ github.event.comment.body || github.event.issue.body }}. Inspect only the necessary files, make clean code edits, run npm run build to confirm zero errors, and save changes."
+
+          opencode run -m "openrouter/openrouter/free" "$TASK" || \
+          opencode run -m "openrouter/qwen/qwen3-coder:free" "$TASK" || \
+          opencode run -m "openrouter/deepseek/deepseek-r1:free" "$TASK"
+
           git add .
-          git commit -m "AI update for ZUKA" || exit 0
-          git push -u origin ai-fix-${{ github.run_number }}
+          if git diff --cached --quiet; then
+            echo "No file changes were produced."
+            exit 1
+          fi
+          git commit -m "ZUKA AI update #${{ github.run_number }}"
+          git push -u origin "$BRANCH"
           gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Automated changes requested in issue." --base main
