@@ -12,7 +12,7 @@ const ZUKA_TRANSLATIONS = {
         nav_watch: "Watch",
         nav_marketplace: "Marketplace",
         nav_groups: "Groups",
-        nav_gaming: "Gaming",
+        nav_menu: "Menu",
         btn_go_live: "Go Live",
         badge_ai_active: "AI Moderation Active",
         title_messenger: "Messenger",
@@ -42,7 +42,7 @@ const ZUKA_TRANSLATIONS = {
 
         story_create_title: "Create story",
         story_share_photo: "Share a photo or write something.",
-        whats_on_your_mind: "What's on your mind, {name}?",
+        whats_on_your_mind: "What's on your mind?",
         btn_live_video: "Live video",
         btn_photo_video: "Photo/video",
         btn_feeling_activity: "Feeling/activity",

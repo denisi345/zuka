@@ -42,6 +42,32 @@ class ZukaFeedEngine {
             }
         }
 
+        // 3. If the posts table is empty, render a realistic ZUKA welcome post card (generic author)
+        if (cleanPosts.length === 0) {
+            cleanPosts = [{
+                id: 'welcome-zuka-post',
+                user_id: null,
+                author_name: 'ZUKA Team',
+                author_avatar: "data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>",
+                is_verified: true,
+                created_at: new Date().toISOString(),
+                content: 'Welcome to ZUKA! This is your News Feed. Follow ZUKA Members, join Groups, watch Reels, share Stories and post your first update using the "What\'s on your mind?" box above.',
+                media_url: null,
+                media_type: 'text',
+                feeling: null,
+                location_tag: null,
+                source_attribution: null,
+                privacy: 'public',
+                is_welcome: true,
+                likes_count: 1,
+                comments_count: 0,
+                shares_count: 0,
+                user_reaction: null,
+                comments_list: []
+            }];
+            return cleanPosts;
+        }
+
         // 3. Global sorting algorithm (Prioritizing Close Friends, then trending scores)
         cleanPosts.sort((a, b) => {
             const isAFriend = currentUser && currentUser.close_friends && currentUser.close_friends.includes(a.user_id);

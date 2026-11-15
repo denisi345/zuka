@@ -1,38 +1,27 @@
 @import "tailwindcss";
 /* ==========================================================================
-   ZUKA SOCIAL SUPER APP - FACEBOOK DESIGN SYSTEM (#1877F2)
+   ZUKA SOCIAL SUPER APP - AUTHENTIC FACEBOOK LIGHT DESIGN SYSTEM
+   Page Background #F0F2F5 | Cards #FFFFFF | Brand Blue #1877F2
    Mobile-First, Responsive, Authentically Branded ZUKA
-   100% English - Cleaned, Dark Mode Fixed
    ========================================================================== */
 
 :root {
     --zuka-blue: #1877F2;
     --zuka-blue-hover: #166fe5;
     --zuka-blue-light: #e7f3ff;
-    --zuka-dark-bg: #18191a;
-    --zuka-dark-card: #242526;
-    --zuka-dark-hover: #3a3b3c;
-    --zuka-dark-border: #393a3b;
     --zuka-text-main: #050505;
     --zuka-text-sub: #65676b;
     --zuka-bg-gray: #f0f2f5;
     --zuka-card-bg: #ffffff;
+    --zuka-icon-btn: #e4e6eb;
+    --zuka-icon-btn-hover: #d8dadf;
     --zuka-border: #ced0d4;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.1);
     --shadow-dropdown: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
-.dark {
-    --zuka-bg-gray: #18191a;
-    --zuka-card-bg: #242526;
-    --zuka-text-main: #e4e6eb;
-    --zuka-text-sub: #b0b3b8;
-    --zuka-border: #393a3b;
-    --zuka-blue-light: rgba(24, 119, 242, 0.2);
-}
-
 body {
-    background-color: var(--zuka-bg-gray);
+    background-color: #F0F2F5;
     color: var(--zuka-text-main);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
@@ -53,15 +42,12 @@ body {
     background: #bcc0c4;
     border-radius: 4px;
 }
-.dark ::-webkit-scrollbar-thumb {
-    background: #4e4f50;
-}
 
 /* Top App Header */
 .zuka-top-nav {
     height: 56px;
-    background: var(--zuka-card-bg);
-    border-bottom: 1px solid var(--zuka-border);
+    background: #FFFFFF;
+    border-bottom: 1px solid #E4E6EB;
     position: sticky;
     top: 0;
     z-index: 50;
@@ -69,7 +55,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .zuka-logo-text {
@@ -84,7 +70,7 @@ body {
 }
 
 .zuka-search-bar {
-    background: var(--zuka-bg-gray);
+    background: #F0F2F5;
     border-radius: 50px;
     padding: 8px 16px;
     display: flex;
@@ -133,7 +119,7 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: var(--zuka-bg-gray);
+    background: #E4E6EB;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -141,13 +127,11 @@ body {
     position: relative;
     color: var(--zuka-text-main);
     transition: background 0.15s;
+    flex-shrink: 0;
 }
 
 .action-circle-btn:hover {
-    background: #e4e6eb;
-}
-.dark .action-circle-btn:hover {
-    background: #3a3b3c;
+    background: #D8DADF;
 }
 
 .unread-badge {
@@ -171,7 +155,7 @@ body {
 /* Stories Carousel */
 .stories-container {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     overflow-x: auto;
     padding-bottom: 6px;
     scrollbar-width: none;
@@ -182,8 +166,8 @@ body {
 
 .story-card {
     min-width: 112px;
-    height: 195px;
-    border-radius: 10px;
+    height: 198px;
+    border-radius: 8px;
     position: relative;
     overflow: hidden;
     cursor: pointer;
@@ -192,10 +176,68 @@ body {
     box-shadow: var(--shadow-card);
     transition: transform 0.2s ease;
     flex-shrink: 0;
+    background-color: #FFFFFF;
 }
 
 .story-card:hover {
     transform: scale(1.02);
+}
+
+/* Create Story Card: top 70% media, bottom 30% white panel */
+.create-story-card {
+    display: flex;
+    flex-direction: column;
+    background: #FFFFFF;
+}
+
+.create-story-top {
+    height: 70%;
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #1877F2 0%, #6279A8 100%);
+}
+
+.create-story-top img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.create-story-bottom {
+    height: 30%;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding-top: 8px;
+}
+
+.create-story-plus {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1877F2;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    margin-top: -20px;
+    flex-shrink: 0;
+}
+
+.create-story-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #050505;
+    white-space: nowrap;
 }
 
 .story-avatar-ring {
@@ -231,19 +273,18 @@ body {
 
 /* Feed Cards & Post Text */
 .zuka-card {
-    background: var(--zuka-card-bg);
+    background: #FFFFFF;
     width: 100%;
     border-radius: 8px;
-    box-shadow: var(--shadow-card);
-    border: 1px solid var(--zuka-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     margin-bottom: 16px;
     overflow: hidden;
 }
 
 .zuka-post-body-text {
-    color: var(--zuka-text-main);
-    font-size: 16px;
-    line-height: 1.5;
+    color: #050505;
+    font-size: 15px;
+    line-height: 1.4;
     font-weight: 400;
     white-space: pre-line;
     word-break: break-word;
@@ -282,8 +323,8 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 4px 8px;
-    border-top: 1px solid var(--zuka-border);
-    background: var(--zuka-card-bg);
+    border-top: 1px solid #CED0D4;
+    background: #FFFFFF;
 }
 
 .zuka-post-action-btn {
@@ -310,6 +351,35 @@ body {
 
 .zuka-post-action-btn.active {
     color: var(--zuka-blue);
+}
+
+/* Inline Comment Box */
+.inline-comment-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid #E4E6EB;
+    background: #FFFFFF;
+}
+
+.inline-comment-input {
+    flex: 1;
+    background: #F0F2F5;
+    border-radius: 50px;
+    padding: 8px 14px;
+    font-size: 13px;
+    outline: none;
+    border: none;
+    color: #050505;
+}
+
+.inline-comment-list {
+    padding: 8px 12px 0;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Reaction Flyout */
