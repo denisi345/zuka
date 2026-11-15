@@ -1,0 +1,28 @@
+name: ZUKA Gemini AI Agent
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  gemini-autonomous-dev:
+    if: contains(github.event.issue.body, '@gemini-cli') || contains(github.event.comment.body, '@gemini-cli')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ZUKA repository
+        uses: actions/checkout@v4
+
+      - name: Run Gemini AI Developer Agent
+        uses: google-github-actions/run-gemini-cli@v0
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            You are the lead full-stack developer for the ZUKA app.
+            Read the user's request in the GitHub issue/comment, inspect the relevant HTML, CSS, and JS files in the repository, make all necessary code edits cleanly, run `npm run build` to verify zero syntax or build errors, and create a Pull Request with your changes.
+            User request: ${{ github.event.comment.body || github.event.issue.body }}
