@@ -18,10 +18,23 @@ jobs:
       - name: Checkout ZUKA repository
         uses: actions/checkout@v4
 
+      - name: Trust ZUKA workspace for Gemini CLI
+        run: |
+          mkdir -p ~/.gemini
+          echo "{\"$GITHUB_WORKSPACE\": \"TRUST_FOLDER\"}" > ~/.gemini/trustedFolders.json
+
       - name: Run Gemini AI Developer Agent
         uses: google-github-actions/run-gemini-cli@v0
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          settings: |
+            {
+              "security": {
+                "folderTrust": {
+                  "enabled": false
+                }
+              }
+            }
           prompt: |
             You are the lead full-stack developer for the ZUKA app.
             Read the user's request in the GitHub issue/comment, inspect the relevant HTML, CSS, and JS files in the repository, make all necessary code edits cleanly, run `npm run build` to verify zero syntax or build errors, and create a Pull Request with your changes.
