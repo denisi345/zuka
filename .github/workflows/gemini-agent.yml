@@ -25,13 +25,14 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_BODY: ${{ github.event.comment.body || github.event.issue.body }}
         run: |
           git config user.name "ZUKA AI Agent"
           git config user.email "agent@zuka.app"
           BRANCH="ai-fix-${{ github.run_number }}"
           git checkout -b "$BRANCH"
 
-          TASK="Complete this request cleanly: ${{ github.event.comment.body || github.event.issue.body }}. Inspect only the necessary files, make clean code edits, run npm run build to confirm zero errors, and save changes."
+          TASK="Complete this request cleanly: $ISSUE_BODY. Inspect the necessary files, make clean code edits across the project, run npm run build to confirm zero errors, and save changes."
 
           opencode run -m "openrouter/openrouter/free" "$TASK" || \
           opencode run -m "openrouter/qwen/qwen3-coder:free" "$TASK" || \
