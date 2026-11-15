@@ -625,8 +625,8 @@
             document.getElementById('sidebar-stars-balance').innerText = `${user.stars_balance || 0} ⭐`;
         }
 
-        function renderStories() {
-            const stories = window.ZukaStories.getStories();
+        async function renderStories() {
+            const stories = (await window.ZukaStories.getStories()) || [];
             const currentUser = window.ZukaAuth.getCurrentUser();
             const tray = document.getElementById('stories-tray');
             if (!tray) return;
@@ -652,11 +652,12 @@
                 `).join('')}
             `;
         }
-        function renderFeed() {
-            const posts = window.ZukaFeed.getFeedPosts();
+        async function renderFeed() {
+            const posts = (await window.ZukaFeed.getFeedPosts()) || [];
             const container = document.getElementById('feed-posts-container');
             if (!container) return;
 
+            if (!posts.length) { container.innerHTML = `<div class="zuka-card p-6 text-center space-y-2"><div class="text-3xl">🌍</div><h3 class="font-bold text-base">Welcome to ZUKA!</h3><p class="text-xs text-gray-500">No posts yet. Click "What's on your mind?" above to share your first post or photo!</p></div>`; return; }
             container.innerHTML = posts.map(p => `
                 <div class="zuka-card" id="post-${p.id}">
                     <div class="p-3.5 flex items-center justify-between">
@@ -750,8 +751,8 @@
                 </div>
             `).join('');
         }
-        function renderContacts() {
-            const contacts = window.ZukaChat.getContacts();
+        async function renderContacts() {
+            const contacts = (await window.ZukaChat.getContacts()) || [];
             const container = document.getElementById('contacts-list-container');
             if (!container) return;
 
@@ -772,8 +773,8 @@
             `).join('');
         }
 
-        function renderNotifications() {
-            const notifs = window.ZukaNotifications.getNotifications();
+        async function renderNotifications() {
+            const notifs = (await window.ZukaNotifications.getNotifications()) || [];
             const unread = window.ZukaNotifications.getUnreadCount();
             const badge = document.getElementById('notif-badge-count');
             if (badge) badge.innerText = unread;
@@ -926,7 +927,7 @@
             if (window.ZukaFeed && typeof window.ZukaFeed.sharePost === 'function') {
                 await window.ZukaFeed.sharePost(postId);
             } else if (window.supabaseClient) {
-                const posts = window.ZukaFeed.getFeedPosts();
+                const posts = (await window.ZukaFeed.getFeedPosts()) || [];
                 const p = posts.find(item => item.id === postId);
                 if (p) {
                     const newCount = (p.shares_count || 0) + 1;
@@ -990,7 +991,7 @@
 
         function openChatWith(contactId) {
             window.activeContact = contactId;
-            const contacts = window.ZukaChat.getContacts();
+            const contacts = (await window.ZukaChat.getContacts()) || [];
             const contact = contacts.find(c => c.id === contactId) || { name: 'User', avatar: '' };
 
             const nameEl = document.getElementById('chat-header-name');
@@ -1782,7 +1783,7 @@
                 const item = reels.find(r => r.id === currentCommentVideoId);
                 if (item) comments = item.comments || [];
             } else if (currentCommentVideoType === 'post') {
-                const posts = window.ZukaFeed.getFeedPosts();
+                const posts = (await window.ZukaFeed.getFeedPosts()) || [];
                 const item = posts.find(p => p.id === currentCommentVideoId);
                 if (item) comments = (item.comments_list || []).map(c => ({
                     user_name: c.user_name,

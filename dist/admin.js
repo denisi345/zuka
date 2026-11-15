@@ -97,7 +97,7 @@ class ZukaOwnerAdminEngine {
             window.supabaseClient.from('posts').select('*', { count: 'exact', head: true }),
             window.supabaseClient.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
             window.supabaseClient.from('groups').select('*', { count: 'exact', head: true }),
-            window.supabaseClient.from('lives').select('*', { count: 'exact', head: true }).eq('is_active', true),
+            window.supabaseClient.from('live_streams').select('*', { count: 'exact', head: true }).eq('is_active', true),
             window.supabaseClient.from('ai_flags').select('*', { count: 'exact', head: true })
         ]);
 
@@ -163,7 +163,7 @@ class ZukaOwnerAdminEngine {
     async getLives() {
         if (!window.supabaseClient) return [];
         const { data } = await window.supabaseClient
-            .from('lives')
+            .from('live_streams')
             .select('*')
             .order('started_at', { ascending: false });
         return data || [];

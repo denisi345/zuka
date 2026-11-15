@@ -59,7 +59,7 @@ class ZukaLiveEngine {
             if (this.isBroadcasting && this.currentLiveId) {
                 // Fetch latest live metrics directly from the database row to prevent manipulation
                 const { data, error } = await window.supabaseClient
-                    .from('lives')
+                    .from('live_streams')
                     .select('viewers_count')
                     .eq('id', this.currentLiveId)
                     .maybeSingle();
@@ -85,7 +85,7 @@ class ZukaLiveEngine {
         };
 
         const { data, error } = await window.supabaseClient
-            .from('lives')
+            .from('live_streams')
             .insert([liveRecord])
             .select()
             .single();
@@ -145,7 +145,7 @@ class ZukaLiveEngine {
 
         // 1. Update live record entry state on remote database
         await window.supabaseClient
-            .from('lives')
+            .from('live_streams')
             .update({
                 is_active: false,
                 viewers_count: this.viewersCount,
