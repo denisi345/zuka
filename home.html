@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="/style.css">
 </head>
-<body class="bg-[#f0f2f5] dark:bg-[#18191a] text-[#050505] dark:text-[#e4e6eb] antialiased">
+<body class="bg-[#f0f2f5] text-[#050505] antialiased">
 
     <!-- TOP NAVIGATION BAR -->
     <header class="zuka-top-nav">
@@ -22,7 +22,7 @@
             <div class="relative ml-2">
                 <div class="zuka-search-bar cursor-pointer" onclick="openSearchModal()">
                     <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <input type="text" id="top-search-input" data-i18n-placeholder="search_placeholder" placeholder="Search ZUKA..." class="bg-transparent border-none outline-none w-28 sm:w-48 text-xs sm:text-sm">
+                    <input type="text" id="top-search-input" data-i18n-placeholder="search_placeholder" placeholder="Search ZUKA" class="bg-transparent border-none outline-none w-28 sm:w-48 text-xs sm:text-sm">
                 </div>
             </div>
         </div>
@@ -30,19 +30,19 @@
         <!-- Center: Primary Navigation Tabs (Desktop) -->
         <div class="zuka-desktop-nav-center hidden md:flex items-center justify-center gap-1 flex-1 max-w-xl mx-4">
             <div class="zuka-nav-tab active" id="nav-tab-feed" data-i18n-title="nav_feed" title="Home" onclick="switchMainTab('feed')">
-                <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5L12 3l9 7.5M5 9.5V20a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V9.5"/></svg>
             </div>
-            <div class="zuka-nav-tab" id="nav-tab-watch" data-i18n-title="nav_watch" title="Watch" onclick="switchMainTab('watch')">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div class="zuka-nav-tab" id="nav-tab-watch" data-i18n-title="nav_watch" title="Watch & Reels" onclick="switchMainTab('watch')">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div class="zuka-nav-tab" id="nav-tab-marketplace" data-i18n-title="nav_marketplace" title="Marketplace" onclick="switchMainTab('marketplace')">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </div>
             <div class="zuka-nav-tab" id="nav-tab-groups" data-i18n-title="nav_groups" title="Groups" onclick="switchMainTab('groups')">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </div>
-            <div class="zuka-nav-tab" id="nav-tab-gaming" data-i18n-title="nav_gaming" title="Gaming" onclick="switchMainTab('gaming')">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
+            <div class="zuka-nav-tab" id="nav-tab-menu" data-i18n-title="nav_menu" title="Menu" onclick="switchMainTab('menu')">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </div>
         </div>
 
@@ -58,8 +58,8 @@
                 <div class="unread-badge" id="notif-badge-count">2</div>
             </div>
 
-            <div class="relative cursor-pointer" onclick="toggleProfileMenu()">
-                <img id="nav-user-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" alt="Profile">
+            <div class="relative cursor-pointer" onclick="toggleProfileMenu()" title="Account" aria-label="Account">
+                <img id="nav-user-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover" alt="">
             </div>
         </div>
     </header>
@@ -71,87 +71,87 @@
             <div class="zuka-sidebar-link" onclick="switchMainTab('profile')">
                 <img id="left-sidebar-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-9 h-9 rounded-full object-cover">
                 <div class="flex-1 truncate">
-                    <div id="left-sidebar-name" class="font-bold text-sm text-gray-900 dark:text-white truncate">ZUKA Member</div>
+                    <div id="left-sidebar-name" class="font-bold text-sm text-gray-900 truncate">ZUKA Member</div>
                     <div class="text-[11px] text-gray-500" data-i18n="view_your_profile">View your profile</div>
                 </div>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('friends')">
-                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">👥</div>
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">👥</div>
                 <span data-i18n="menu_friends">Friends</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('groups')">
-                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">🏛️</div>
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">🏛️</div>
                 <span data-i18n="menu_groups">Groups</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('marketplace')">
-                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">🏪</div>
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">🏪</div>
                 <span data-i18n="menu_marketplace">Marketplace</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('watch')">
-                <div class="zuka-sidebar-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600">📺</div>
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">📺</div>
                 <span data-i18n="menu_watch">Watch & Video</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('reels')">
-                <div class="zuka-sidebar-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600">🎬</div>
+                <div class="zuka-sidebar-icon bg-rose-100 text-rose-600">🎬</div>
                 <span data-i18n="menu_reels">ZUKA Reels</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('memories')">
-                <div class="zuka-sidebar-icon bg-sky-100 dark:bg-sky-900/40 text-sky-600">⏰</div>
+                <div class="zuka-sidebar-icon bg-sky-100 text-sky-600">⏰</div>
                 <span data-i18n="menu_memories">Memories</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('saved')">
-                <div class="zuka-sidebar-icon bg-purple-100 dark:bg-purple-900/40 text-purple-600">🔖</div>
+                <div class="zuka-sidebar-icon bg-purple-100 text-purple-600">🔖</div>
                 <span data-i18n="menu_saved">Saved</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('pages')">
-                <div class="zuka-sidebar-icon bg-amber-100 dark:bg-amber-900/40 text-amber-600">📄</div>
+                <div class="zuka-sidebar-icon bg-amber-100 text-amber-600">📄</div>
                 <span data-i18n="menu_pages">Pages</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('events')">
-                <div class="zuka-sidebar-icon bg-red-100 dark:bg-red-900/40 text-red-600">📅</div>
+                <div class="zuka-sidebar-icon bg-red-100 text-red-600">📅</div>
                 <span data-i18n="menu_events">Events</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('dating')">
-                <div class="zuka-sidebar-icon bg-pink-100 dark:bg-pink-900/40 text-pink-600">❤️</div>
+                <div class="zuka-sidebar-icon bg-pink-100 text-pink-600">❤️</div>
                 <span data-i18n="menu_dating">ZUKA Dating</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('jobs')">
-                <div class="zuka-sidebar-icon bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600">💼</div>
+                <div class="zuka-sidebar-icon bg-cyan-100 text-cyan-600">💼</div>
                 <span data-i18n="menu_jobs">Jobs</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('fundraiser')">
-                <div class="zuka-sidebar-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600">🤝</div>
+                <div class="zuka-sidebar-icon bg-emerald-100 text-emerald-600">🤝</div>
                 <span data-i18n="menu_fundraiser">Fundraisers</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('ads')">
-                <div class="zuka-sidebar-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600">📢</div>
+                <div class="zuka-sidebar-icon bg-indigo-100 text-indigo-600">📢</div>
                 <span data-i18n="menu_ads">Ads Manager</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="window.ZukaI18n.openLanguageModal()">
-                <div class="zuka-sidebar-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600">🌐</div>
+                <div class="zuka-sidebar-icon bg-emerald-100 text-emerald-600">🌐</div>
                 <span data-i18n="menu_language">Language</span>
             </div>
 
             <div class="zuka-sidebar-link" onclick="switchMainTab('settings')">
-                <div class="zuka-sidebar-icon bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">⚙️</div>
+                <div class="zuka-sidebar-icon bg-gray-200 text-gray-700">⚙️</div>
                 <span data-i18n="menu_settings">Settings & Privacy</span>
             </div>
 
-            <hr class="border-gray-300 dark:border-gray-800 my-2">
+            <hr class="border-gray-300 my-2">
 
             <!-- Creator Mode Card -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 rounded-xl shadow-sm text-xs space-y-1">
@@ -179,23 +179,23 @@
             <div class="zuka-card p-4">
                 <div class="flex items-center gap-3">
                     <img id="create-post-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover">
-                    <div onclick="openCreatePostModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full py-2.5 px-4 text-xs sm:text-sm text-gray-500 cursor-pointer transition">
+                    <div onclick="openCreatePostModal()" class="flex-1 bg-[#F0F2F5] hover:bg-[#E4E6EB] rounded-full py-2.5 px-4 text-xs sm:text-sm text-[#65676B] cursor-pointer transition">
                         <span id="create-post-prompt">What's on your mind?</span>
                     </div>
                 </div>
 
-                <hr class="border-gray-200 dark:border-gray-800 my-3">
+                <hr class="border-[#CED0D4] my-3">
 
-                <div class="flex items-center justify-around text-xs font-semibold text-gray-600 dark:text-gray-300">
-                    <button onclick="openLiveModal()" class="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition text-red-500 cursor-pointer">
+                <div class="flex items-center justify-around text-xs font-semibold text-[#65676B]">
+                    <button onclick="openLiveModal()" class="flex items-center gap-2 hover:bg-[#F0F2F5] px-3 py-2 rounded-lg transition text-[#F3425F] cursor-pointer">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
                         <span data-i18n="btn_live_video">Live video</span>
                     </button>
-                    <button onclick="openCreatePostModal('image')" class="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition text-emerald-500 cursor-pointer">
+                    <button onclick="openCreatePostModal('image')" class="flex items-center gap-2 hover:bg-[#F0F2F5] px-3 py-2 rounded-lg transition text-[#45BD62] cursor-pointer">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
                         <span data-i18n="btn_photo_video">Photo/video</span>
                     </button>
-                    <button onclick="openCreatePostModal('feeling')" class="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-2 rounded-lg transition text-amber-500 cursor-pointer">
+                    <button onclick="openCreatePostModal('feeling')" class="flex items-center gap-2 hover:bg-[#F0F2F5] px-3 py-2 rounded-lg transition text-[#F7B928] cursor-pointer">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
                         <span data-i18n="btn_feeling_activity">Feeling/activity</span>
                     </button>
@@ -219,7 +219,7 @@
                 <div class="flex gap-3 items-center">
                     <img src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-20 h-16 rounded-lg object-cover">
                     <div>
-                        <div class="font-bold text-xs text-gray-900 dark:text-white leading-tight">Toyota Harrier 2026 Special Edition</div>
+                        <div class="font-bold text-xs text-gray-900 leading-tight">Toyota Harrier 2026 Special Edition</div>
                         <p class="text-[11px] text-gray-500 mt-1">globalmotors.com</p>
                     </div>
                 </div>
@@ -230,7 +230,7 @@
                 <div class="flex items-center justify-between text-xs text-gray-500 font-bold mb-3">
                     <span data-i18n="sidebar_contacts">Contacts (Messenger)</span>
                     <div class="flex items-center gap-2">
-                        <button onclick="openChatWith('zuka_ai_contact')" class="text-[11px] text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded font-bold">🤖 ZUKA AI</button>
+                        <button onclick="openChatWith('zuka_ai_contact')" class="text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded font-bold">🤖 ZUKA AI</button>
                     </div>
                 </div>
 
@@ -264,18 +264,18 @@
     </nav>
     <!-- CREATE POST MODAL -->
     <div id="create-post-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                <h3 class="font-bold text-base text-gray-900 dark:text-white text-center flex-1" data-i18n="create_post_modal_title">Create post</h3>
-                <button onclick="closeModal('create-post-modal')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">✕</button>
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-bold text-base text-gray-900 text-center flex-1" data-i18n="create_post_modal_title">Create post</h3>
+                <button onclick="closeModal('create-post-modal')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-900 cursor-pointer">✕</button>
             </div>
 
             <div class="p-4 space-y-3">
                 <div class="flex items-center gap-3">
                     <img id="modal-post-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-10 h-10 rounded-full object-cover">
                     <div>
-                        <div id="modal-post-name" class="font-bold text-sm text-gray-900 dark:text-white">ZUKA Member</div>
-                        <select id="post-privacy-select" class="text-[11px] bg-gray-100 dark:bg-gray-800 border-none rounded px-2 py-0.5 mt-0.5 text-gray-600 dark:text-gray-300">
+                        <div id="modal-post-name" class="font-bold text-sm text-gray-900">ZUKA Member</div>
+                        <select id="post-privacy-select" class="text-[11px] bg-gray-100 border-none rounded px-2 py-0.5 mt-0.5 text-gray-600">
                             <option value="public" data-i18n="privacy_public">🌍 Public</option>
                             <option value="friends" data-i18n="privacy_friends">👥 Friends</option>
                             <option value="only_me" data-i18n="privacy_only_me">🔒 Only me</option>
@@ -284,11 +284,11 @@
                 </div>
 
                 <!-- Textarea -->
-                <textarea id="post-content-textarea" rows="4" data-i18n-placeholder="post_textarea_placeholder" placeholder="What's on your mind? Share your thoughts..." class="w-full bg-transparent border-none outline-none resize-none text-base text-gray-900 dark:text-white placeholder-gray-400"></textarea>
+                <textarea id="post-content-textarea" rows="4" data-i18n-placeholder="post_textarea_placeholder" placeholder="What's on your mind? Share your thoughts..." class="w-full bg-transparent border-none outline-none resize-none text-base text-gray-900 placeholder-gray-400"></textarea>
 
                 <!-- AI Helper Button -->
                 <div class="flex items-center gap-2">
-                    <button onclick="aiHelpWritePost()" data-i18n="btn_ai_write" class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold px-3 py-1.5 rounded-full border border-blue-200 dark:border-blue-800 flex items-center gap-1.5 hover:bg-blue-100 transition cursor-pointer">
+                    <button onclick="aiHelpWritePost()" data-i18n="btn_ai_write" class="text-xs bg-blue-50 text-blue-600 font-bold px-3 py-1.5 rounded-full border border-blue-200 flex items-center gap-1.5 hover:bg-blue-100 transition cursor-pointer">
                         ✨ ZUKA AI Writing Assistant
                     </button>
                 </div>
@@ -300,8 +300,8 @@
                 </div>
 
                 <!-- Media Action Bar -->
-                <div class="border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex items-center justify-between">
-                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300" data-i18n="add_to_post">Add to your post:</span>
+                <div class="border border-gray-200 rounded-xl p-3 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-700" data-i18n="add_to_post">Add to your post:</span>
                     <div class="flex items-center gap-2">
                         <label class="cursor-pointer text-emerald-500 hover:scale-110 transition" title="Add Photo">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
@@ -409,32 +409,32 @@
             </div>
         </div>
 
-        <div class="flex-1 p-3 overflow-y-auto space-y-2 bg-[#f0f2f5] dark:bg-gray-900" id="chat-messages-container">
+        <div class="flex-1 p-3 overflow-y-auto space-y-2 bg-[#f0f2f5]" id="chat-messages-container">
             <!-- Messages dynamically rendered here -->
         </div>
 
         <!-- Chat Input Bar -->
-        <div class="p-2 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center gap-1.5">
+        <div class="p-2 border-t border-gray-200 bg-white flex items-center gap-1.5">
             <button onclick="openZukaPayModal()" data-i18n-title="btn_zuka_pay" title="Send Money (ZUKA Pay)" class="text-emerald-500 p-1 text-base cursor-pointer">💸</button>
-            <input type="text" id="chat-input-field" data-i18n-placeholder="chat_input_placeholder" placeholder="Type a message..." class="flex-1 bg-gray-100 dark:bg-gray-800 border-none rounded-full px-3 py-1.5 text-xs outline-none text-gray-900 dark:text-white" onkeydown="if(event.key==='Enter') sendChatMessage()">
+            <input type="text" id="chat-input-field" data-i18n-placeholder="chat_input_placeholder" placeholder="Type a message..." class="flex-1 bg-gray-100 border-none rounded-full px-3 py-1.5 text-xs outline-none text-gray-900" onkeydown="if(event.key==='Enter') sendChatMessage()">
             <button onclick="sendChatMessage()" class="text-blue-600 font-bold p-1 text-sm cursor-pointer">➤</button>
         </div>
     </div>
 
     <!-- ZUKA PAY SEND MONEY MODAL -->
     <div id="zuka-pay-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-2xl p-5 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-5 border border-gray-200 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-base text-gray-900 dark:text-white">ZUKA Pay - Send Money</h3>
+                <h3 class="font-bold text-base text-gray-900">ZUKA Pay - Send Money</h3>
                 <button onclick="closeModal('zuka-pay-modal')">✕</button>
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-500 mb-1">Amount ($ / TZS)</label>
-                <input type="number" id="pay-amount-input" placeholder="25" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2.5 font-bold text-lg text-gray-900 dark:text-white">
+                <input type="number" id="pay-amount-input" placeholder="25" class="w-full bg-gray-100 rounded-lg p-2.5 font-bold text-lg text-gray-900">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-500 mb-1">Payment Method</label>
-                <select id="pay-provider-select" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-xs">
+                <select id="pay-provider-select" class="w-full bg-gray-100 rounded-lg p-2 text-xs">
                     <option value="Card">Credit / Debit Card (Visa/Mastercard)</option>
                     <option value="M-Pesa">Vodacom M-Pesa</option>
                     <option value="Tigo Pesa">Tigo Pesa</option>
@@ -448,22 +448,22 @@
     </div>
 
     <!-- NOTIFICATION DRAWER POPUP -->
-    <div id="notification-drawer" class="fixed top-14 right-4 sm:right-16 w-80 sm:w-96 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 p-4 hidden max-h-[500px] overflow-y-auto">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
-            <h3 class="font-bold text-base text-gray-900 dark:text-white" data-i18n="notifications_title">Notifications</h3>
+    <div id="notification-drawer" class="fixed top-14 right-4 sm:right-16 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-4 hidden max-h-[500px] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+            <h3 class="font-bold text-base text-gray-900" data-i18n="notifications_title">Notifications</h3>
             <button onclick="window.ZukaNotifications.markAllAsRead(); renderNotifications();" data-i18n="btn_mark_all_read" class="text-xs text-blue-600 hover:underline cursor-pointer">Mark all as read</button>
         </div>
-        <div class="divide-y divide-gray-100 dark:divide-gray-800" id="notification-items-container">
+        <div class="divide-y divide-gray-100" id="notification-items-container">
             <!-- Notifications injected here -->
         </div>
     </div>
 
     <!-- USER PROFILE MENU POPUP -->
-    <div id="profile-menu-popup" class="fixed top-14 right-4 w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 p-3 hidden">
-        <div class="p-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3 cursor-pointer" onclick="switchMainTab('profile'); toggleProfileMenu();">
+    <div id="profile-menu-popup" class="fixed top-14 right-4 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-3 hidden">
+        <div class="p-2 border-b border-gray-100 flex items-center gap-3 cursor-pointer" onclick="switchMainTab('profile'); toggleProfileMenu();">
             <img id="dropdown-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-12 h-12 rounded-full object-cover">
             <div>
-                <div id="dropdown-name" class="font-bold text-sm text-gray-900 dark:text-white">ZUKA Member</div>
+                <div id="dropdown-name" class="font-bold text-sm text-gray-900">ZUKA Member</div>
                 <div class="text-xs text-blue-600" data-i18n="view_your_profile">View your profile</div>
             </div>
         </div>
@@ -490,19 +490,56 @@
             </div>
         </div>
     </div>
+
+    <!-- MAIN MENU POPUP (DESKTOP NAV) -->
+    <div id="zuka-menu-popup" class="fixed top-16 left-1/2 -translate-x-1/2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-3 hidden">
+        <div class="px-2 pb-2 border-b border-gray-100">
+            <h3 class="font-bold text-base text-gray-900" data-i18n="nav_menu">Menu</h3>
+        </div>
+        <div class="pt-2 space-y-1">
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('friends'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">👥</div>
+                <span data-i18n="menu_friends">Friends</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('groups'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">🏛️</div>
+                <span data-i18n="menu_groups">Groups</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('marketplace'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">🏪</div>
+                <span data-i18n="menu_marketplace">Marketplace</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('watch'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-blue-100 text-blue-600">📺</div>
+                <span data-i18n="menu_watch">Watch & Video</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('reels'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-rose-100 text-rose-600">🎬</div>
+                <span data-i18n="menu_reels">ZUKA Reels</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('saved'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-purple-100 text-purple-600">🔖</div>
+                <span data-i18n="menu_saved">Saved</span>
+            </div>
+            <div class="zuka-sidebar-link text-xs" onclick="switchMainTab('settings'); toggleZukaMenuPopup();">
+                <div class="zuka-sidebar-icon bg-gray-200 text-gray-700">⚙️</div>
+                <span data-i18n="menu_settings">Settings & Privacy</span>
+            </div>
+        </div>
+    </div>
     <!-- BLUE TICK VERIFICATION MODAL -->
     <div id="bluetick-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-2xl space-y-4">
+        <div class="bg-white w-full max-w-md rounded-2xl p-6 border border-gray-200 shadow-2xl space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 class="font-bold text-base text-gray-900 flex items-center gap-2">
                     🎖️ Request Verified Badge (Blue Tick)
                 </h3>
                 <button onclick="closeModal('bluetick-modal')">✕</button>
             </div>
             <p class="text-xs text-gray-500">Confirm you are an authentic creator, public figure, or registered organization.</p>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                <select id="verif-cat-select" class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-xs">
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Category</label>
+                <select id="verif-cat-select" class="w-full bg-gray-100 rounded-lg p-2 text-xs">
                     <option value="Content Creator">Content Creator / Digital Influencer</option>
                     <option value="Business">Business / Brand</option>
                     <option value="Public Figure">Public Figure / Leader</option>
@@ -510,11 +547,11 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Reason for Verification</label>
-                <textarea id="verif-reason-textarea" rows="3" placeholder="Explain why your account should be verified..." class="w-full bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-xs"></textarea>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Reason for Verification</label>
+                <textarea id="verif-reason-textarea" rows="3" placeholder="Explain why your account should be verified..." class="w-full bg-gray-100 rounded-lg p-2 text-xs"></textarea>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Government ID / Business Document</label>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Government ID / Business Document</label>
                 <input type="file" id="verif-doc-input" class="text-xs text-gray-500">
             </div>
             <button onclick="submitVerificationForm()" class="w-full bg-[#1877F2] text-white font-bold py-2 rounded-lg text-xs cursor-pointer">
@@ -524,17 +561,17 @@
     </div>
 
     <!-- VIDEO / REELS COMMENTS BOTTOM SHEET (70% HEIGHT) -->
-    <div id="video-comments-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl flex flex-col transition-transform duration-300 transform translate-y-full max-w-lg mx-auto border-t border-gray-200 dark:border-gray-800 h-[70%] max-h-[85vh]">
-        <div class="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto my-2.5 shrink-0"></div>
-        <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
-            <h3 class="font-bold text-sm text-gray-900 dark:text-white" id="sheet-comments-count-title">Comments</h3>
-            <button onclick="closeVideoCommentsSheet()" class="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 text-lg font-bold leading-none cursor-pointer">✕</button>
+    <div id="video-comments-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl flex flex-col transition-transform duration-300 transform translate-y-full max-w-lg mx-auto border-t border-gray-200 h-[70%] max-h-[85vh]">
+        <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto my-2.5 shrink-0"></div>
+        <div class="px-4 py-2 border-b border-gray-100 flex items-center justify-between shrink-0">
+            <h3 class="font-bold text-sm text-gray-900" id="sheet-comments-count-title">Comments</h3>
+            <button onclick="closeVideoCommentsSheet()" class="p-1 rounded-full text-gray-500 hover:bg-gray-100 text-lg font-bold leading-none cursor-pointer">✕</button>
         </div>
         <div id="sheet-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3.5"></div>
-        <div class="p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 flex items-center gap-2 shrink-0">
+        <div class="p-3 border-t border-gray-100 bg-gray-50 flex items-center gap-2 shrink-0">
             <img id="sheet-input-avatar" src="data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>" class="w-8 h-8 rounded-full object-cover">
-            <input type="text" id="sheet-comment-input" placeholder="Add a comment..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-4 py-2 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" onkeydown="if(event.key==='Enter') submitVideoComment()">
-            <button onclick="submitVideoComment()" class="text-[#1877F2] font-bold text-xs px-3 py-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/40 cursor-pointer">Post</button>
+            <input type="text" id="sheet-comment-input" placeholder="Add a comment..." class="flex-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-xs text-gray-900 outline-none focus:border-[#1877F2]" onkeydown="if(event.key==='Enter') submitVideoComment()">
+            <button onclick="submitVideoComment()" class="text-[#1877F2] font-bold text-xs px-3 py-1.5 rounded-full hover:bg-blue-50 cursor-pointer">Post</button>
         </div>
     </div>
     <div id="video-comments-backdrop" onclick="closeVideoCommentsSheet()" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity"></div>
@@ -578,6 +615,8 @@
     <!-- CORE UI CONTROLLER -->
     <script>
         let attachedMediaUrl = null;
+        let openInlineCommentsId = null;
+        const ZUKA_DEFAULT_AVATAR = "data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>";
 
         document.addEventListener("DOMContentLoaded", async () => {
   try { await syncUserData(); } catch (e) {}
@@ -614,7 +653,7 @@
             document.getElementById('left-sidebar-name').innerText = user.full_name;
             document.getElementById('create-post-avatar').src = user.avatar_url || "data:image/svg+xml;utf8,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%231877F2%22/><text x=%2250%22 y=%2266%22 font-size=%2252%22 font-weight=%22bold%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22>Z</text></svg>";
 
-            const promptText = t('whats_on_your_mind', { name: user.full_name.split(' ')[0] });
+            const promptText = t('whats_on_your_mind');
             const promptEl = document.getElementById('create-post-prompt');
             if (promptEl) promptEl.innerText = promptText;
 
@@ -631,23 +670,28 @@
             const tray = document.getElementById('stories-tray');
             if (!tray) return;
 
-            const t = (k) => window.ZukaI18n ? window.ZukaI18n.t(k) : k;
+            const t = (k, fb) => {
+                const v = window.ZukaI18n ? window.ZukaI18n.t(k) : k;
+                return (v && v !== k) ? v : (fb || k);
+            };
 
             tray.innerHTML = `
-                <div onclick="openCreateStoryModal()" class="story-card bg-white dark:bg-gray-800 flex flex-col justify-between border border-gray-200 dark:border-gray-800">
-                    <img src="${currentUser ? currentUser.avatar_url : ''}" class="w-full h-32 object-cover">
-                    <div class="relative flex flex-col items-center justify-center p-2 bg-white dark:bg-gray-800 flex-1">
-                        <div class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-bold text-lg -mt-6 border-2 border-white dark:border-gray-800">+</div>
-                        <span class="text-[11px] font-bold text-gray-800 dark:text-white mt-1">${t('story_create_title')}</span>
+                <div onclick="openCreateStoryModal()" class="story-card create-story-card">
+                    <div class="create-story-top">
+                        <img src="${(currentUser && currentUser.avatar_url) ? currentUser.avatar_url : ZUKA_DEFAULT_AVATAR}" class="w-full h-full object-cover" alt="Your story" onerror="this.src='${ZUKA_DEFAULT_AVATAR}'">
+                    </div>
+                    <div class="create-story-bottom">
+                        <div class="create-story-plus">+</div>
+                        <span class="create-story-label">${t('story_create_title', 'Create story')}</span>
                     </div>
                 </div>
                 ${stories.map(s => `
                     <div onclick="viewStory('${s.id}')" class="story-card" style="background-image: url('${s.media_url}')">
                         <div class="story-avatar-ring">
-                            <img src="${s.user_avatar}" class="w-full h-full object-cover">
+                            <img src="${s.user_avatar || ZUKA_DEFAULT_AVATAR}" class="w-full h-full object-cover">
                         </div>
                         <div class="story-overlay"></div>
-                        <div class="story-owner-name">${s.user_name}</div>
+                        <div class="story-owner-name">${s.user_name || 'ZUKA Member'}</div>
                     </div>
                 `).join('')}
             `;
@@ -690,29 +734,39 @@
             const container = document.getElementById('feed-posts-container');
             if (!container) return;
 
-            if (!posts.length) { container.innerHTML = `<div class="zuka-card p-6 text-center space-y-2"><div class="text-3xl">🌍</div><h3 class="font-bold text-base">Welcome to ZUKA!</h3><p class="text-xs text-gray-500">No posts yet. Click "What's on your mind?" above to share your first post or photo!</p></div>`; return; }
+            if (!posts.length) {
+                container.innerHTML = `<div class="zuka-card p-6 text-center space-y-2"><div class="text-3xl">🌍</div><h3 class="font-bold text-base">Welcome to ZUKA!</h3><p class="text-xs text-gray-500">No posts yet. Click "What's on your mind?" above to share your first post or photo!</p></div>`;
+                return;
+            }
+
+            const currentUser = window.ZukaAuth.getCurrentUser();
+            const meAvatar = (currentUser && currentUser.avatar_url) ? currentUser.avatar_url : ZUKA_DEFAULT_AVATAR;
+
             container.innerHTML = posts.map(p => `
                 <div class="zuka-card" id="post-${p.id}">
+                    <!-- Post Header -->
                     <div class="p-3.5 flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <img src="${p.author_avatar || p.page_avatar}" class="w-10 h-10 rounded-full object-cover">
+                            <img src="${p.author_avatar || p.page_avatar || ZUKA_DEFAULT_AVATAR}" class="w-10 h-10 rounded-full object-cover" alt="Author avatar">
                             <div>
                                 <div class="zuka-post-author-name flex items-center gap-1">
-                                    <span>${p.author_name || p.page_name}</span>
+                                    <span>${p.author_name || p.page_name || 'ZUKA Member'}</span>
                                     ${p.is_verified ? '<span class="blue-tick-badge" title="Verified Account">✓</span>' : ''}
                                     ${p.feeling ? `<span class="text-xs font-normal text-gray-500">${p.feeling}</span>` : ''}
                                 </div>
-                                <div class="zuka-post-meta flex items-center gap-1">
-                                    <span>${p.location_tag ? `${p.location_tag} • ` : ''}${new Date(p.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                <div class="zuka-post-meta flex items-center gap-1 text-[#65676B]">
+                                    <span>${p.location_tag ? `${p.location_tag} • ` : ''}${new Date(p.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2digit'})}</span>
                                     <span>•</span>
-                                    <span>${p.source_attribution || '🌍'}</span>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/></svg>
+                                    <span>${p.source_attribution || 'Public'}</span>
                                 </div>
                             </div>
                         </div>
-                        <button onclick="openPostOptions('${p.id}')" class="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full cursor-pointer">•••</button>
+                        <button onclick="openPostOptions('${p.id}')" class="text-gray-500 hover:bg-[#F0F2F5] p-1.5 rounded-full cursor-pointer font-bold text-sm">•••</button>
                     </div>
 
-                    <div class="px-3.5 pb-2.5 zuka-post-body-text whitespace-pre-line leading-relaxed">
+                    <!-- Post Body -->
+                    <div class="px-3.5 pb-2.5 zuka-post-body-text">
                         ${p.content}
                     </div>
 
@@ -727,13 +781,13 @@
                     ` : ''}
 
                     ${p.poll_data ? `
-                        <div class="p-4 mx-3 my-2 bg-gray-50 dark:bg-gray-800/60 rounded-xl space-y-2 border border-gray-200 dark:border-gray-700">
-                            <div class="font-bold text-xs uppercase tracking-wider text-blue-600">${p.poll_data.question}</div>
+                        <div class="p-4 mx-3 my-2 bg-[#F0F2F5] rounded-xl space-y-2 border border-[#CED0D4]">
+                            <div class="font-bold text-xs uppercase tracking-wider text-[#1877F2]">${p.poll_data.question}</div>
                             ${p.poll_data.options.map((opt, idx) => {
                                 const pct = p.poll_data.total_votes > 0 ? Math.round((opt.votes / p.poll_data.total_votes) * 100) : 0;
                                 return `
-                                    <div onclick="votePollOption('${p.id}', ${idx})" class="cursor-pointer relative overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2.5 flex items-center justify-between text-xs font-semibold">
-                                        <div class="absolute inset-0 bg-blue-500/15" style="width: ${pct}%"></div>
+                                    <div onclick="votePollOption('${p.id}', ${idx})" class="cursor-pointer relative overflow-hidden bg-white border border-[#CED0D4] rounded-lg p-2.5 flex items-center justify-between text-xs font-semibold">
+                                        <div class="absolute inset-0 bg-[#1877F2]/15" style="width: ${pct}%"></div>
                                         <span class="relative z-10">${opt.text}</span>
                                         <span class="relative z-10 font-bold">${pct}% (${opt.votes})</span>
                                     </div>
@@ -743,17 +797,19 @@
                         </div>
                     ` : ''}
 
-                    <div class="px-3.5 py-2 flex items-center justify-between text-xs text-gray-500 border-b border-gray-100 dark:border-gray-800">
+                    <!-- Reaction / Comment Counts Bar -->
+                    <div class="px-3.5 py-2 flex items-center justify-between text-xs text-[#65676B] border-b border-[#E4E6EB]">
                         <div class="flex items-center gap-1">
                             <span>👍❤️</span>
                             <span id="likes-count-${p.id}">${p.likes_count || 0}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span onclick="openPostCommentsSheet('${p.id}')" class="cursor-pointer hover:underline">${p.comments_count || 0} Comments</span>
+                            <span onclick="toggleInlineComments('${p.id}')" class="cursor-pointer hover:underline">${p.comments_count || 0} Comments</span>
                             <span>${p.shares_count || 0} Shares</span>
                         </div>
                     </div>
 
+                    <!-- 3-Column Action Bar -->
                     <div class="zuka-post-actions-row">
                         <div class="relative like-btn-container flex-1">
                             <div class="reaction-popover">
@@ -771,7 +827,7 @@
                             </button>
                         </div>
 
-                        <button onclick="openPostCommentsSheet('${p.id}')" class="zuka-post-action-btn">
+                        <button onclick="toggleInlineComments('${p.id}')" class="zuka-post-action-btn">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                             <span>Comment</span>
                         </button>
@@ -780,6 +836,26 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                             <span>Share</span>
                         </button>
+                    </div>
+
+                    <!-- Inline Comment Box -->
+                    <div id="inline-comments-${p.id}" class="${openInlineCommentsId === p.id ? '' : 'hidden'}">
+                        <div class="inline-comment-list" id="inline-comment-list-${p.id}">
+                            ${(p.comments_list || []).slice(-3).map(c => `
+                                <div class="flex items-start gap-2">
+                                    <img src="${c.user_avatar || ZUKA_DEFAULT_AVATAR}" class="w-8 h-8 rounded-full object-cover shrink-0" alt="Commenter avatar">
+                                    <div class="bg-[#F0F2F5] rounded-2xl px-3 py-2 text-xs">
+                                        <div class="font-bold text-[#050505] leading-tight">${c.user_name || 'ZUKA Member'}</div>
+                                        <div class="text-[#050505] mt-0.5">${c.text}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="inline-comment-row">
+                            <img src="${meAvatar}" class="w-8 h-8 rounded-full object-cover shrink-0" alt="Your avatar">
+                            <input id="comment-input-${p.id}" class="inline-comment-input" placeholder="Write a comment..." onkeydown="if(event.key==='Enter') submitComment('${p.id}')">
+                            <button onclick="submitComment('${p.id}')" class="text-[#1877F2] text-xs font-bold cursor-pointer">Post</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -797,7 +873,7 @@
                             ${c.is_online ? '<span class="online-indicator"></span>' : ''}
                         </div>
                         <div class="truncate">
-                            <div class="font-bold text-xs truncate text-gray-900 dark:text-white">${c.name}</div>
+                            <div class="font-bold text-xs truncate text-gray-900">${c.name}</div>
                             <div class="text-[10px] text-gray-500 truncate">${c.last_msg}</div>
                         </div>
                     </div>
@@ -816,10 +892,10 @@
             if (!container) return;
 
             container.innerHTML = notifs.map(n => `
-                <div class="py-2.5 flex items-start gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1.5 rounded-lg ${!n.is_read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}">
+                <div class="py-2.5 flex items-start gap-3 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg ${!n.is_read ? 'bg-blue-50/50' : ''}">
                     <img src="${n.actor_avatar}" class="w-9 h-9 rounded-full object-cover">
                     <div class="flex-1 text-xs">
-                        <p class="text-gray-900 dark:text-gray-200">
+                        <p class="text-gray-900">
                             <span class="font-bold">${n.actor_name}</span> ${n.content}
                         </p>
                         <span class="text-[10px] text-blue-500 font-semibold">${n.time}</span>
@@ -930,10 +1006,22 @@
             }
         }
         function reactTo(postId, reactionType) {
+            if (postId === 'welcome-zuka-post') return;
             window.ZukaFeed.reactToPost(postId, reactionType).then(() => renderFeed()).catch(e => console.error('Reaction failed:', e));
         }
 
+        function toggleInlineComments(postId) {
+            openInlineCommentsId = (openInlineCommentsId === postId) ? null : postId;
+            renderFeed();
+        }
+
+        function toggleZukaMenuPopup() {
+            const popup = document.getElementById('zuka-menu-popup');
+            if (popup) popup.classList.toggle('hidden');
+        }
+
         function submitComment(postId) {
+            if (postId === 'welcome-zuka-post') return;
             const input = document.getElementById(`comment-input-${postId}`);
             if (!input || !input.value.trim()) return;
 
@@ -948,6 +1036,7 @@
         }
 
         async function sharePost(postId) {
+            if (postId === 'welcome-zuka-post') return;
             const msg = (window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw')
                 ? 'Chapisho limeshirikiwa kwenye ukuta wako wa ZUKA!'
                 : 'Post shared to your ZUKA timeline!';
@@ -968,6 +1057,7 @@
         }
 
 function openPostOptions(postId) {
+            if (postId === 'welcome-zuka-post') return;
             const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
             const choicePrompt = isSwahili
                 ? 'Chagua hatua:\n1. Hifadhi (Save Post)\n2. Ripoti kwa Mmiliki (Report Post)\n3. Futa (Delete)'
@@ -1070,7 +1160,7 @@ function openPostOptions(postId) {
                 const isMe = m.sender_id === 'me';
                 return `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                        <div class="max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-[#1877F2] text-white rounded-br-xs' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 rounded-bl-xs'}">
+                        <div class="max-w-[75%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${isMe ? 'bg-[#1877F2] text-white rounded-br-xs' : 'bg-white text-gray-900 border border-gray-200 rounded-bl-xs'}">
                             ${m.is_pay ? `<div class="font-bold text-amber-300">💸 Sent $${Number(m.pay_amount).toLocaleString()}</div>` : ''}
                             ${m.text}
                         </div>
@@ -1167,6 +1257,11 @@ function openPostOptions(postId) {
         }
         // TAB SWITCHER CONTROLLER (Feed, Watch, Marketplace, Groups, Profile, etc.)
         async function switchMainTab(tab) {
+            if (tab === 'menu') {
+                toggleZukaMenuPopup();
+                return;
+            }
+            toggleZukaMenuPopup();
             document.querySelectorAll('.zuka-nav-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.mob-nav-item').forEach(m => m.classList.remove('active'));
             const activeMob = document.getElementById(`mob-tab-${tab}`);
@@ -1183,9 +1278,9 @@ function openPostOptions(postId) {
                     <div class="mb-4"><div class="stories-container" id="stories-tray"></div></div>
                     <div class="zuka-card p-4">
                         <div class="flex items-center gap-3">
-                            <img src="${safeUser.avatar_url}" class="w-10 h-10 rounded-full object-cover">
-                            <div onclick="openCreatePostModal()" class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full py-2.5 px-4 text-xs sm:text-sm text-gray-500 cursor-pointer">
-                                ${t('whats_on_your_mind', { name: (safeUser.full_name || 'ZUKA Member').split(' ')[0] })}
+                            <img src="${safeUser.avatar_url || ZUKA_DEFAULT_AVATAR}" class="w-10 h-10 rounded-full object-cover" alt="Your avatar">
+                            <div onclick="openCreatePostModal()" class="flex-1 bg-[#F0F2F5] hover:bg-[#E4E6EB] rounded-full py-2.5 px-4 text-xs sm:text-sm text-[#65676B] cursor-pointer">
+                                ${t('whats_on_your_mind') === 'whats_on_your_mind' ? 'What\'s on your mind?' : t('whats_on_your_mind')}
                             </div>
                         </div>
                     </div>
@@ -1216,13 +1311,13 @@ function openPostOptions(postId) {
                                         <img src="${p.photo_url}" class="w-full h-40 object-cover">
                                         <div class="p-3">
                                             <div class="font-black text-[#1877F2] text-base">$${Number(p.price).toLocaleString()}</div>
-                                            <div class="font-bold text-xs text-gray-900 dark:text-white line-clamp-1 mt-0.5">${p.title}</div>
+                                            <div class="font-bold text-xs text-gray-900 line-clamp-1 mt-0.5">${p.title}</div>
                                             <div class="text-[11px] text-gray-500 mt-1">${p.location}</div>
                                         </div>
                                     </div>
                                     <div class="p-3 pt-0 flex gap-2">
                                         <button onclick="openChatWith('${p.seller_id}')" class="flex-1 bg-[#1877F2] text-white text-xs font-bold py-1.5 rounded cursor-pointer">${t('mkt_msg_seller')}</button>
-                                        <button onclick="promptMakeOffer('${p.id}')" class="bg-gray-100 dark:bg-gray-800 text-xs px-2.5 py-1.5 rounded font-bold cursor-pointer">${t('mkt_make_offer')}</button>
+                                        <button onclick="promptMakeOffer('${p.id}')" class="bg-gray-100 text-xs px-2.5 py-1.5 rounded font-bold cursor-pointer">${t('mkt_make_offer')}</button>
                                     </div>
                                 </div>
                             `).join('')}
@@ -1247,15 +1342,15 @@ function openPostOptions(postId) {
                                     <img src="${g.cover_url}" class="w-full h-36 object-cover">
                                     <div class="p-4 space-y-2">
                                         <div class="flex items-center justify-between">
-                                            <h3 class="font-bold text-base text-gray-900 dark:text-white">${g.name}</h3>
+                                            <h3 class="font-bold text-base text-gray-900">${g.name}</h3>
                                             <span class="text-xs text-gray-500">${g.members_count} Members</span>
                                         </div>
-                                        <p class="text-xs text-gray-600 dark:text-gray-300">${g.description}</p>
+                                        <p class="text-xs text-gray-600">${g.description}</p>
                                         <div class="pt-2 flex items-center gap-2">
                                             <button onclick="window.ZukaGroups.joinGroup('${g.id}'); switchMainTab('groups');" class="bg-[#1877F2] text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">
                                                 ${g.is_member ? t('groups_joined_btn') : t('groups_join_btn')}
                                             </button>
-                                            <button onclick="openChatWith('gc_${g.id}')" class="bg-gray-100 dark:bg-gray-800 text-xs px-3 py-2 rounded-lg font-bold cursor-pointer">
+                                            <button onclick="openChatWith('gc_${g.id}')" class="bg-gray-100 text-xs px-3 py-2 rounded-lg font-bold cursor-pointer">
                                                 ${t('groups_chat_btn')}
                                             </button>
                                         </div>
@@ -1279,9 +1374,9 @@ function openPostOptions(postId) {
                             <div class="px-6 pb-6 pt-0 relative">
                                 <div class="flex flex-col sm:flex-row items-center sm:items-end justify-between -mt-16 sm:-mt-20 gap-4">
                                     <div class="flex flex-col sm:flex-row items-center gap-4">
-                                        <img src="${u.avatar_url}" class="w-32 h-32 rounded-full object-cover border-4 border-white dark:border-gray-900 shadow-xl">
+                                        <img src="${u.avatar_url}" class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl">
                                         <div class="text-center sm:text-left mt-2">
-                                            <h1 class="text-2xl font-black text-gray-900 dark:text-white flex items-center justify-center sm:justify-start gap-1.5">
+                                            <h1 class="text-2xl font-black text-gray-900 flex items-center justify-center sm:justify-start gap-1.5">
                                                 ${u.full_name}
                                                 ${u.is_verified ? '<span class="blue-tick-badge">✓</span>' : ''}
                                             </h1>
@@ -1291,19 +1386,19 @@ function openPostOptions(postId) {
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button onclick="promptEditBio()" class="bg-[#1877F2] text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">${t('profile_edit_bio')}</button>
-                                        <button onclick="window.ZukaAuth.toggleProfileLock(); switchMainTab('profile');" class="bg-gray-100 dark:bg-gray-800 text-xs px-3 py-2 rounded-lg font-bold cursor-pointer">
+                                        <button onclick="window.ZukaAuth.toggleProfileLock(); switchMainTab('profile');" class="bg-gray-100 text-xs px-3 py-2 rounded-lg font-bold cursor-pointer">
                                             ${u.is_locked ? t('profile_unlock') : t('profile_lock')}
                                         </button>
                                     </div>
                                 </div>
 
-                                <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-700 dark:text-gray-300 space-y-2">
+                                <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-700 space-y-2">
                                     <p class="font-medium text-sm">"${u.bio}"</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-500 mt-2">
-                                        <div>📍 Location: <strong class="text-gray-800 dark:text-gray-200">${u.location}</strong></div>
-                                        <div>💼 Work: <strong class="text-gray-800 dark:text-gray-200">${u.work}</strong></div>
-                                        <div>🎓 Education: <strong class="text-gray-800 dark:text-gray-200">${u.education || 'University'}</strong></div>
-                                        <div>❤️ Relationship: <strong class="text-gray-800 dark:text-gray-200">${u.relationship}</strong></div>
+                                        <div>📍 Location: <strong class="text-gray-800">${u.location}</strong></div>
+                                        <div>💼 Work: <strong class="text-gray-800">${u.work}</strong></div>
+                                        <div>🎓 Education: <strong class="text-gray-800">${u.education || 'University'}</strong></div>
+                                        <div>❤️ Relationship: <strong class="text-gray-800">${u.relationship}</strong></div>
                                     </div>
                                 </div>
                             </div>
@@ -1319,11 +1414,11 @@ function openPostOptions(postId) {
                     <div class="zuka-card p-6 space-y-6">
                         <h2 class="text-xl font-bold" data-i18n="settings_title">${t('settings_title')}</h2>
                         <div class="space-y-4 text-xs">
-                            <div class="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-xl flex items-center justify-between">
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
                                 <div class="flex items-center gap-3">
                                     <span class="text-2xl">🌐</span>
                                     <div>
-                                        <div class="font-bold text-sm text-gray-900 dark:text-white">${t('settings_lang_title')}</div>
+                                        <div class="font-bold text-sm text-gray-900">${t('settings_lang_title')}</div>
                                         <div class="text-gray-500">${t('settings_lang_desc')}: <strong class="text-blue-600">${currentLangName}</strong></div>
                                     </div>
                                 </div>
@@ -1332,7 +1427,7 @@ function openPostOptions(postId) {
                                 </button>
                             </div>
 
-                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
+                            <div class="p-3 bg-gray-50 rounded-lg flex items-center justify-between">
                                 <div>
                                     <div class="font-bold text-sm" data-i18n="menu_dark_mode">Dark mode</div>
                                     <div class="text-gray-500" data-i18n="settings_dark_mode_desc">Adjust the visual appearance of ZUKA</div>
@@ -1340,7 +1435,7 @@ function openPostOptions(postId) {
                                 <button onclick="window.ZukaSettings.toggleDarkMode()" class="bg-[#1877F2] text-white px-3 py-1.5 rounded font-bold cursor-pointer">Toggle</button>
                             </div>
 
-                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                            <div class="p-3 bg-gray-50 rounded-lg space-y-2">
                                 <div class="font-bold text-sm">${t('settings_news_pref_title')}</div>
                                 <p class="text-gray-500">${t('settings_news_pref_desc')}</p>
                                 <div class="flex flex-wrap gap-2 pt-1">
@@ -1352,7 +1447,7 @@ function openPostOptions(postId) {
                                 </div>
                             </div>
 
-                            <div class="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg flex items-center justify-between">
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
                                 <div>
                                     <div class="font-bold text-red-600 text-sm">${t('settings_delete_account')}</div>
                                     <div class="text-gray-500">${t('settings_delete_desc')}</div>
@@ -1469,25 +1564,25 @@ function openPostOptions(postId) {
 
             container.innerHTML = `
                 <div class="zuka-video-tab-root w-full bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[calc(100vh-100px)]">
-                    <div class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-5 pt-2.5 pb-0 flex items-center justify-between shrink-0 z-30">
+                    <div class="bg-white border-b border-gray-200 px-5 pt-2.5 pb-0 flex items-center justify-between shrink-0 z-30">
                         <div class="flex items-center gap-8">
-                            <button onclick="switchVideoSubtab('for_you')" id="subtab-btn-for-you" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'for_you' ? 'border-b-2 border-[#1877F2] text-[#1877F2] dark:text-[#1877F2] font-bold' : 'text-gray-900 dark:text-white hover:text-[#1877F2]'}">
+                            <button onclick="switchVideoSubtab('for_you')" id="subtab-btn-for-you" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'for_you' ? 'border-b-2 border-[#1877F2] text-[#1877F2] font-bold' : 'text-gray-900 hover:text-[#1877F2]'}">
                                 For You
                             </button>
-                            <button onclick="switchVideoSubtab('reels')" id="subtab-btn-reels" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'reels' ? 'border-b-2 border-[#1877F2] text-[#1877F2] dark:text-[#1877F2] font-bold' : 'text-gray-900 dark:text-white hover:text-[#1877F2]'}">
+                            <button onclick="switchVideoSubtab('reels')" id="subtab-btn-reels" class="text-sm sm:text-base font-semibold pb-2.5 transition cursor-pointer select-none ${subtab === 'reels' ? 'border-b-2 border-[#1877F2] text-[#1877F2] font-bold' : 'text-gray-900 hover:text-[#1877F2]'}">
                                 Reels
                             </button>
                         </div>
                         <div class="flex items-center gap-2 pb-2">
-                            <button onclick="toggleVideoSearchInput()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-200 cursor-pointer transition shadow-2xs" title="Search videos">
+                            <button onclick="toggleVideoSearchInput()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 cursor-pointer transition shadow-2xs" title="Search videos">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </button>
                         </div>
                     </div>
 
-                    <div id="video-search-bar" class="${query ? '' : 'hidden'} bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 shrink-0 z-20">
-                        <input type="text" id="video-search-input" value="${query}" placeholder="Search videos, creators, or music..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#1877F2]" oninput="handleVideoSearchInput(this.value)">
-                        <button onclick="clearVideoSearch()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-semibold px-2 cursor-pointer">Clear</button>
+                    <div id="video-search-bar" class="${query ? '' : 'hidden'} bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2 shrink-0 z-20">
+                        <input type="text" id="video-search-input" value="${query}" placeholder="Search videos, creators, or music..." class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 outline-none focus:border-[#1877F2]" oninput="handleVideoSearchInput(this.value)">
+                        <button onclick="clearVideoSearch()" class="text-xs text-gray-500 hover:text-gray-700 font-semibold px-2 cursor-pointer">Clear</button>
                     </div>
                     <div id="video-feed-scroll" class="zuka-video-feed-wrapper flex-1">
                         ${items.length === 0 ? `
@@ -1873,9 +1968,9 @@ function openPostOptions(postId) {
                 list.innerHTML = comments.map(c => `
                     <div class="flex items-start gap-3">
                         <img src="${c.user_avatar}" class="w-8 h-8 rounded-full object-cover shrink-0">
-                        <div class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl px-3.5 py-2 text-xs">
-                            <div class="font-bold text-gray-900 dark:text-white leading-tight">${c.user_name}</div>
-                            <div class="text-gray-800 dark:text-gray-200 mt-0.5">${c.text}</div>
+                        <div class="flex-1 bg-gray-100 rounded-2xl px-3.5 py-2 text-xs">
+                            <div class="font-bold text-gray-900 leading-tight">${c.user_name}</div>
+                            <div class="text-gray-800 mt-0.5">${c.text}</div>
                             <div class="text-[10px] text-gray-400 mt-1">${c.time || 'Just now'}</div>
                         </div>
                     </div>
