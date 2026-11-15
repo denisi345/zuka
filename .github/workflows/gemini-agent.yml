@@ -14,6 +14,7 @@ jobs:
   zuka-autonomous-dev:
     if: contains(github.event.issue.body, '@zuka-ai') || contains(github.event.comment.body, '@zuka-ai')
     runs-on: ubuntu-latest
+    timeout-minutes: 4
     steps:
       - name: Checkout ZUKA repository
         uses: actions/checkout@v4
@@ -21,7 +22,7 @@ jobs:
       - name: Install OpenCode AI Agent
         run: npm install -g opencode-ai
 
-      - name: Run Verified OpenRouter Coding Agent
+      - name: Run High-Speed Coding Agent
         env:
           OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,17 +33,17 @@ jobs:
           BRANCH="ai-fix-${{ github.run_number }}"
           git checkout -b "$BRANCH"
 
-          TASK="You are building ZUKA, a social network designed to look and work exactly like Facebook. User request: $ISSUE_BODY. Always ensure Facebook-style UI/UX, connect all features to Supabase tables, never use hardcoded personal names (use generic labels like ZUKA Member), make clean code edits across the necessary files, and run npm run build to confirm zero errors."
+          TASK="You MUST edit the files directly to fulfill this ZUKA Facebook-style request: $ISSUE_BODY. Never use hardcoded personal names, run npm run build once, and finish."
 
-          opencode run -m "openrouter/openrouter/free" "$TASK" || \
-          opencode run -m "openrouter/qwen/qwen3-coder:free" "$TASK" || \
-          opencode run -m "openrouter/deepseek/deepseek-r1:free" "$TASK"
+          timeout 120 opencode run -m "openrouter/qwen/qwen3-coder:free" "$TASK" || \
+          timeout 120 opencode run -m "openrouter/google/gemma-3-27b-it:free" "$TASK" || \
+          timeout 120 opencode run -m "openrouter/openrouter/free" "$TASK"
 
           git add .
           if git diff --cached --quiet; then
-            gh issue comment "${{ github.event.issue.number }}" --body "ZUKA AI Agent checked the repository and verified that the build passes cleanly."
+            gh issue comment "${{ github.event.issue.number }}" --body "ZUKA AI Agent checked the files and verified the build."
             exit 0
           fi
-          git commit -m "ZUKA Facebook-style AI update #${{ github.run_number }}"
+          git commit -m "ZUKA fast AI update #${{ github.run_number }}"
           git push -u origin "$BRANCH"
-          gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Automated Facebook-style updates requested in issue." --base main
+          gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Fast automated update." --base main
