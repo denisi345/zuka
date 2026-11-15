@@ -292,11 +292,57 @@ class ZukaFeedEngine {
             };
 
             const { error: insertError } = await window.supabaseClient
-                .from('posts')
-                .insert([newPost]);
+                .from('saved_posts')
+                .insert([newSave]);
             if (insertError) throw new Error(insertError.message);
         }
-        return newPost;
+        return true;
+    }
+
+    async sharePost(postId) {
+        if (!window.supabaseClient) return false;
+
+        const { data: post, error: fetchError } = await window.supabaseClient
+            .from('posts')
+            .select('shares_count')
+            .eq('id', postId)
+            .maybeSingle();
+
+        if (fetchError || !post) return false;
+
+        const nextShares = (post.shares_count || 0) + 1;
+
+        const { error: updateError } = await window.supabaseClient
+            .from('posts')
+            .update({ shares_count: nextShares })
+            .eq('id', postId);
+
+        if (updateError) throw updateError;
+        return true;
+    }
+
+    async reportPost(postId, reason) {
+        if (!window.supabaseClient) return false;
+
+        const currentUser = window.ZukaAuth.getCurrentUser();
+        if (!currentUser) return false;
+
+        const newReport = {
+            content_type: 'post',
+            content_id: postId,
+            reason: reason || 'Reported by user',
+            snippet: '',
+            ai_score: 50,
+            status: 'pending',
+            created_at: new Date().toISOString()
+        };
+
+        const { error } = await window.supabaseClient
+            .from('reports')
+            .insert([newReport]);
+
+        if (error) throw error;
+        return true;
     }
 }
 
