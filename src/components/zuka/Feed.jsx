@@ -1,61 +1,67 @@
-import React from 'react';
-import { 
-  Video as VideoIcon,
-  Image,
-  Smile,
-  MoreHorizontal,
-  ThumbsUp,
-  MessageCircle,
-  Share2,
-  Globe,
-  ChevronRight,
-  PlusCircle
-} from 'lucide-react';
-import Stories from './Stories';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import CreatePost from './CreatePost';
+import Stories from './Stories';
 import Post from './Post';
 
-const Feed = () => {
-  // Sample stories data
-  const stories = [
-    { id: 1, user: "Williametta Blessing Davids", image: "/api/placeholder/180/250" },
-    { id: 2, user: "Van Dave Gbowea", image: "/api/placeholder/180/250" },
-    { id: 3, user: "Onefootball", image: "/api/placeholder/180/250" },
-    { id: 4, user: "HapDan TV", image: "/api/placeholder/180/250" }
-  ];
+export default function Feed({ userProfile }) {
+  const [posts, setPosts] = useState([]);
+  const [stories, setStories] = useState([]);
 
-  // Sample posts data
-  const posts = [
-    {
-      id: 1,
-      user: "T. Kla Wesley Jr.",
-      verified: true,
-      timeAgo: "1h",
-      content: `Man United will try to sign Alphonso Davies next summer as a free agent. According to Dean Jones, the Canadian wants a signing-on fee of around £10m if he is to move to Manchester United. He’s demanding £240,000-a-week wage.
-United is keen on Davies but Real Madrid is still leading the race to sign him.`,
-      likes: "12K",
-      comments: "1.5K",
-      shares: "842",
-      privacy: "Public"
-    },
-    // Add more posts as needed
-  ];
+  useEffect(() => {
+    loadFeedData();
+  }, []);
+
+  async function loadFeedData() {
+    try {
+      const { data: postRows } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (Array.isArray(postRows)) setPosts(postRows);
+    } catch (_) {}
+
+    try {
+      const { data: storyRows } = await supabase
+        .from('stories')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(15);
+      if (Array.isArray(storyRows)) setStories(storyRows);
+    } catch (_) {}
+  }
+
+  async function handleCreatePost(text) {
+    const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
+    const optimistic = {
+      id: `temp-${Date.now()}`,
+      author_name: authorName,
+      content: text,
+      time_label: 'Just now'
+    };
+    setPosts((prev) => [optimistic, ...prev]);
+
+    try {
+      const payload = { content: text, author_name: authorName };
+      if (userProfile?.id) payload.user_id = userProfile.id;
+      await supabase.from('posts').insert(payload);
+    } catch (_) {}
+  }
 
   return (
-    <div className="w-[80%] mx-auto pt-4 pb-4">
-      <div className="max-w-[680px] mx-auto px-4">
-        {/* Stories Section */}
-        <Stories />
-        {/* Create Post */}
-        <CreatePost />
-
-        {/* Posts */}
-        {posts.map((post) => (
-          <Post post={post} />
-        ))}
+    <div className="w-full pb-12">
+      <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} />
+      <Stories userProfile={userProfile} stories={stories} />
+      <div>
+        {posts.length === 0 ? (
+          <div className="bg-white border border-[#E4E6EB] rounded-lg p-6 text-center text-[#65676B] text-[15px]">
+            No posts yet. Share the first update on ZUKA above!
+          </div>
+        ) : (
+          posts.map((post) => <Post key={post.id} post={post} />)
+        )}
       </div>
     </div>
   );
-};
-
-export default Feed;
+}

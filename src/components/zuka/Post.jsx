@@ -1,178 +1,116 @@
 import React, { useState } from 'react';
-import { Globe, MessageCircle, MoreHorizontal, Share2, ThumbsUp } from "lucide-react";
+import { ThumbsUp, MessageSquare, Share2, MoreHorizontal, Globe } from 'lucide-react';
 
-const Post = ({ post }) => {
+export default function Post({ post }) {
   const [liked, setLiked] = useState(false);
-  const [showActionMenu, setShowActionMenu] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [showComments, setShowComments] = useState(false);
 
-  // Enhanced reaction display
-  const reactionTypes = [
-    { icon: "👍", count: post.likes, color: "bg-blue-500" },
-    { icon: "❤️", count: Math.floor(post.likes * 0.3), color: "bg-red-500" },
-    { icon: "😆", count: Math.floor(post.likes * 0.1), color: "bg-yellow-500" }
-  ];
+  function toggleLike() {
+    setLiked(!liked);
+    setLikesCount((c) => (liked ? Math.max(0, c - 1) : c + 1));
+  }
 
-  // Action menu items
-  const actionMenuItems = [
-    { label: "Save post", icon: "📥" },
-    { label: "Edit post", icon: "✏️" },
-    { label: "Hide post", icon: "👁️" },
-    { label: "Delete post", icon: "🗑️", danger: true }
-  ];
+  function handleAddComment(e) {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    setComments([...comments, { id: Date.now(), text: commentText.trim() }]);
+    setCommentText('');
+  }
+
+  const author = post.author_name || 'ZUKA Member';
 
   return (
-    <div className="bg-white rounded-xl shadow-sm mb-4 transition-shadow duration-200 hover:shadow-md">
-      {/* Post Header */}
-      <div className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {/* Author Avatar */}
-            <div className="relative group cursor-pointer">
-              <img
-                src={post.userImage || "https://scontent.fmlw1-2.fna.fbcdn.net/v/t39.30808-1/358436123_746713900796196_3501156095924192639_n.jpg?stp=cp0_dst-jpg_s40x40&_nc_cat=100&ccb=1-7&_nc_sid=f4b9fd&_nc_eui2=AeFyfYJIglFkX8g6PRuFlMTnnJpedSNzQTacml51I3NBNgGgHk_f_ckaLO2DTkC9XtEW1Te9JqRwSrcyVk673Gg4&_nc_ohc=ppyWtxRZz5MQ7kNvgFg2gR4&_nc_zt=24&_nc_ht=scontent.fmlw1-2.fna&_nc_gid=ApH_XRnenGx3HGxYy-igASE&oh=00_AYADHqxmVItJEsNi_gB3v-M2c4ivELUiUJ0gTPnXt_Ti-w&oe=6734958F"}
-                alt={post.user}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-transparent group-hover:ring-gray-200 
-                         transition-all duration-200"
-              />
-              {post.isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full 
-                               border-2 border-white"></div>
-              )}
-            </div>
-
-            {/* Author Info */}
-            <div>
-              <div className="flex items-center space-x-1">
-                <h3 className="font-semibold hover:underline cursor-pointer text-[15px]">{post.user}</h3>
-                {post.verified && (
-                  <div className="group relative">
-                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
-                    </svg>
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block 
-                                  bg-black text-white text-xs py-1 px-2 rounded whitespace-nowrap">
-                      Verified Account
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center space-x-2 text-gray-500 text-[13px]">
-                <span>{post.timeAgo}</span>
-                <span>·</span>
-                <div className="flex items-center space-x-1 group cursor-pointer">
-                  <Globe className="h-3.5 w-3.5 group-hover:text-blue-500 transition-colors duration-200" />
-                  <span className="group-hover:text-blue-500 transition-colors duration-200">Public</span>
-                </div>
-              </div>
-            </div>
+    <article className="bg-white border-y sm:border border-[#E4E6EB] sm:rounded-lg mb-2.5 overflow-hidden">
+      <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-bold text-base shrink-0">
+            {author.charAt(0).toUpperCase()}
           </div>
-
-          {/* More Actions Button */}
-          <div className="relative">
-            <button 
-              onClick={() => setShowActionMenu(!showActionMenu)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-all duration-200 
-                       focus:outline-none focus:ring-2 focus:ring-gray-200"
-            >
-              <MoreHorizontal className="h-5 w-5 text-gray-500" />
-            </button>
-
-            {/* Action Menu Dropdown */}
-            {showActionMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border 
-                             border-gray-200 z-50 py-2 animate-fadeIn">
-                {actionMenuItems.map((item, index) => (
-                  <button
-                    key={index}
-                    className={`w-full px-4 py-2 text-left flex items-center space-x-3 hover:bg-gray-50 
-                              transition-colors duration-200
-                              ${item.danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'}`}
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span className="text-[14px] font-medium">{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+          <div>
+            <div className="font-semibold text-[15px] text-[#050505] leading-tight">{author}</div>
+            <div className="text-[12px] text-[#65676B] flex items-center gap-1 mt-0.5">
+              <span>{post.time_label || 'Just now'}</span>
+              <span>&middot;</span>
+              <Globe className="w-3 h-3" />
+            </div>
           </div>
         </div>
+        <button type="button" className="p-1.5 text-[#65676B] rounded-full hover:bg-[#F0F2F5]">
+          <MoreHorizontal className="w-5 h-5" />
+        </button>
+      </div>
 
-        {/* Post Content */}
-        <div className="mt-3 text-[15px] whitespace-pre-line">
+      {post.content && (
+        <p className="px-3 pb-2.5 text-[15px] text-[#050505] leading-snug whitespace-pre-wrap">
           {post.content}
+        </p>
+      )}
+
+      {post.image_url && (
+        <div className="w-full bg-black">
+          <img src={post.image_url} alt="" className="w-full max-h-[520px] object-cover block" />
         </div>
+      )}
 
-        {/* Post Image (if exists) */}
-        {post.image && (
-          <div className="mt-3 -mx-4">
-            <img
-              src={post.image}
-              alt="Post content"
-              className="w-full hover:brightness-95 transition-all duration-200 cursor-pointer"
-            />
-          </div>
-        )}
-
-        {/* Post Stats */}
-        <div className="mt-3 flex items-center justify-between text-gray-500 text-sm">
-          {/* Reactions */}
-          <div className="flex items-center space-x-2 group cursor-pointer hover:underline">
-            <div className="flex -space-x-1">
-              {reactionTypes.map((reaction, index) => (
-                <div 
-                  key={index}
-                  className={`w-5 h-5 rounded-full ${reaction.color} flex items-center justify-center 
-                             ring-2 ring-white`}
-                >
-                  <span className="text-xs">{reaction.icon}</span>
-                </div>
-              ))}
-            </div>
-            <span>{post.likes.toLocaleString()}</span>
-          </div>
-
-          {/* Comments and Shares */}
-          <div className="flex space-x-3 text-[13px]">
-            <button className="hover:underline">
-              {post.comments.toLocaleString()} comments
-            </button>
-            <button className="hover:underline">
-              {post.shares.toLocaleString()} shares
-            </button>
-          </div>
-        </div>
+      <div className="px-3 py-1.5 flex items-center justify-between text-[13px] text-[#65676B] border-b border-[#E4E6EB]">
+        <span>{likesCount > 0 ? `${likesCount} Likes` : ''}</span>
+        <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
       </div>
 
-      {/* Post Actions */}
-      <div className="flex items-center justify-between px-2 py-1 border-t">
-        {/* Like Button */}
-        <button 
-          onClick={() => setLiked(!liked)}
-          className={`flex items-center justify-center space-x-2 flex-1 p-2 rounded-lg
-                     transition-all duration-200 hover:bg-gray-100 group
-                     ${liked ? 'text-blue-500' : 'text-gray-500'}`}
+      <div className="grid grid-cols-3 py-1">
+        <button
+          type="button"
+          onClick={toggleLike}
+          className={`flex items-center justify-center gap-1.5 py-2 text-[14px] font-semibold cursor-pointer ${
+            liked ? 'text-[#1877F2]' : 'text-[#65676B]'
+          }`}
         >
-          <ThumbsUp className={`h-5 w-5 group-hover:scale-110 transition-transform duration-200 
-                              ${liked ? 'fill-current' : ''}`} />
-          <span className="font-medium text-[15px]">Like</span>
+          <ThumbsUp className="w-4 h-4" />
+          <span>Like</span>
         </button>
-
-        {/* Comment Button */}
-        <button className="flex items-center justify-center space-x-2 flex-1 p-2 rounded-lg
-                          transition-all duration-200 hover:bg-gray-100 group text-gray-500">
-          <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-          <span className="font-medium text-[15px]">Comment</span>
+        <button
+          type="button"
+          onClick={() => setShowComments(!showComments)}
+          className="flex items-center justify-center gap-1.5 py-2 text-[14px] font-semibold text-[#65676B] cursor-pointer"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Comment</span>
         </button>
-
-        {/* Share Button */}
-        <button className="flex items-center justify-center space-x-2 flex-1 p-2 rounded-lg
-                          transition-all duration-200 hover:bg-gray-100 group text-gray-500">
-          <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-          <span className="font-medium text-[15px]">Share</span>
+        <button
+          type="button"
+          onClick={() => navigator.clipboard?.writeText(window.location.href)}
+          className="flex items-center justify-center gap-1.5 py-2 text-[14px] font-semibold text-[#65676B] cursor-pointer"
+        >
+          <Share2 className="w-4 h-4" />
+          <span>Share</span>
         </button>
       </div>
-    </div>
-  );
-};
 
-export default Post;
+      {showComments && (
+        <div className="px-3 pb-3 pt-1 border-t border-[#E4E6EB] bg-[#F0F2F5]/50">
+          {comments.map((c) => (
+            <div key={c.id} className="bg-[#F0F2F5] rounded-2xl px-3 py-1.5 text-[14px] mb-1.5">
+              <span className="font-semibold mr-1.5">ZUKA Member:</span>
+              {c.text}
+            </div>
+          ))}
+          <form onSubmit={handleAddComment} className="flex gap-2 mt-1.5">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment..."
+              className="flex-1 bg-[#F0F2F5] rounded-full px-3.5 py-1.5 text-[14px] focus:outline-none"
+            />
+            <button type="submit" className="text-[#1877F2] font-semibold text-sm px-2 cursor-pointer">
+              Send
+            </button>
+          </form>
+        </div>
+      )}
+    </article>
+  );
+}
