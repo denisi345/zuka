@@ -4,58 +4,62 @@ import CreatePost from './CreatePost';
 import Stories from './Stories';
 import Post from './Post';
 
-export default function Feed({ userProfile }) {
+export default function Feed({ userProfile, onOpenProfile }) {
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
 
-  useEffect(() => {
-    loadFeedData();
-  }, []);
+  useEffect(() => { loadFeedData(); }, []);
 
   async function loadFeedData() {
     try {
-      const { data: postRows } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30);
+      const { data: postRows } = await supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(30);
       if (Array.isArray(postRows)) setPosts(postRows);
     } catch (_) {}
-
     try {
-      const { data: storyRows } = await supabase
-        .from('stories')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(15);
+      const { data: storyRows } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(15);
       if (Array.isArray(storyRows)) setStories(storyRows);
     } catch (_) {}
   }
 
-  async function handleCreatePost(text) {
+  async function handleCreatePost(text, imageUrl = '') {
     const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-    const optimistic = {
-      id: `temp-${Date.now()}`,
-      author_name: authorName,
-      content: text,
-      time_label: 'Just now'
-    };
+    const optimistic = { id: `temp-${Date.now()}`, author_name: authorName, content: text, image_url: imageUrl, time_label: 'Just now' };
     setPosts((prev) => [optimistic, ...prev]);
-
     try {
       const payload = { content: text, author_name: authorName };
+      if (imageUrl) payload.image_url = imageUrl;
       if (userProfile?.id) payload.user_id = userProfile.id;
       await supabase.from('posts').insert(payload);
     } catch (_) {}
   }
 
+  async function handleUploadStory(file) {
+    const clean = file.name.replace(/[^a-zA-Z0-9._-]/g, '');
+    const path = `stories/${Date.now()}_${clean}`;
+    let mediaUrl = URL.createObjectURL(file);
+    for (const bucket of ['media', 'stories', 'public']) {
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file);
+      if (!upErr) {
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+        if (pub?.publicUrl) { mediaUrl = pub.publicUrl; break; }
+      }
+    }
+    const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
+    setStories((prev) => [{ id: `st-${Date.now()}`, author_name: authorName, media_url: mediaUrl }, ...prev]);
+    try {
+      const payload = { media_url: mediaUrl, author_name: authorName };
+      if (userProfile?.id) payload.user_id = userProfile.id;
+      await supabase.from('stories').insert(payload);
+    } catch (_) {}
+  }
+
   return (
-    <div className="w-full pb-12">
-      <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} />
-      <Stories userProfile={userProfile} stories={stories} />
+    <div style={{ width: '100%', paddingBottom: '48px' }}>
+      <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} onOpenProfile={onOpenProfile} />
+      <Stories userProfile={userProfile} stories={stories} onUploadStory={handleUploadStory} />
       <div>
         {posts.length === 0 ? (
-          <div className="bg-white border border-[#E4E6EB] rounded-lg p-6 text-center text-[#65676B] text-[15px]">
+          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E4E6EB', borderRadius: '8px', padding: '24px', margin: '0 8px', textAlign: 'center', color: '#65676B', fontSize: '15px' }}>
             No posts yet. Share the first update on ZUKA above!
           </div>
         ) : (

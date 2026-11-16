@@ -8,10 +8,13 @@ import { FriendsView, NotificationsView } from "@/components/zuka/FriendsAndNoti
 import Messenger from "@/components/zuka/Messenger";
 import Reels from "@/components/zuka/Reels";
 import Marketplace from "@/components/zuka/Marketplace";
+import Profile from "@/components/zuka/Profile";
 import RightSidebar from "@/components/zuka/RightSidebar";
 
 const Dashboard = () => {
-  const profile = useAuthStore((s) => s.profile);
+  const storeProfile = useAuthStore((s) => s.profile);
+  const [localProfile, setLocalProfile] = useState(null);
+  const profile = localProfile || storeProfile;
   const [activeTab, setActiveTab] = useState("feed");
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatTarget, setChatTarget] = useState(null);
@@ -31,9 +34,14 @@ const Dashboard = () => {
 
       {menuOpen && (
         <div style={{ position: "fixed", top: "54px", right: "12px", zIndex: 50, width: "240px", backgroundColor: "#FFFFFF", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: "1px solid #E4E6EB", padding: "12px" }}>
-          <div style={{ fontWeight: 700, fontSize: "16px", padding: "6px 8px 10px", borderBottom: "1px solid #E4E6EB" }}>
+          <button
+            type="button"
+            onClick={() => { setActiveTab("profile"); setMenuOpen(false); }}
+            style={{ width: "100%", textAlign: "left", fontWeight: 700, fontSize: "16px", padding: "8px", borderBottom: "1px solid #E4E6EB", background: "none", borderTop: "none", borderLeft: "none", borderRight: "none", cursor: "pointer", color: "#050505" }}
+          >
             {profile?.full_name || profile?.username || "ZUKA Member"}
-          </div>
+            <div style={{ fontSize: "12px", color: "#1877F2", fontWeight: 600, marginTop: "2px" }}>See your profile</div>
+          </button>
           <button
             type="button"
             onClick={handleLogout}
@@ -50,21 +58,24 @@ const Dashboard = () => {
         </div>
 
         <main style={{ flex: 1, maxWidth: "680px", margin: "0 auto", width: "100%" }}>
-          {activeTab === "feed" && <Feed userProfile={profile} />}
+          {activeTab === "feed" && <Feed userProfile={profile} onOpenProfile={() => setActiveTab("profile")} />}
+          {activeTab === "profile" && (
+            <Profile
+              userProfile={profile}
+              onBack={() => setActiveTab("feed")}
+              onOpenMessenger={() => setActiveTab("messenger")}
+              onProfileUpdated={(updated) => setLocalProfile(updated)}
+            />
+          )}
           {activeTab === "friends" && (
             <FriendsView
               userProfile={profile}
-              onMessageUser={(person) => {
-                setChatTarget(person);
-                setActiveTab("messenger");
-              }}
+              onMessageUser={(person) => { setChatTarget(person); setActiveTab("messenger"); }}
             />
           )}
           {activeTab === "messenger" && <Messenger userProfile={profile} initialChat={chatTarget} />}
           {activeTab === "reels" && <Reels userProfile={profile} />}
-          {activeTab === "notifications" && (
-            <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />
-          )}
+          {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
           {activeTab === "marketplace" && (
             <Marketplace
               userProfile={profile}

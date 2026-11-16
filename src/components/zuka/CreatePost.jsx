@@ -1,56 +1,71 @@
 import React, { useState } from 'react';
 import { Image } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
-export default function CreatePost({ userProfile, onCreatePost }) {
+export default function CreatePost({ userProfile, onCreatePost, onOpenProfile }) {
   const [text, setText] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const [open, setOpen] = useState(false);
+  const [posting, setPosting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!text.trim()) return;
-    if (onCreatePost) onCreatePost(text.trim());
+    if (!text.trim() && !imageFile) return;
+    setPosting(true);
+    let imageUrl = '';
+    if (imageFile) {
+      const clean = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '');
+      const path = `posts/${Date.now()}_${clean}`;
+      for (const bucket of ['media', 'posts', 'public']) {
+        const { error: upErr } = await supabase.storage.from(bucket).upload(path, imageFile);
+        if (!upErr) {
+          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+          if (pub?.publicUrl) { imageUrl = pub.publicUrl; break; }
+        }
+      }
+    }
+    if (onCreatePost) await onCreatePost(text.trim(), imageUrl);
     setText('');
+    setImageFile(null);
+    setPosting(false);
     setOpen(false);
   }
 
+  const initial = (userProfile?.full_name || userProfile?.username || 'Z').charAt(0).toUpperCase();
+
   return (
-    <div className="bg-white border-b border-[#E4E6EB] px-3 py-2.5">
-      <div className="flex items-center gap-2.5">
-        <div className="w-10 h-10 rounded-full bg-[#E4E6EB] overflow-hidden flex items-center justify-center font-bold text-[#050505] shrink-0">
-          {userProfile?.avatar_url ? (
-            <img src={userProfile.avatar_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            (userProfile?.username || 'Z').charAt(0).toUpperCase()
-          )}
-        </div>
+    <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '10px 12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', color: '#050505', flexShrink: 0, cursor: 'pointer' }}
+        >
+          {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
+        </button>
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="flex-1 h-10 px-4 rounded-full border border-[#CED0D4] bg-white text-left text-[15px] text-[#65676B] cursor-pointer"
+          style={{ flex: 1, height: '40px', padding: '0 16px', borderRadius: '20px', border: '1px solid #CED0D4', backgroundColor: '#FFFFFF', textAlign: 'left', fontSize: '15px', color: '#65676B', cursor: 'pointer' }}
         >
           What's on your mind?
         </button>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex flex-col items-center justify-center px-1.5 text-[#45BD62] cursor-pointer"
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 6px', background: 'none', border: 'none', color: '#45BD62', cursor: 'pointer' }}
         >
-          <Image className="w-6 h-6" />
-          <span className="text-[11px] font-medium text-[#65676B] leading-tight">Photo</span>
+          <Image size={24} />
+          <span style={{ fontSize: '11px', fontWeight: 600, color: '#65676B' }}>Photo</span>
         </button>
       </div>
 
       {open && (
-        <form onSubmit={handleSubmit} className="mt-2.5 pt-2.5 border-t border-[#E4E6EB] flex flex-col gap-2">
-          <textarea
-            rows={3}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="What's on your mind?"
-            className="w-full p-2.5 rounded-lg border border-[#CED0D4] text-[15px] focus:outline-none"
-          />
-          <button type="submit" className="self-end bg-[#1877F2] text-white font-semibold px-4 py-1.5 rounded-md text-sm cursor-pointer">
-            Post
+        <form onSubmit={handleSubmit} style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #E4E6EB', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="What's on your mind?" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px', boxSizing: 'border-box', outline: 'none' }} />
+          <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} style={{ fontSize: '13px', padding: '6px', border: '1px solid #CED0D4', borderRadius: '8px' }} />
+          <button type="submit" disabled={posting} style={{ alignSelf: 'flex-end', backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', fontWeight: 700, padding: '8px 18px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}>
+            {posting ? 'Posting...' : 'Post'}
           </button>
         </form>
       )}

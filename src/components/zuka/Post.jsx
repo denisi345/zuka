@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
 import { ThumbsUp, MessageSquare, Share2, MoreHorizontal, Globe } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Post({ post }) {
   const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes_count || 0);
+  const [likesCount, setLikesCount] = useState(Number(post.likes_count || 0));
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
 
-  function toggleLike() {
-    setLiked(!liked);
-    setLikesCount((c) => (liked ? Math.max(0, c - 1) : c + 1));
+  async function toggleLike() {
+    const nextLiked = !liked;
+    const nextCount = nextLiked ? likesCount + 1 : Math.max(0, likesCount - 1);
+    setLiked(nextLiked);
+    setLikesCount(nextCount);
+    if (post.id && !String(post.id).startsWith('temp-')) {
+      try {
+        await supabase.from('posts').update({ likes_count: nextCount }).eq('id', post.id);
+      } catch (_) {}
+    }
   }
 
   function handleAddComment(e) {
@@ -23,89 +31,101 @@ export default function Post({ post }) {
   const author = post.author_name || 'ZUKA Member';
 
   return (
-    <article className="bg-white border-y sm:border border-[#E4E6EB] sm:rounded-lg mb-2.5 overflow-hidden">
-      <div className="px-3 pt-3 pb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center font-bold text-base shrink-0">
+    <article style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', marginBottom: '8px', overflow: 'hidden' }}>
+      <div style={{ padding: '12px 12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', flexShrink: 0 }}>
             {author.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-[15px] text-[#050505] leading-tight">{author}</div>
-            <div className="text-[12px] text-[#65676B] flex items-center gap-1 mt-0.5">
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', lineHeight: 1.2 }}>{author}</div>
+            <div style={{ fontSize: '12px', color: '#65676B', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
               <span>{post.time_label || 'Just now'}</span>
               <span>&middot;</span>
-              <Globe className="w-3 h-3" />
+              <Globe size={12} />
             </div>
           </div>
         </div>
-        <button type="button" className="p-1.5 text-[#65676B] rounded-full hover:bg-[#F0F2F5]">
-          <MoreHorizontal className="w-5 h-5" />
+        <button type="button" style={{ background: 'none', border: 'none', padding: '6px', color: '#65676B', cursor: 'pointer' }}>
+          <MoreHorizontal size={20} />
         </button>
       </div>
 
       {post.content && (
-        <p className="px-3 pb-2.5 text-[15px] text-[#050505] leading-snug whitespace-pre-wrap">
+        <p style={{ padding: '0 12px 10px', margin: 0, fontSize: '15px', color: '#050505', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
           {post.content}
         </p>
       )}
 
       {post.image_url && (
-        <div className="w-full bg-black">
-          <img src={post.image_url} alt="" className="w-full max-h-[520px] object-cover block" />
+        <div style={{ width: '100%', backgroundColor: '#000000' }}>
+          <img src={post.image_url} alt="" style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }} />
         </div>
       )}
 
-      <div className="px-3 py-1.5 flex items-center justify-between text-[13px] text-[#65676B] border-b border-[#E4E6EB]">
-        <span>{likesCount > 0 ? `${likesCount} Likes` : ''}</span>
-        <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
-      </div>
+      {(likesCount > 0 || comments.length > 0) && (
+        <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', color: '#65676B', borderBottom: '1px solid #E4E6EB' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            {likesCount > 0 && (
+              <>
+                <span style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ThumbsUp size={11} fill="#FFFFFF" />
+                </span>
+                <span>{likesCount}</span>
+              </>
+            )}
+          </span>
+          <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
+        </div>
+      )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", padding: "4px 0" }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', padding: '4px 0', borderTop: '1px solid #E4E6EB' }}>
         <button
           type="button"
           onClick={toggleLike}
-          className={`flex items-center justify-center gap-1.5 py-2 text-[14px] font-semibold cursor-pointer ${
-            liked ? 'text-[#1877F2]' : 'text-[#65676B]'
-          }`}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 0',
+            background: 'none', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+            color: liked ? '#1877F2' : '#65676B'
+          }}
         >
-          <ThumbsUp className="w-4 h-4" />
+          <ThumbsUp size={18} color={liked ? '#1877F2' : '#65676B'} fill={liked ? '#1877F2' : 'none'} />
           <span>Like</span>
         </button>
         <button
           type="button"
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center justify-center gap-1.5 py-2 text-[14px] font-semibold text-[#65676B] cursor-pointer"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 0', background: 'none', border: 'none', fontSize: '14px', fontWeight: 600, color: '#65676B', cursor: 'pointer' }}
         >
-          <MessageSquare className="w-4 h-4" />
+          <MessageSquare size={18} />
           <span>Comment</span>
         </button>
         <button
           type="button"
           onClick={() => navigator.clipboard?.writeText(window.location.href)}
-          className="flex items-center justify-center gap-1.5 py-2 text-[14px] font-semibold text-[#65676B] cursor-pointer"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 0', background: 'none', border: 'none', fontSize: '14px', fontWeight: 600, color: '#65676B', cursor: 'pointer' }}
         >
-          <Share2 className="w-4 h-4" />
+          <Share2 size={18} />
           <span>Share</span>
         </button>
       </div>
 
       {showComments && (
-        <div className="px-3 pb-3 pt-1 border-t border-[#E4E6EB] bg-[#F0F2F5]/50">
+        <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #E4E6EB', backgroundColor: '#F0F2F5' }}>
           {comments.map((c) => (
-            <div key={c.id} className="bg-[#F0F2F5] rounded-2xl px-3 py-1.5 text-[14px] mb-1.5">
-              <span className="font-semibold mr-1.5">ZUKA Member:</span>
-              {c.text}
+            <div key={c.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', padding: '6px 12px', fontSize: '14px', marginBottom: '6px' }}>
+              <strong>ZUKA Member: </strong>{c.text}
             </div>
           ))}
-          <form onSubmit={handleAddComment} className="flex gap-2 mt-1.5">
+          <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
             <input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder="Write a comment..."
-              className="flex-1 bg-[#F0F2F5] rounded-full px-3.5 py-1.5 text-[14px] focus:outline-none"
+              style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: '18px', border: '1px solid #CED0D4', padding: '7px 12px', fontSize: '14px', outline: 'none' }}
             />
-            <button type="submit" className="text-[#1877F2] font-semibold text-sm px-2 cursor-pointer">
+            <button type="submit" style={{ background: 'none', border: 'none', color: '#1877F2', fontWeight: 700, fontSize: '14px', padding: '0 8px', cursor: 'pointer' }}>
               Send
             </button>
           </form>
