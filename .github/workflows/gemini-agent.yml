@@ -24,6 +24,7 @@ jobs:
 
       - name: Run Autonomous Coding Agent
         env:
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
