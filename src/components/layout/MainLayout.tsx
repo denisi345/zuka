@@ -130,7 +130,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       {/* Sidebar for desktop */}
       <div className="hidden md:flex w-64 flex-col bg-vercel-gray-900 border-r border-vercel-gray-800">
         <div className="flex items-center justify-center h-16 border-b border-vercel-gray-800">
-          <h1 className="text-xl font-bold text-gradient">SupaSocial</h1>
+          <h1 className="text-xl font-bold text-gradient">ZUKA</h1>
         </div>
         <div className="flex flex-col flex-grow p-4 space-y-2">
           {navItems.map((item) => (
