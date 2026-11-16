@@ -12,29 +12,29 @@ export default function Header({ activeTab = 'feed', setActiveTab = () => {}, on
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-[#E4E6EB]">
-      <div className="max-w-[1200px] mx-auto h-[52px] px-3 flex items-center justify-between">
+    <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', height: '52px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button
           type="button"
           onClick={() => setActiveTab('feed')}
-          className="text-[#1877F2] text-[28px] font-extrabold tracking-tight leading-none cursor-pointer"
+          style={{ color: '#1877F2', fontSize: '28px', fontWeight: 800, letterSpacing: '-0.5px', lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer' }}
         >
           ZUKA
         </button>
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setActiveTab('feed')} className="w-9 h-9 rounded-full bg-[#E4E6EB] flex items-center justify-center text-[#050505] cursor-pointer">
-            <Plus className="w-5 h-5" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button type="button" onClick={() => setActiveTab('feed')} style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
+            <Plus size={20} />
           </button>
-          <button type="button" onClick={() => setActiveTab('friends')} className="w-9 h-9 rounded-full bg-[#E4E6EB] flex items-center justify-center text-[#050505] cursor-pointer">
-            <Search className="w-5 h-5" />
+          <button type="button" onClick={() => setActiveTab('friends')} style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
+            <Search size={20} />
           </button>
-          <button type="button" onClick={onOpenMenu} className="w-9 h-9 rounded-full bg-[#E4E6EB] flex items-center justify-center text-[#050505] cursor-pointer">
-            <Menu className="w-5 h-5" />
+          <button type="button" onClick={onOpenMenu} style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
+            <Menu size={20} />
           </button>
         </div>
       </div>
 
-      <nav className="max-w-[680px] mx-auto h-[46px] grid grid-cols-6">
+      <nav style={{ maxWidth: '680px', margin: '0 auto', height: '46px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -44,11 +44,18 @@ export default function Header({ activeTab = 'feed', setActiveTab = () => {}, on
               type="button"
               onClick={() => setActiveTab(tab.id)}
               aria-label={tab.label}
-              className={`flex items-center justify-center border-b-[3px] cursor-pointer ${
-                active ? 'border-[#1877F2] text-[#1877F2]' : 'border-transparent text-[#65676B]'
-              }`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'none',
+                border: 'none',
+                borderBottom: active ? '3px solid #1877F2' : '3px solid transparent',
+                color: active ? '#1877F2' : '#65676B',
+                cursor: 'pointer'
+              }}
             >
-              <Icon className="w-6 h-6" />
+              <Icon size={24} />
             </button>
           );
         })}
