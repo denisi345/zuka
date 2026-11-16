@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/zuka/Header";
 import LeftSidebar from "@/components/zuka/LeftSidebar";
 import Feed from "@/components/zuka/Feed";
+import Marketplace from "@/components/zuka/Marketplace";
 import RightSidebar from "@/components/zuka/RightSidebar";
 
 const Dashboard = () => {
@@ -17,7 +18,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] text-[#050505]">
+    <div style={{ minHeight: "100vh", backgroundColor: "#F0F2F5", color: "#050505" }}>
       <Header
         activeTab={activeTab}
         setActiveTab={(tab) => { setActiveTab(tab); setMenuOpen(false); }}
@@ -25,35 +26,41 @@ const Dashboard = () => {
       />
 
       {menuOpen && (
-        <div className="fixed top-[54px] right-3 z-50 w-64 bg-white rounded-xl shadow-lg border border-[#E4E6EB] p-3">
-          <div className="font-bold text-[16px] px-2 py-1.5 border-b border-[#E4E6EB]">
+        <div style={{ position: "fixed", top: "54px", right: "12px", zIndex: 50, width: "240px", backgroundColor: "#FFFFFF", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: "1px solid #E4E6EB", padding: "12px" }}>
+          <div style={{ fontWeight: 700, fontSize: "16px", padding: "6px 8px 10px", borderBottom: "1px solid #E4E6EB" }}>
             {profile?.full_name || profile?.username || "ZUKA Member"}
           </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full text-left px-2 py-2.5 mt-1 text-[#E41E3F] font-semibold rounded-lg hover:bg-[#F0F2F5] cursor-pointer"
+            style={{ width: "100%", textAlign: "left", padding: "10px 8px", marginTop: "4px", color: "#E41E3F", fontWeight: 600, background: "none", border: "none", borderRadius: "8px", cursor: "pointer" }}
           >
             Log Out
           </button>
         </div>
       )}
 
-      <div className="max-w-[1440px] mx-auto flex justify-between pt-2">
+      <div style={{ maxWidth: "1440px", margin: "0 auto", display: "flex", justifyContent: "space-between", paddingTop: "4px" }}>
         <div className="hidden lg:block w-[320px] shrink-0">
           <LeftSidebar userProfile={profile} />
         </div>
 
-        <main className="flex-1 max-w-[680px] mx-auto">
+        <main style={{ flex: 1, maxWidth: "680px", margin: "0 auto", width: "100%" }}>
           {activeTab === "feed" && <Feed userProfile={profile} />}
-          {activeTab !== "feed" && (
-            <div className="bg-white border border-[#E4E6EB] rounded-lg p-6 m-2 text-center">
-              <h2 className="text-lg font-bold capitalize mb-1">ZUKA {activeTab}</h2>
-              <p className="text-sm text-[#65676B] mb-4">Ready to connect {activeTab} module.</p>
+          {activeTab === "marketplace" && (
+            <Marketplace
+              userProfile={profile}
+              onMessageSeller={() => setActiveTab("messenger")}
+            />
+          )}
+          {activeTab !== "feed" && activeTab !== "marketplace" && (
+            <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E4E6EB", borderRadius: "8px", padding: "24px", margin: "12px", textAlign: "center" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: 700, textTransform: "capitalize", marginBottom: "6px" }}>ZUKA {activeTab}</h2>
+              <p style={{ fontSize: "14px", color: "#65676B", marginBottom: "14px" }}>Ready to connect {activeTab} module.</p>
               <button
                 type="button"
                 onClick={() => setActiveTab("feed")}
-                className="bg-[#1877F2] text-white font-semibold px-4 py-2 rounded-md text-sm cursor-pointer"
+                style={{ backgroundColor: "#1877F2", color: "#FFFFFF", fontWeight: 600, padding: "8px 16px", borderRadius: "6px", border: "none", fontSize: "14px", cursor: "pointer" }}
               >
                 Back to Feed
               </button>
