@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/zuka/Header";
 import LeftSidebar from "@/components/zuka/LeftSidebar";
 import Feed from "@/components/zuka/Feed";
-import Marketplace from "@/components/zuka/Marketplace";
-import Reels from "@/components/zuka/Reels";
+import { FriendsView, NotificationsView } from "@/components/zuka/FriendsAndNotifs";
 import Messenger from "@/components/zuka/Messenger";
+import Reels from "@/components/zuka/Reels";
+import Marketplace from "@/components/zuka/Marketplace";
 import RightSidebar from "@/components/zuka/RightSidebar";
 
 const Dashboard = () => {
@@ -50,8 +51,20 @@ const Dashboard = () => {
 
         <main style={{ flex: 1, maxWidth: "680px", margin: "0 auto", width: "100%" }}>
           {activeTab === "feed" && <Feed userProfile={profile} />}
+          {activeTab === "friends" && (
+            <FriendsView
+              userProfile={profile}
+              onMessageUser={(person) => {
+                setChatTarget(person);
+                setActiveTab("messenger");
+              }}
+            />
+          )}
           {activeTab === "messenger" && <Messenger userProfile={profile} initialChat={chatTarget} />}
           {activeTab === "reels" && <Reels userProfile={profile} />}
+          {activeTab === "notifications" && (
+            <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />
+          )}
           {activeTab === "marketplace" && (
             <Marketplace
               userProfile={profile}
@@ -60,19 +73,6 @@ const Dashboard = () => {
                 setActiveTab("messenger");
               }}
             />
-          )}
-          {activeTab !== "feed" && activeTab !== "messenger" && activeTab !== "reels" && activeTab !== "marketplace" && (
-            <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E4E6EB", borderRadius: "8px", padding: "24px", margin: "12px", textAlign: "center" }}>
-              <h2 style={{ fontSize: "18px", fontWeight: 700, textTransform: "capitalize", marginBottom: "6px" }}>ZUKA {activeTab}</h2>
-              <p style={{ fontSize: "14px", color: "#65676B", marginBottom: "14px" }}>Ready to connect {activeTab} module.</p>
-              <button
-                type="button"
-                onClick={() => setActiveTab("feed")}
-                style={{ backgroundColor: "#1877F2", color: "#FFFFFF", fontWeight: 600, padding: "8px 16px", borderRadius: "6px", border: "none", fontSize: "14px", cursor: "pointer" }}
-              >
-                Back to Feed
-              </button>
-            </div>
           )}
         </main>
 
