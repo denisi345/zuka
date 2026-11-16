@@ -576,6 +576,128 @@
     </div>
     <div id="video-comments-backdrop" onclick="closeVideoCommentsSheet()" class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity"></div>
 
+    <!-- ==========================================================================
+         ZUKA REELS - FULL-SCREEN 9:16 OVERLAY CONTAINER
+         ========================================================================== -->
+    <div id="zuka-reels-overlay" class="zuka-reels-overlay hidden" onclick="ZukaReelsUI.handleOverlayClick(event)">
+        <!-- Backdrop (clicking outside closes overlay) -->
+        <div class="absolute inset-0" onclick="closeZukaReelsOverlay()"></div>
+
+        <div class="zuka-reels-viewport" id="zuka-reels-viewport"></div>
+
+        <!-- Top Safe Zone -->
+        <div class="zuka-reels-top-overlay">
+            <div class="zuka-reels-top-row">
+                <button id="zuka-reels-back-btn" class="zuka-reels-back-btn" onclick="closeZukaReelsOverlay()" aria-label="Back">&larr;</button>
+                <div class="zuka-reels-title">ZUKA Reels</div>
+                <button class="zuka-create-reel-btn" onclick="openCreateReelModal()" aria-label="Create Reel">+ Create Reel</button>
+            </div>
+        </div>
+
+        <!-- Right Action Stack -->
+        <div class="zuka-reels-right-actions" id="zuka-reels-right-actions">
+            <button id="zuka-reel-btn-like" class="zuka-reel-action-btn" onclick="event.stopPropagation(); ZukaReelsUI.toggleLikeCurrent()" title="Like">
+                <div id="zuka-reel-like-circle" class="zuka-reel-action-circle">❤️</div>
+                <span id="zuka-reel-like-count" class="zuka-reel-action-count">0</span>
+            </button>
+            <button class="zuka-reel-action-btn" onclick="event.stopPropagation(); ZukaReelsUI.openCommentsCurrent()" title="Comment">
+                <div class="zuka-reel-action-circle">💬</div>
+                <span id="zuka-reel-comment-count" class="zuka-reel-action-count">0</span>
+            </button>
+            <button class="zuka-reel-action-btn" onclick="event.stopPropagation(); ZukaReelsUI.shareCurrent()" title="Share">
+                <div class="zuka-reel-action-circle">↗️</div>
+                <span id="zuka-reel-share-count" class="zuka-reel-action-count">0</span>
+            </button>
+            <button id="zuka-reel-btn-mute" class="zuka-reel-action-btn" onclick="event.stopPropagation(); ZukaReelsUI.toggleMute()" title="Mute / Unmute">
+                <div id="zuka-reel-mute-circle" class="zuka-reel-action-circle">🔊</div>
+            </button>
+            <button class="zuka-reel-action-btn" onclick="event.stopPropagation(); ZukaReelsUI.toggleSaveCurrent()" title="Save">
+                <div id="zuka-reel-save-circle" class="zuka-reel-action-circle">📑</div>
+                <span id="zuka-reel-save-label" class="zuka-reel-action-count">Save</span>
+            </button>
+            <button class="zuka-reel-action-btn" onclick="event.stopPropagation(); ZukaReelsUI.showMoreCurrent()" title="More options">
+                <div class="zuka-reel-action-circle">•••</div>
+            </button>
+        </div>
+
+        <!-- Bottom-Left Creator & Caption Safe Zone -->
+        <div class="zuka-reels-bottom-left">
+            <div class="zuka-reel-creator-row">
+                <img id="zuka-reel-avatar" class="zuka-reel-avatar" src="" alt="">
+                <div class="flex flex-col min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span id="zuka-reel-author" class="zuka-reel-author-name">ZUKA Team</span>
+                        <span class="blue-tick-badge !w-3.5 !h-3.5 !text-[9px]">✓</span>
+                    </div>
+                    <button id="zuka-reel-follow-btn" class="zuka-reel-follow-btn" onclick="event.stopPropagation(); ZukaReelsUI.toggleFollowCurrent()" title="Follow">Follow</button>
+                </div>
+            </div>
+            <p id="zuka-reel-caption" class="zuka-reel-caption"></p>
+            <button id="zuka-reel-more-btn" class="zuka-reel-more-btn" onclick="event.stopPropagation(); ZukaReelsUI.toggleCaptionExpand()">... more</button>
+            <div class="zuka-reel-audio-ticker">
+                <span class="text-sm">🎵</span>
+                <span id="zuka-reel-audio-text" class="zuka-reel-audio-text">Original audio - ZUKA</span>
+            </div>
+        </div>
+
+        <!-- Bottom Progress Bar -->
+        <div class="zuka-reel-bottom-progress" id="zuka-reel-progress-bar">
+            <div class="zuka-reel-bottom-progress-fill" id="zuka-reel-progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         ZUKA REELS - COMMENTS BOTTOM SHEET (SLIDE-UP DRAWER)
+         ========================================================================== -->
+    <div id="zuka-reels-comments-sheet" class="zuka-reels-comments-sheet">
+        <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto my-2.5 shrink-0"></div>
+        <div class="zuka-reels-comments-header">
+            <div class="zuka-reels-comments-title">Comments</div>
+            <button onclick="closeZukaReelsComments()" class="zuka-reels-comments-close">✕</button>
+        </div>
+        <div id="zuka-reels-comments-list" class="zuka-reels-comments-list"></div>
+        <div class="zuka-reels-comment-input-row">
+            <img id="zuka-reels-sheet-avatar" src="" class="w-8 h-8 rounded-full object-cover">
+            <input type="text" id="zuka-reels-comment-input" placeholder="Add a comment..." class="zuka-reels-comment-input" onkeydown="if(event.key==='Enter') ZukaReelsUI.submitCommentCurrent()">
+            <button onclick="ZukaReelsUI.submitCommentCurrent()" class="zuka-reels-comment-send">💬</button>
+        </div>
+    </div>
+    <div id="zuka-reels-comments-backdrop" onclick="closeZukaReelsComments()" class="zuka-reels-comments-backdrop zuka-hidden"></div>
+
+    <!-- ==========================================================================
+         ZUKA CREATE REEL MODAL
+         ========================================================================== -->
+    <div id="zuka-create-reel-modal-overlay" class="zuka-create-reel-modal-overlay hidden">
+        <div class="zuka-create-reel-modal">
+            <div class="zuka-create-reel-modal-header">
+                <div class="zuka-create-reel-modal-title">Create Reel</div>
+                <button onclick="closeCreateReelModal()" class="zuka-create-reel-close">✕</button>
+            </div>
+            <div class="zuka-create-reel-modal-body">
+                <div class="zuka-create-reel-preview" id="zuka-create-reel-preview">
+                    <video id="zuka-create-reel-video" playsinline muted></video>
+                    <div class="zuka-create-reel-preview-placeholder" id="zuka-create-reel-placeholder">
+                        <span style="font-size:48px;">🎬</span>
+                        <span>Select a video to create your Reel</span>
+                    </div>
+                </div>
+                <div class="zuka-create-reel-label">Video File</div>
+                <div class="zuka-create-reel-file-input" onclick="document.getElementById('zuka-create-reel-file').click()" aria-label="Select video file">
+                    <span>Upload video</span>
+                    <input type="file" id="zuka-create-reel-file" accept="video/*" class="hidden">
+                </div>
+                <div class="zuka-create-reel-label">Caption</div>
+                <textarea id="zuka-create-reel-caption" class="zuka-create-reel-caption-input" placeholder="Write a caption..."></textarea>
+                <div class="zuka-create-reel-audio-input">
+                    <div class="zuka-create-reel-label">Audio Track</div>
+                    <input type="text" id="zuka-create-reel-audio" class="zuka-create-reel-caption-input" value="Original Audio" placeholder="Original Audio">
+                </div>
+                <div id="zuka-create-reel-error" style="color:#e41e3f; font-size:12px; margin-top:6px; display:none;"></div>
+                <button onclick="publishCreateReel()" class="zuka-create-reel-publish-btn">Publish Reel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ALL APPLICATION JAVASCRIPT MODULES -->
     <script src="/i18n.js"></script>
     <script src="/supabase.js"></script>
@@ -1362,7 +1484,7 @@ function openPostOptions(postId) {
                 `;
             
             } else if (tab === 'reels') {
-                renderFacebookVideoTab('reels');
+                openZukaReelsOverlay();
             } else if (tab === 'profile') {
                 const u = window.ZukaAuth.getCurrentUser() || { avatar_url: '', cover_url: '', full_name: 'ZUKA Member', username: 'member', bio: '', location: '', work: '', education: '', relationship: '', is_verified: false, is_locked: false, followers_count: 0, following_count: 0 };
                 container.innerHTML = `
@@ -1496,15 +1618,50 @@ function openPostOptions(postId) {
             }
         }
 
-        function promptCreateReel() {
-            const isSwahili = window.ZukaI18n && window.ZukaI18n.getLanguage() === 'sw';
-            const cap = prompt(isSwahili ? 'Maelezo ya Reel yako:' : 'Reel caption:');
-            if (cap) {
-                window.ZukaReels.createReel({
-                    videoUrl: 'https://mixkit.co',
-                    caption: cap
-                }).then(() => switchMainTab('reels')).catch(e => alert(e.message));
+        function openCreateReelModal() {
+            document.getElementById('zuka-create-reel-modal-overlay').classList.remove('hidden');
+            document.getElementById('zuka-create-reel-video').src = '';
+            document.getElementById('zuka-create-reel-caption').value = '';
+            document.getElementById('zuka-create-reel-audio').value = 'Original Audio';
+            document.getElementById('zuka-create-reel-file').value = '';
+            document.getElementById('zuka-create-reel-placeholder').style.display = 'flex';
+            document.getElementById('zuka-create-reel-video').style.display = 'none';
+            document.getElementById('zuka-create-reel-error').style.display = 'none';
+        }
+
+        function closeCreateReelModal() {
+            document.getElementById('zuka-create-reel-modal-overlay').classList.add('hidden');
+        }
+
+        function publishCreateReel() {
+            const fileInput = document.getElementById('zuka-create-reel-file');
+            const errorEl = document.getElementById('zuka-create-reel-error');
+            const videoEl = document.getElementById('zuka-create-reel-video');
+            const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+            const caption = document.getElementById('zuka-create-reel-caption').value.trim();
+            const audioTrack = document.getElementById('zuka-create-reel-audio').value.trim() || 'Original Audio';
+            const videoUrl = (videoEl && videoEl.src) || file ? (videoEl && videoEl.src) || '' : '';
+
+            if (!file && !videoUrl) {
+                errorEl.textContent = 'Please select a video file to publish your Reel.';
+                errorEl.style.display = 'block';
+                return;
             }
+            if (!caption) {
+                errorEl.textContent = 'Please write a caption for your Reel.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            ZukaReelsUI.publishReel({ file, caption, audioTrack, videoUrl })
+                .then(() => {
+                    closeCreateReelModal();
+                    alert('Your Reel has been published to ZUKA!');
+                })
+                .catch(e => {
+                    errorEl.textContent = e.message || 'Failed to publish reel.';
+                    errorEl.style.display = 'block';
+                });
         }
         function promptEditBio() {
             const b = prompt('Edit your bio:', window.ZukaAuth.getCurrentUser().bio);

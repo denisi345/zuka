@@ -757,3 +757,709 @@ body {
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
     margin-top: 3px;
 }
+
+/* ==========================================================================
+   ZUKA REELS - FULL-SCREEN 9:16 OVERLAY SYSTEM
+   ========================================================================== */
+
+.zuka-reels-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: #000000;
+    z-index: 2000;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.zuka-reels-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: #000000;
+}
+
+.zuka-reels-viewport::-webkit-scrollbar {
+    display: none;
+}
+
+.zuka-reel-slide {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    background: #000000;
+    overflow: hidden;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.zuka-reel-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000;
+}
+
+.zuka-reel-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #000000;
+}
+
+@media (min-width: 768px) {
+    .zuka-reel-slide {
+        width: 420px;
+        height: 88vh;
+        height: 88dvh;
+        border-radius: 12px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+}
+
+.zuka-reels-top-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 14vh;
+    height: 14dvh;
+    min-height: 88px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 60%, transparent 100%);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 14px 16px;
+    z-index: 60;
+    pointer-events: none;
+}
+
+.zuka-reels-top-overlay > * {
+    pointer-events: auto;
+}
+
+.zuka-reels-top-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.zuka-reels-back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+}
+
+.zuka-reels-back-btn:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.zuka-reels-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    letter-spacing: 0.2px;
+}
+
+.zuka-create-reel-btn {
+    background: #1877F2;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(24, 119, 242, 0.55);
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.zuka-create-reel-btn:hover {
+    background: #146fe5;
+}
+
+.zuka-create-reel-btn:active {
+    transform: scale(0.96);
+}
+
+.zuka-reels-right-actions {
+    position: absolute;
+    right: 14px;
+    top: 64px;
+    bottom: 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    z-index: 55;
+    pointer-events: none;
+}
+
+.zuka-reels-right-actions > * {
+    pointer-events: auto;
+}
+
+.zuka-reel-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    transition: transform 0.15s ease;
+}
+
+.zuka-reel-action-btn:hover {
+    transform: scale(1.08);
+}
+
+.zuka-reel-action-btn:active {
+    transform: scale(0.92);
+}
+
+.zuka-reel-action-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(24, 24, 27, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 17px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.zuka-reel-action-btn.zuka-liked .zuka-reel-action-circle {
+    background: #1877F2;
+    border-color: #1877F2;
+}
+
+.zuka-reel-action-count {
+    font-size: 11px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.zuka-reels-bottom-left {
+    position: absolute;
+    left: 12px;
+    bottom: 35%;
+    max-width: calc(100% - 28px);
+    z-index: 50;
+}
+
+.zuka-reel-creator-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zuka-reel-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    object-fit: cover;
+    background: #333333;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.zuka-reel-author-name {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 14px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.zuka-reel-follow-btn {
+    background: transparent;
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.zuka-reel-follow-btn.zuka-following {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.zuka-reel-caption {
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 1.35;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    margin-top: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.zuka-reel-caption.zuka-caption-expanded {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+}
+
+.zuka-reel-more-btn {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.zuka-reel-audio-ticker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+    max-width: 240px;
+}
+
+.zuka-reel-audio-text {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.zuka-reel-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.25);
+    z-index: 55;
+}
+
+.zuka-reel-progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #1877F2;
+}
+
+.zuka-reel-bottom-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.25);
+    z-index: 55;
+}
+
+.zuka-reel-bottom-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #1877F2;
+}
+
+.zuka-reels-heart-floating {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 88px;
+    color: #e41e3f;
+    pointer-events: none;
+    z-index: 45;
+    animation: zukaHeartPopAnimation 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    filter: drop-shadow(0 6px 20px rgba(228, 30, 63, 0.6));
+}
+
+@keyframes zukaHeartPopAnimation {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+    }
+    40% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.4);
+    }
+    70% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.6);
+    }
+}
+
+.zuka-play-pause-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 32px;
+    pointer-events: none;
+    z-index: 45;
+    animation: zukaPlayPauseFlashAnim 0.5s ease-out forwards;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+@keyframes zukaPlayPauseFlashAnim {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.6);
+    }
+    50% {
+        opacity: 0.95;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.3);
+    }
+}
+
+/* ZUKA Reels Bottom Sheet (Comments) */
+.zuka-reels-comments-sheet {
+    position: fixed;
+    inset-x: 0;
+    bottom: 0;
+    z-index: 2100;
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1);
+    transform: translateY(105%);
+    height: 70%;
+    max-height: 85vh;
+    border-t: 1px solid #e4e6eb;
+}
+
+.zuka-reels-comments-sheet.zuka-open {
+    transform: translateY(0);
+}
+
+.zuka-reels-comments-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2050;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    border: none;
+    cursor: default;
+}
+
+.zuka-reels-comments-backdrop.zuka-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.zuka-reels-comments-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.zuka-reels-comments-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #050505;
+}
+
+.zuka-reels-comments-close {
+    background: #f0f2f5;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #050505;
+}
+
+.zuka-reels-comments-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: #fafbfc;
+}
+
+.zuka-reels-comment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.zuka-reels-comment-bubble {
+    background: #ffffff;
+    border: 1px solid #e4e6eb;
+    border-radius: 16px;
+    padding: 10px 12px;
+    flex: 1;
+}
+
+.zuka-reels-comment-author {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1877F2;
+}
+
+.zuka-reels-comment-text {
+    font-size: 13px;
+    color: #050505;
+    margin-top: 2px;
+}
+
+.zuka-reels-comment-time {
+    font-size: 10px;
+    color: #8a8d91;
+    margin-top: 4px;
+}
+
+.zuka-reels-comment-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid #e4e6eb;
+    background: #ffffff;
+}
+
+.zuka-reels-comment-input {
+    flex: 1;
+    border: 1px solid #e4e6eb;
+    background: #f0f2f5;
+    border-radius: 999px;
+    padding: 10px 16px;
+    font-size: 13px;
+    outline: none;
+}
+
+.zuka-reels-comment-input:focus {
+    border-color: #1877F2;
+}
+
+.zuka-reels-comment-send {
+    background: #1877F2;
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ZUKA Create Reel Modal */
+.zuka-create-reel-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    z-index: 2200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.zuka-create-reel-modal {
+    background: #ffffff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.zuka-create-reel-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.zuka-create-reel-modal-title {
+    font-size: 18px;
+    font-weight: 900;
+    color: #050505;
+}
+
+.zuka-create-reel-close {
+    background: #f0f2f5;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #050505;
+}
+
+.zuka-create-reel-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.zuka-create-reel-preview {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    background: #000000;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.zuka-create-reel-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.zuka-create-reel-preview-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+}
+
+.zuka-create-reel-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #050505;
+}
+
+.zuka-create-reel-file-input {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #f0f2f5;
+    border: 2px dashed #bcc0c4;
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    color: #050505;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.zuka-create-reel-file-input:hover {
+    background: #e4e6eb;
+}
+
+.zuka-create-reel-caption-input {
+    width: 100%;
+    border: 1px solid #e4e6eb;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+    min-height: 80px;
+}
+
+.zuka-create-reel-caption-input:focus {
+    border-color: #1877F2;
+}
+
+.zuka-create-reel-audio-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.zuka-create-reel-audio-input input {
+    flex: 1;
+}
+
+.zuka-create-reel-publish-btn {
+    background: #1877F2;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.zuka-create-reel-publish-btn:hover {
+    background: #146fe5;
+}
+
+.zuka-create-reel-publish-btn:disabled {
+    background: #bcc0c4;
+    cursor: not-allowed;
+}
