@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("feed");
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatTarget, setChatTarget] = useState(null);
+  const [viewedProfile, setViewedProfile] = useState(null);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -36,7 +37,7 @@ const Dashboard = () => {
         <div style={{ position: "fixed", top: "54px", right: "12px", zIndex: 50, width: "240px", backgroundColor: "#FFFFFF", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: "1px solid #E4E6EB", padding: "12px" }}>
           <button
             type="button"
-            onClick={() => { setActiveTab("profile"); setMenuOpen(false); }}
+            onClick={() => { setViewedProfile(null); setActiveTab("profile"); setMenuOpen(false); }}
             style={{ width: "100%", textAlign: "left", fontWeight: 700, fontSize: "16px", padding: "8px", borderBottom: "1px solid #E4E6EB", background: "none", borderTop: "none", borderLeft: "none", borderRight: "none", cursor: "pointer", color: "#050505" }}
           >
             {profile?.full_name || profile?.username || "ZUKA Member"}
@@ -58,12 +59,22 @@ const Dashboard = () => {
         </div>
 
         <main style={{ flex: 1, maxWidth: "680px", margin: "0 auto", width: "100%" }}>
-          {activeTab === "feed" && <Feed userProfile={profile} onOpenProfile={() => setActiveTab("profile")} />}
+          {activeTab === "feed" && (
+            <Feed
+              userProfile={profile}
+              onOpenProfile={() => { setViewedProfile(null); setActiveTab("profile"); }}
+              onOpenUserProfile={(person) => { setViewedProfile(person); setActiveTab("profile"); }}
+            />
+          )}
           {activeTab === "profile" && (
             <Profile
-              userProfile={profile}
+              currentUser={profile}
+              targetProfile={viewedProfile}
               onBack={() => setActiveTab("feed")}
-              onOpenMessenger={() => setActiveTab("messenger")}
+              onOpenMessenger={(person) => {
+                if (person) setChatTarget(person);
+                setActiveTab("messenger");
+              }}
               onProfileUpdated={(updated) => setLocalProfile(updated)}
             />
           )}

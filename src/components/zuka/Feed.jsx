@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { Megaphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import CreatePost from './CreatePost';
 import Stories from './Stories';
 import Post from './Post';
 
-export default function Feed({ userProfile, onOpenProfile }) {
+export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) {
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
+  const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => { loadFeedData(); }, []);
 
@@ -19,11 +21,15 @@ export default function Feed({ userProfile, onOpenProfile }) {
       const { data: storyRows } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(15);
       if (Array.isArray(storyRows)) setStories(storyRows);
     } catch (_) {}
+    try {
+      const { data: ceoRow } = await supabase.from('ceo_settings').select('announcement').limit(1).maybeSingle();
+      if (ceoRow?.announcement) setAnnouncement(ceoRow.announcement);
+    } catch (_) {}
   }
 
   async function handleCreatePost(text, imageUrl = '') {
     const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-    const optimistic = { id: `temp-${Date.now()}`, author_name: authorName, content: text, image_url: imageUrl, time_label: 'Just now' };
+    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, is_verified: userProfile?.is_verified, content: text, image_url: imageUrl, time_label: 'Just now' };
     setPosts((prev) => [optimistic, ...prev]);
     try {
       const payload = { content: text, author_name: authorName };
@@ -55,6 +61,12 @@ export default function Feed({ userProfile, onOpenProfile }) {
 
   return (
     <div style={{ width: '100%', paddingBottom: '48px' }}>
+      {announcement && (
+        <div style={{ backgroundColor: '#E7F3FF', borderBottom: '1px solid #1877F2', color: '#050505', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+          <Megaphone size={18} color="#1877F2" style={{ flexShrink: 0 }} />
+          <span><strong>ZUKA CEO:</strong> {announcement}</span>
+        </div>
+      )}
       <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} onOpenProfile={onOpenProfile} />
       <Stories userProfile={userProfile} stories={stories} onUploadStory={handleUploadStory} />
       <div>
@@ -63,7 +75,15 @@ export default function Feed({ userProfile, onOpenProfile }) {
             No posts yet. Share the first update on ZUKA above!
           </div>
         ) : (
-          posts.map((post) => <Post key={post.id} post={post} />)
+          posts.map((post) => (
+            <Post
+              key={post.id}
+              post={post}
+              currentUserId={userProfile?.id}
+              onOpenUserProfile={onOpenUserProfile}
+              onDeletePost={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
+            />
+          ))
         )}
       </div>
     </div>
