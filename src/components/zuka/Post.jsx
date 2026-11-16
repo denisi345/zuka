@@ -60,7 +60,7 @@ export default function Post({ post }) {
         <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
       </div>
 
-      <div className="grid grid-cols-3 py-1">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", padding: "4px 0" }}>
         <button
           type="button"
           onClick={toggleLike}

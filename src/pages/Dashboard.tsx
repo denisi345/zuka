@@ -5,6 +5,7 @@ import Header from "@/components/zuka/Header";
 import LeftSidebar from "@/components/zuka/LeftSidebar";
 import Feed from "@/components/zuka/Feed";
 import Marketplace from "@/components/zuka/Marketplace";
+import Reels from "@/components/zuka/Reels";
 import RightSidebar from "@/components/zuka/RightSidebar";
 
 const Dashboard = () => {
@@ -47,13 +48,14 @@ const Dashboard = () => {
 
         <main style={{ flex: 1, maxWidth: "680px", margin: "0 auto", width: "100%" }}>
           {activeTab === "feed" && <Feed userProfile={profile} />}
+          {activeTab === "reels" && <Reels userProfile={profile} />}
           {activeTab === "marketplace" && (
             <Marketplace
               userProfile={profile}
               onMessageSeller={() => setActiveTab("messenger")}
             />
           )}
-          {activeTab !== "feed" && activeTab !== "marketplace" && (
+          {activeTab !== "feed" && activeTab !== "marketplace" && activeTab !== "reels" && (
             <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E4E6EB", borderRadius: "8px", padding: "24px", margin: "12px", textAlign: "center" }}>
               <h2 style={{ fontSize: "18px", fontWeight: 700, textTransform: "capitalize", marginBottom: "6px" }}>ZUKA {activeTab}</h2>
               <p style={{ fontSize: "14px", color: "#65676B", marginBottom: "14px" }}>Ready to connect {activeTab} module.</p>
