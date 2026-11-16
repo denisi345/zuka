@@ -33,14 +33,15 @@ jobs:
           BRANCH="ai-fix-${{ github.run_number }}"
           git checkout -b "$BRANCH"
 
-          TASK="You are building ZUKA, a social network designed to look and work like Facebook. Complete this request thoroughly: $ISSUE_BODY. Never use hardcoded personal names (use generic labels like ZUKA Member), run npm run build to confirm zero errors, and finish cleanly."
+          TASK="MANDATORY EXECUTION RULE: You MUST write actual code changes to the repository files on disk to fulfill this request. Do NOT exit with zero changes. Never use hardcoded personal names (use generic labels like ZUKA Member). Always preserve existing Supabase IDs and scripts, apply authentic Facebook UI/UX, run npm run build to verify zero errors, and finish. User Request: $ISSUE_BODY"
 
-          opencode run -m "openrouter/openrouter/free" "$TASK" || true
+          opencode run -m "openrouter/qwen/qwen3-coder:free" "$TASK" || \
+          opencode run -m "openrouter/openrouter/free" "$TASK"
 
           git add .
           if git diff --cached --quiet; then
-            gh issue comment "${{ github.event.issue.number }}" --body "ZUKA AI Agent completed check with no pending file changes."
-            exit 0
+            echo "ERROR: Agent failed to modify any files."
+            exit 1
           fi
           git commit -m "ZUKA AI update #${{ github.run_number }}"
           git push -u origin "$BRANCH"
