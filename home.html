@@ -2195,6 +2195,231 @@ zukaBtns.forEach(function(fn) {
     };
   }
 });
+<script id="zuka-unified-controller">
+(function () {
+  if (window.__zukaControllerActive) return;
+  window.__zukaControllerActive = true;
+
+  const TEXT_MAP = {
+    whats_on_your_mind: "What's on your mind?",
+    story_create_title: "Create story",
+    groups_header: "Groups",
+    groups_subtitle: "Discover and join communities on ZUKA",
+    groups_create_btn: "+ Create Group",
+    profile_followers: "Followers",
+    profile_following: "Following",
+    profile_edit_bio: "Edit Bio",
+    profile_lock: "Lock Profile",
+    settings_title: "Settings & Privacy"
+  };
+
+  const DEFAULT_AVATAR =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      '<svg xmlns="http://w3.org" width="40" height="40" viewBox="0 0 40 40">' +
+        '<circle cx="20" cy="20" r="20" fill="#E4E6EB"/>' +
+        '<circle cx="20" cy="15" r="7" fill="#65676B"/>' +
+        '<path d="M8 35c0-6.6 5.4-11 12-11s12 4.4 12 11" fill="#65676B"/>' +
+      '</svg>'
+    );
+
+  function getSupabase() {
+    return window.supabaseClient || window.supabase || null;
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function findFeedContainer() {
+    return (
+      document.getElementById('feed-container') ||
+      document.getElementById('posts-feed') ||
+      document.getElementById('news-feed') ||
+      document.querySelector('.feed-container, .posts-list, #feed')
+    );
+  }
+
+  function createPostCardElement(post) {
+    const card = document.createElement('div');
+    card.className = 'zuka-post-card';
+    card.style.cssText =
+      'background:#FFFFFF;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.1);padding:14px 16px;margin:12px 0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#050505;';
+
+    const author = escapeHtml(post.author_name || 'ZUKA Team');
+    const content = escapeHtml(post.content || '');
+    const mediaHtml = post.image_url
+      ? `<img src="${escapeHtml(post.image_url)}" alt="Post media" style="width:100%;max-height:520px;object-fit:cover;border-radius:8px;margin-bottom:10px;" />`
+      : '';
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#1877F2;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;">${author.charAt(0).toUpperCase()}</div>
+        <div>
+          <div style="font-weight:600;font-size:15px;color:#050505;">${author}</div>
+          <div style="font-size:12px;color:#65676B;">Just now &middot; Public</div>
+        </div>
+      </div>
+      <p style="font-size:15px;color:#050505;margin:0 0 12px;line-height:1.45;white-space:pre-wrap;">${content}</p>
+      ${mediaHtml}
+      <div style="border-top:1px solid #E4E6EB;padding-top:8px;display:flex;justify-content:space-around;">
+        <button type="button" class="zuka-like-btn" style="background:none;border:none;font-weight:600;color:#65676B;cursor:pointer;padding:6px 12px;font-size:14px;">Like</button>
+        <button type="button" class="zuka-comment-btn" style="background:none;border:none;font-weight:600;color:#65676B;cursor:pointer;padding:6px 12px;font-size:14px;">Comment</button>
+        <button type="button" class="zuka-share-btn" style="background:none;border:none;font-weight:600;color:#65676B;cursor:pointer;padding:6px 12px;font-size:14px;">Share</button>
+      </div>
+      <div class="zuka-comments-list" style="margin-top:6px;"></div>
+    `;
+
+    card.querySelector('.zuka-like-btn').onclick = function () {
+      const liked = this.dataset.liked === '1';
+      this.dataset.liked = liked ? '0' : '1';
+      this.style.color = liked ? '#65676B' : '#1877F2';
+      this.textContent = liked ? 'Like' : 'Liked (1)';
+    };
+
+    card.querySelector('.zuka-comment-btn').onclick = function () {
+      const reply = prompt('Write a comment:');
+      if (!reply || !reply.trim()) return;
+      const item = document.createElement('div');
+      item.style.cssText =
+        'background:#F0F2F5;padding:8px 12px;border-radius:14px;margin-top:6px;font-size:14px;color:#050505;';
+      item.textContent = 'ZUKA Member: ' + reply.trim();
+      card.querySelector('.zuka-comments-list').appendChild(item);
+    };
+
+    card.querySelector('.zuka-share-btn').onclick = function () {
+      if (navigator.clipboard) navigator.clipboard.writeText(window.location.href);
+      this.textContent = 'Link Copied';
+    };
+
+    return card;
+  }
+
+  async function syncFeedPosts() {
+    const feedBox = findFeedContainer();
+    if (!feedBox) return;
+
+    const sb = getSupabase();
+    if (sb && !feedBox.dataset.supabaseSynced) {
+      feedBox.dataset.supabaseSynced = '1';
+      try {
+        const { data, error } = await sb
+          .from('posts')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (!error && Array.isArray(data) && data.length > 0) {
+          feedBox.innerHTML = '';
+          data.forEach((row) => feedBox.appendChild(createPostCardElement(row)));
+          return;
+        }
+      } catch (_) {}
+    }
+
+    if (!feedBox.querySelector('.zuka-post-card, .post-card')) {
+      feedBox.appendChild(
+        createPostCardElement({
+          author_name: 'ZUKA Team',
+          content: 'Welcome to ZUKA! Share updates, photos, Reels, and explore Marketplace.'
+        })
+      );
+    }
+  }
+
+  function sanitizeInterface() {
+    document.querySelectorAll('[data-i18n], h1, h2, h3, p, span, button, div').forEach((el) => {
+      if (el.children.length === 0) {
+        const raw = (el.textContent || '').trim();
+        if (TEXT_MAP[raw]) el.textContent = TEXT_MAP[raw];
+        if (raw === '"null"' || raw === 'null') el.textContent = '';
+        if (raw.includes(': undefined')) el.textContent = raw.replace('undefined', 'Not specified');
+      }
+    });
+
+    document.querySelectorAll('img').forEach((img) => {
+      const src = img.getAttribute('src');
+      if (!src || src === 'null' || src === 'undefined') {
+        img.src = DEFAULT_AVATAR;
+      }
+    });
+
+    syncFeedPosts();
+  }
+
+  function closeAllMenusAndMedia() {
+    document.querySelectorAll('video').forEach((v) => {
+      try {
+        v.pause();
+        v.muted = true;
+      } catch (_) {}
+    });
+    const menuSelectors = ['#menu-dropdown', '.menu-dropdown', '#nav-menu-dropdown', '.nav-dropdown'];
+    menuSelectors.forEach((sel) => {
+      document.querySelectorAll(sel).forEach((el) => {
+        el.style.display = 'none';
+        el.classList.remove('open', 'active');
+      });
+    });
+  }
+
+  document.addEventListener(
+    'click',
+    async function (e) {
+      const target = e.target.closest('button, a, [data-tab], [data-nav], .menu-item, div');
+      if (!target) return;
+      const text = (target.textContent || '').trim().toLowerCase();
+
+      if (!target.closest('#menu-btn, .menu-toggle, [aria-label="Menu"]')) {
+        const menuSelectors = ['#menu-dropdown', '.menu-dropdown', '#nav-menu-dropdown', '.nav-dropdown'];
+        menuSelectors.forEach((sel) => {
+          document.querySelectorAll(sel).forEach((el) => {
+            if (!el.contains(target)) el.style.display = 'none';
+          });
+        });
+      }
+
+      if (text === 'marketplace' && typeof window.openZukaMarketplace === 'function') {
+        e.preventDefault();
+        closeAllMenusAndMedia();
+        window.openZukaMarketplace();
+      }
+
+      if (text === "what's on your mind?" || text === 'whats_on_your_mind') {
+        e.preventDefault();
+        const postText = prompt("What's on your mind?");
+        if (!postText || !postText.trim()) return;
+
+        const feedBox = findFeedContainer();
+        if (feedBox) {
+          feedBox.prepend(
+            createPostCardElement({
+              author_name: 'ZUKA Member',
+              content: postText.trim()
+            })
+          );
+        }
+
+        const sb = getSupabase();
+        if (sb) {
+          try {
+            const { data: authData } = await sb.auth.getUser();
+            const payload = { content: postText.trim() };
+            if (authData && authData.user) payload.user_id = authData.user.id;
+            await sb.from('posts').insert(payload);
+          } catch (_) {}
+        }
+      }
+    },
+    true
+  );
+
+  setInterval(sanitizeInterface, 700);
+  document.addEventListener('DOMContentLoaded', sanitizeInterface);
+})();
 </script>
 </body>
 </html>
