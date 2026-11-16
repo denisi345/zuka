@@ -1,4 +1,4 @@
-/**
+/*
  * ZUKA - Reels Engine (reels.js)
  * 100% English - No Fake Reels, No Fake Likes, No Fake Comments
  * Fully Integrated with Supabase Client & Cloudflare Deploys
@@ -7,11 +7,13 @@
 
 class ZukaReelsEngine {
     constructor() {
-        this.initReels();
+        this.initReelsEngine();
     }
 
-    initReels() {
-        // Initialization handled remotely by Postgres schema constraints on Supabase
+    initReelsEngine() {
+        window.addEventListener('zuka:realtime:reels_update', (e) => {
+            this.refreshReelsFeed();
+        });
     }
 
     async getReels() {
@@ -48,9 +50,9 @@ class ZukaReelsEngine {
 
         const { data: updatedReel, error: updateError } = await window.supabaseClient
             .from('reels')
-            .update({ 
-                is_liked: nextLikedStatus, 
-                likes_count: Math.max(0, nextLikesCount) 
+            .update({
+                is_liked: nextLikedStatus,
+                likes_count: Math.max(0, nextLikesCount)
             })
             .eq('id', reelId)
             .select()
@@ -118,7 +120,7 @@ class ZukaReelsEngine {
         if (fetchError || !reel) return null;
 
         const currentComments = reel.comments || [];
-        const newC = {
+        const newComment = {
             id: 'cr_' + Date.now(),
             user_name: currentUser ? currentUser.full_name : 'You',
             user_avatar: currentUser ? currentUser.avatar_url : '',
@@ -126,28 +128,37 @@ class ZukaReelsEngine {
             created_at: new Date().toISOString()
         };
 
-        currentComments.push(newC);
+        currentComments.push(newComment);
         const nextCommentsCount = (reel.comments_count || 0) + 1;
 
         const { error: updateError } = await window.supabaseClient
             .from('reels')
-            .update({ 
-                comments: currentComments, 
-                comments_count: nextCommentsCount 
+            .update({
+                comments: currentComments,
+                comments_count: nextCommentsCount
             })
             .eq('id', reelId);
 
         if (updateError) throw updateError;
-        return newC;
+        return newComment;
     }
 
-    async createReel({ videoUrl, caption, audioTrack }) {
+    async createReel({ videoUrl, caption, audioTrack, videoFile }) {
         if (!window.supabaseClient) {
             throw new Error('Supabase client is not initialized.');
         }
 
         const currentUser = window.ZukaAuth.getCurrentUser();
         if (!currentUser) throw new Error('Please log in first to create a reel.');
+
+        let uploadedVideoUrl = videoUrl;
+        if (videoFile) {
+            try {
+                uploadedVideoUrl = await window.ZukaSupabase.uploadFile('reels', videoFile);
+            } catch (error) {
+                throw new Error('Failed to upload video to storage.');
+            }
+        }
 
         if (caption && window.ZukaAIModerator) {
             const scan = window.ZukaAIModerator.scanContent(caption, currentUser.id);
@@ -160,7 +171,7 @@ class ZukaReelsEngine {
             user_id: currentUser.id,
             creator_name: currentUser.full_name,
             creator_avatar: currentUser.avatar_url,
-            video_url: videoUrl,
+            video_url: uploadedVideoUrl,
             caption: caption || '',
             audio_track: audioTrack || 'Original Audio',
             likes_count: 0,
@@ -181,6 +192,11 @@ class ZukaReelsEngine {
 
         if (error) throw error;
         return data;
+    }
+
+    async refreshReelsFeed() {
+        if (!window.ZukaReelsUI) return;
+        await window.ZukaReelsUI.loadReels();
     }
 }
 
