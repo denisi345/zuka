@@ -15,6 +15,7 @@ const Dashboard = () => {
   const storeProfile = useAuthStore((s) => s.profile);
   const [localProfile, setLocalProfile] = useState(null);
   const profile = localProfile || storeProfile;
+  React.useEffect(() => { if (!storeProfile?.id) return; import("@/integrations/supabase/client").then(({ supabase }) => { supabase.from("profiles").select("*").eq("id", storeProfile.id).maybeSingle().then(({ data }) => { if (data) setLocalProfile(data); }); }); }, [storeProfile?.id]);
   const [activeTab, setActiveTab] = useState("feed");
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatTarget, setChatTarget] = useState(null);
@@ -84,7 +85,7 @@ const Dashboard = () => {
               onMessageUser={(person) => { setChatTarget(person); setActiveTab("messenger"); }}
             />
           )}
-          {activeTab === "messenger" && <Messenger userProfile={profile} initialChat={chatTarget} />}
+          {activeTab === "messenger" && <Messenger currentUser={profile} initialPeer={chatTarget} />}
           {activeTab === "reels" && <Reels userProfile={profile} />}
           {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
           {activeTab === "marketplace" && (
