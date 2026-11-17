@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Megaphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import CreatePost from './CreatePost';
 import Stories from './Stories';
@@ -8,31 +7,47 @@ import Post from './Post';
 export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) {
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
-  const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => { loadFeedData(); }, []);
 
   async function loadFeedData() {
+    let profileMap = {};
+    try {
+      const { data: profRows } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified');
+      if (Array.isArray(profRows)) {
+        profRows.forEach((pr) => { profileMap[String(pr.id)] = pr; });
+      }
+    } catch (_) {}
+
     try {
       const { data: postRows } = await supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(30);
-      if (Array.isArray(postRows)) setPosts(postRows);
+      if (Array.isArray(postRows)) {
+        const merged = postRows.map((p) => {
+          const owner = p.user_id ? profileMap[String(p.user_id)] : null;
+          const isOfficial = p.author_name === 'ZUKA Official';
+          return {
+            ...p,
+            author_name: isOfficial ? 'ZUKA Official' : (owner?.full_name || owner?.username || p.author_name || 'ZUKA Member'),
+            avatar_url: isOfficial ? '' : (owner?.avatar_url || p.avatar_url || ''),
+            is_verified: isOfficial ? true : Boolean(owner?.is_verified || p.is_verified)
+          };
+        });
+        setPosts(merged);
+      }
     } catch (_) {}
+
     try {
       const { data: storyRows } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(15);
       if (Array.isArray(storyRows)) setStories(storyRows);
-    } catch (_) {}
-    try {
-      const { data: ceoRow } = await supabase.from('ceo_settings').select('announcement').limit(1).maybeSingle();
-      if (ceoRow?.announcement) setAnnouncement(ceoRow.announcement);
     } catch (_) {}
   }
 
   async function handleCreatePost(text, mediaUrl = '', mediaType = 'image') {
     const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, is_verified: userProfile?.is_verified, content: text, image_url: mediaUrl, media_type: mediaType, time_label: 'Just now' };
+    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, avatar_url: userProfile?.avatar_url, is_verified: userProfile?.is_verified, content: text, image_url: mediaUrl, media_type: mediaType, time_label: 'Just now' };
     setPosts((prev) => [optimistic, ...prev]);
     try {
-      const payload = { content: text, author_name: authorName };
+      const payload = { content: text, author_name: authorName, is_verified: Boolean(userProfile?.is_verified) };
       if (mediaUrl) payload.image_url = mediaUrl;
       if (userProfile?.id) payload.user_id = userProfile.id;
       await supabase.from('posts').insert(payload);
@@ -40,7 +55,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
   }
 
   async function handleUploadStory(file) {
-    const clean = file.name.replace(/[^a-zA-Z0-9._-]/g, '');
+    const clean = (file.name || 'story.jpg').replace(/[^a-zA-Z0-9._-]/g, '');
     const path = `stories/${Date.now()}_${clean}`;
     let mediaUrl = URL.createObjectURL(file);
     for (const bucket of ['media', 'stories', 'public']) {
@@ -61,12 +76,6 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
 
   return (
     <div style={{ width: '100%', paddingBottom: '48px' }}>
-      {announcement && (
-        <div style={{ backgroundColor: '#E7F3FF', borderBottom: '1px solid #1877F2', color: '#050505', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-          <Megaphone size={18} color="#1877F2" style={{ flexShrink: 0 }} />
-          <span><strong>ZUKA CEO:</strong> {announcement}</span>
-        </div>
-      )}
       <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} onOpenProfile={onOpenProfile} />
       <Stories userProfile={userProfile} stories={stories} onUploadStory={handleUploadStory} />
       <div>

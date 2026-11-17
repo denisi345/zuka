@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Edit3, MessageCircle, ArrowLeft, Check, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
@@ -17,6 +17,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
   const [friendSent, setFriendSent] = useState(false);
 
   const avatarInputRef = useRef(null);
+  useEffect(() => { if (!initialData?.id) return; supabase.from("profiles").select("*").eq("id", initialData.id).maybeSingle().then(({ data }) => { if (data) { setProfile(data); setFullName(data.full_name || data.username || ""); setBio(data.bio || ""); setAvatarUrl(data.avatar_url || ""); setCoverUrl(data.cover_url || ""); } }); }, [initialData?.id]);
   const coverInputRef = useRef(null);
 
   async function uploadImageFile(file, folder) {
