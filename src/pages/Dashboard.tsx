@@ -1,21 +1,15 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/zuka/Header";
 import LeftSidebar from "@/components/zuka/LeftSidebar";
 import Feed from "@/components/zuka/Feed";
+import { FriendsView, NotificationsView } from "@/components/zuka/FriendsAndNotifs";
+import Messenger from "@/components/zuka/Messenger";
+import Reels from "@/components/zuka/Reels";
+import Marketplace from "@/components/zuka/Marketplace";
+import Profile from "@/components/zuka/Profile";
 import RightSidebar from "@/components/zuka/RightSidebar";
-
-const FriendsView = lazy(() => import("@/components/zuka/FriendsAndNotifs").then((m) => ({ default: m.FriendsView })));
-const NotificationsView = lazy(() => import("@/components/zuka/FriendsAndNotifs").then((m) => ({ default: m.NotificationsView })));
-const Messenger = lazy(() => import("@/components/zuka/Messenger"));
-const Reels = lazy(() => import("@/components/zuka/Reels"));
-const Marketplace = lazy(() => import("@/components/zuka/Marketplace"));
-const Profile = lazy(() => import("@/components/zuka/Profile"));
-
-const TabLoader = () => (
-  <div style={{ padding: "32px", textAlign: "center", color: "#65676B", fontSize: "14px" }}>Loading...</div>
-);
 
 const Dashboard = () => {
   const storeProfile = useAuthStore((s) => s.profile);
@@ -72,38 +66,36 @@ const Dashboard = () => {
               onOpenUserProfile={(person) => { setViewedProfile(person); setActiveTab("profile"); }}
             />
           )}
-          <Suspense fallback={<TabLoader />}>
-            {activeTab === "profile" && (
-              <Profile
-                currentUser={profile}
-                targetProfile={viewedProfile}
-                onBack={() => setActiveTab("feed")}
-                onOpenMessenger={(person) => {
-                  if (person) setChatTarget(person);
-                  setActiveTab("messenger");
-                }}
-                onProfileUpdated={(updated) => setLocalProfile(updated)}
-              />
-            )}
-            {activeTab === "friends" && (
-              <FriendsView
-                userProfile={profile}
-                onMessageUser={(person) => { setChatTarget(person); setActiveTab("messenger"); }}
-              />
-            )}
-            {activeTab === "messenger" && <Messenger userProfile={profile} initialChat={chatTarget} />}
-            {activeTab === "reels" && <Reels userProfile={profile} />}
-            {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
-            {activeTab === "marketplace" && (
-              <Marketplace
-                userProfile={profile}
-                onMessageSeller={(sellerId, sellerName, msg) => {
-                  if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg });
-                  setActiveTab("messenger");
-                }}
-              />
-            )}
-          </Suspense>
+          {activeTab === "profile" && (
+            <Profile
+              currentUser={profile}
+              targetProfile={viewedProfile}
+              onBack={() => setActiveTab("feed")}
+              onOpenMessenger={(person) => {
+                if (person) setChatTarget(person);
+                setActiveTab("messenger");
+              }}
+              onProfileUpdated={(updated) => setLocalProfile(updated)}
+            />
+          )}
+          {activeTab === "friends" && (
+            <FriendsView
+              userProfile={profile}
+              onMessageUser={(person) => { setChatTarget(person); setActiveTab("messenger"); }}
+            />
+          )}
+          {activeTab === "messenger" && <Messenger userProfile={profile} initialChat={chatTarget} />}
+          {activeTab === "reels" && <Reels userProfile={profile} />}
+          {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
+          {activeTab === "marketplace" && (
+            <Marketplace
+              userProfile={profile}
+              onMessageSeller={(sellerId, sellerName, msg) => {
+                if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg });
+                setActiveTab("messenger");
+              }}
+            />
+          )}
         </main>
 
         <div className="hidden xl:block w-[320px] shrink-0">
