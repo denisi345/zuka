@@ -8,6 +8,7 @@ export default function CreatePost({ userProfile, onCreatePost, onOpenProfile })
   const [previewUrl, setPreviewUrl] = useState('');
   const [open, setOpen] = useState(false);
   const [posting, setPosting] = useState(false);
+  React.useEffect(() => { const h = () => setOpen(true); window.addEventListener("zuka:open-post", h); return () => window.removeEventListener("zuka:open-post", h); }, []);
 
   function handleSelectMedia(e) {
     const file = e.target.files?.[0] || null;

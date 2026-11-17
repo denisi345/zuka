@@ -9,7 +9,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
 
-  useEffect(() => { loadFeedData(); }, []);
+  useEffect(() => { loadFeedData(); const h = () => loadFeedData(); window.addEventListener("zuka:refresh-feed", h); return () => window.removeEventListener("zuka:refresh-feed", h); }, []);
 
   async function loadFeedData() {
     let profileMap = {};

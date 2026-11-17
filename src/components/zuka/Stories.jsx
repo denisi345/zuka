@@ -7,6 +7,7 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
   const [uploading, setUploading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(null);
   const [progress, setProgress] = useState(0);
+  useEffect(() => { const h = () => fileRef.current?.click(); window.addEventListener("zuka:open-story", h); return () => window.removeEventListener("zuka:open-story", h); }, []);
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0];

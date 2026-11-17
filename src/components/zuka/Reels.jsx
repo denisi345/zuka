@@ -21,7 +21,7 @@ export default function Reels({ userProfile }) {
   const [menuReelId, setMenuReelId] = useState(null);
   const [sharedToast, setSharedToast] = useState(false);
 
-  useEffect(() => { loadReels(); }, []);
+  useEffect(() => { loadReels(); const h = () => setCreateOpen(true); window.addEventListener("zuka:open-reel", h); return () => window.removeEventListener("zuka:open-reel", h); }, []);
 
   async function loadReels() {
     let profMap = {};
