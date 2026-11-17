@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ThumbsUp, MessageCircle, Share2, Trash2, Send } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
+import { sendZukaNotification } from './notifyHelper';
 
 export default function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
   const storageKey = `zuka_liked_${post.id}`;
@@ -10,9 +11,14 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [sharedBanner, setSharedBanner] = useState(false);
+  const [sharedBanner, setSharedBanner] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [followed, setFollowed] = useState(false);
 
   const isLiveOrDemo = String(post.id).startsWith('live-') || String(post.id).startsWith('funny-') || String(post.id).startsWith('temp-');
+  const authorName = post.author_name || 'ZUKA Member';
+  const isOwner = currentUserId && String(post.user_id) === String(currentUserId);
+  const isVideo = post.media_type === 'video' || /\.(mp4|webm|mov|m4v)(\?|$)/i.test(post.image_url || '');
 
   function handleLike() {
     const nextLiked = !liked;
@@ -23,6 +29,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
     setLikesCount(nextCount);
     if (!isLiveOrDemo) {
       try { supabase.from('posts').update({ likes_count: nextCount }).eq('id', post.id); } catch (_) {}
+      if (nextLiked) sendZukaNotification({ receiverId: post.user_id, senderId: currentUserId, type: 'like', message: 'Someone liked your post on ZUKA.' });
     }
   }
 
@@ -46,47 +53,62 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
     if (!isLiveOrDemo) {
       try {
         await supabase.from('comments').insert({ post_id: post.id, user_id: currentUserId, content: txt });
+        sendZukaNotification({ receiverId: post.user_id, senderId: currentUserId, type: 'comment', message: `New comment on your post: "${txt.slice(0, 60)}"` });
       } catch (_) {}
     }
   }
 
   async function handleShare() {
-    const shareText = `${post.author_name || 'ZUKA'}: ${post.content || ''}`.slice(0, 200);
+    const shareText = `${authorName}: ${post.content || ''}`.slice(0, 200);
     if (navigator.share) {
       try { await navigator.share({ title: 'ZUKA', text: shareText, url: window.location.href }); return; } catch (_) {}
     }
     try { await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`); } catch (_) {}
-    setSharedBanner(true);
-    setTimeout(() => setSharedBanner(false), 2200);
+    setSharedBanner('Link copied!');
+    setTimeout(() => setSharedBanner(''), 2200);
   }
 
-  const authorName = post.author_name || 'ZUKA Member';
-  const isOwner = currentUserId && String(post.user_id) === String(currentUserId);
-  const isVideo = post.media_type === 'video' || /\.(mp4|webm|mov|m4v)(\?|$)/i.test(post.image_url || '');
-
+  async function handleDelete() {
+    setMenuOpen(false);
+    if (!isLiveOrDemo) {
+      try { await supabase.from('posts').delete().eq('id', post.id); } catch (_) {}
+    }
+    if (onDeletePost) onDeletePost(post.id);
+  }
   return (
-    <article style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', marginTop: '8px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px 6px' }}>
-        <div
-          onClick={() => post.user_id && onOpenUserProfile && onOpenUserProfile({ id: post.user_id, full_name: authorName, avatar_url: post.avatar_url, is_verified: post.is_verified })}
-          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: post.user_id ? 'pointer' : 'default' }}
-        >
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', flexShrink: 0 }}>
+    <article style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', marginTop: '8px', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 12px 6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+          <div
+            onClick={() => post.user_id && onOpenUserProfile && onOpenUserProfile({ id: post.user_id, full_name: authorName, avatar_url: post.avatar_url, is_verified: post.is_verified })}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', flexShrink: 0, cursor: post.user_id ? 'pointer' : 'default' }}
+          >
             {post.avatar_url ? <img src={post.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
-              <span>{authorName}</span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+              <span onClick={() => post.user_id && onOpenUserProfile && onOpenUserProfile({ id: post.user_id, full_name: authorName, avatar_url: post.avatar_url, is_verified: post.is_verified })} style={{ cursor: post.user_id ? 'pointer' : 'default' }}>
+                {authorName}
+              </span>
               {post.is_verified && <ZukaBadge size={16} />}
+              {!isOwner && (
+                <button type="button" onClick={() => setFollowed(!followed)} style={{ background: 'none', border: 'none', color: followed ? '#65676B' : '#1877F2', fontWeight: 700, fontSize: '14px', padding: '0 2px', cursor: 'pointer' }}>
+                  · {followed ? 'Following' : 'Follow'}
+                </button>
+              )}
             </div>
-            <div style={{ fontSize: '12px', color: '#65676B' }}>{post.time_label || 'Just now'} · 🌐</div>
+            <div style={{ fontSize: '12px', color: '#65676B', marginTop: '1px' }}>{post.time_label || 'Just now'} · 🌐</div>
           </div>
         </div>
-        {isOwner && (
-          <button type="button" onClick={async () => { if (!isLiveOrDemo) await supabase.from('posts').delete().eq('id', post.id); if (onDeletePost) onDeletePost(post.id); }} style={{ background: 'none', border: 'none', color: '#65676B', cursor: 'pointer', padding: '4px' }}>
-            <Trash2 size={18} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+          <button type="button" onClick={() => setMenuOpen(true)} aria-label="More options" style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'none', border: 'none', color: '#65676B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <MoreHorizontal size={20} />
           </button>
-        )}
+          <button type="button" onClick={() => onDeletePost && onDeletePost(post.id)} aria-label="Hide post" style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'none', border: 'none', color: '#65676B', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X size={20} />
+          </button>
+        </div>
       </div>
 
       {post.content && <div style={{ padding: '4px 12px 10px', fontSize: '15px', color: '#050505', lineHeight: '1.4', whiteSpace: 'pre-line' }}>{post.content}</div>}
@@ -100,7 +122,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
       {(likesCount > 0 || comments.length > 0 || sharedBanner) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: '13px', color: '#65676B', borderBottom: '1px solid #E4E6EB' }}>
           <span>{likesCount > 0 ? `👍 ${likesCount}` : ''}</span>
-          <span>{sharedBanner ? 'Link copied to share!' : comments.length > 0 ? `${comments.length} Comments` : ''}</span>
+          <span>{sharedBanner || (comments.length > 0 ? `${comments.length} Comments` : '')}</span>
         </div>
       )}
 
@@ -129,6 +151,24 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
               <Send size={15} />
             </button>
           </form>
+        </div>
+      )}
+
+      {menuOpen && (
+        <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '680px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button type="button" onClick={() => { setMenuOpen(false); setSharedBanner('Saved post!'); setTimeout(() => setSharedBanner(''), 2000); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>
+              <Bookmark size={18} /> Save post
+            </button>
+            <button type="button" onClick={() => { setMenuOpen(false); handleShare(); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>
+              <Link2 size={18} /> Copy link
+            </button>
+            {isOwner && (
+              <button type="button" onClick={handleDelete} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#FFEBEE', color: '#D32F2F', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <Trash2 size={18} /> Move to trash (Delete post)
+              </button>
+            )}
+          </div>
         </div>
       )}
     </article>
