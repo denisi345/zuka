@@ -1,191 +1,147 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Plus, X, Play } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Plus, X, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Reels({ userProfile }) {
   const [reels, setReels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [likedIds, setLikedIds] = useState({});
-  const [followedIds, setFollowedIds] = useState({});
-  const [activeCommentReel, setActiveCommentReel] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [caption, setCaption] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
   const [videoFile, setVideoFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [videoUrlInput, setVideoUrlInput] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => { loadReels(); }, []);
 
   async function loadReels() {
-    setLoading(true);
-    let rows = [];
-    for (const tbl of ['reels', 'videos']) {
-      const { data, error } = await supabase.from(tbl).select('*').order('created_at', { ascending: false }).limit(40);
-      if (!error && Array.isArray(data)) { rows = data; break; }
-    }
-    setReels(rows);
-    setLoading(false);
+    try {
+      const { data } = await supabase.from('reels').select('*').order('created_at', { ascending: false }).limit(25);
+      if (Array.isArray(data)) setReels(data);
+    } catch (_) {}
   }
 
-  async function toggleLike(reel) {
-    const isLiked = !!likedIds[reel.id];
-    const nextLikes = Math.max(0, Number(reel.likes_count || 0) + (isLiked ? -1 : 1));
-    setLikedIds((prev) => ({ ...prev, [reel.id]: !isLiked }));
-    setReels((prev) => prev.map((r) => (r.id === reel.id ? { ...r, likes_count: nextLikes } : r)));
-    await supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reel.id);
+  function handleSelectVideo(e) {
+    const file = e.target.files?.[0] || null;
+    setVideoFile(file);
+    if (file) setPreviewUrl(URL.createObjectURL(file));
+    else setPreviewUrl('');
   }
 
-  async function openComments(reel) {
-    setActiveCommentReel(reel);
-    setComments([]);
-    const { data } = await supabase.from('reel_comments').select('*').eq('reel_id', reel.id).order('created_at', { ascending: true });
-    if (Array.isArray(data)) setComments(data);
-  }
-  async function submitComment(e) {
+  async function handlePublishReel(e) {
     e.preventDefault();
-    if (!commentText.trim() || !activeCommentReel) return;
-    const text = commentText.trim();
-    const author = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-    setComments((prev) => [...prev, { id: `c-${Date.now()}`, author_name: author, content: text }]);
-    setCommentText('');
-    const nextCount = Number(activeCommentReel.comments_count || 0) + 1;
-    setReels((prev) => prev.map((r) => (r.id === activeCommentReel.id ? { ...r, comments_count: nextCount } : r)));
-    await supabase.from('reel_comments').insert({ reel_id: activeCommentReel.id, user_id: userProfile?.id || null, author_name: author, content: text });
-    await supabase.from('reels').update({ comments_count: nextCount }).eq('id', activeCommentReel.id);
-  }
+    if (!videoFile && !videoUrlInput.trim()) return;
+    setUploading(true);
+    let finalVideoUrl = videoUrlInput.trim();
 
-  async function handleCreateReel(e) {
-    e.preventDefault();
-    setSubmitting(true);
-    let finalUrl = videoUrl.trim();
-    if (videoFile) {
-      const clean = videoFile.name.replace(/[^a-zA-Z0-9._-]/g, '');
-      const path = `reels/${Date.now()}_${clean}`;
-      for (const bucket of ['reels', 'media', 'videos', 'public']) {
-        const { error: upErr } = await supabase.storage.from(bucket).upload(path, videoFile);
-        if (!upErr) {
-          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-          if (pub?.publicUrl) { finalUrl = pub.publicUrl; break; }
+    try {
+      if (videoFile) {
+        finalVideoUrl = previewUrl || URL.createObjectURL(videoFile);
+        const clean = (videoFile.name || 'reel.mp4').replace(/[^a-zA-Z0-9._-]/g, '');
+        const path = `reels/${Date.now()}_${clean}`;
+        for (const bucket of ['media', 'reels', 'videos', 'public']) {
+          const { error: upErr } = await supabase.storage.from(bucket).upload(path, videoFile);
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+            if (pub?.publicUrl) { finalVideoUrl = pub.publicUrl; break; }
+          }
         }
       }
-    }
-    if (!finalUrl) { setSubmitting(false); return; }
-    const author = userProfile?.full_name || userProfile?.username || 'ZUKA Creator';
-    const payload = { video_url: finalUrl, caption: caption.trim(), author_name: author, likes_count: 0, comments_count: 0 };
-    if (userProfile?.id) payload.user_id = userProfile.id;
-    const { data, error } = await supabase.from('reels').insert(payload).select().single();
-    setReels((prev) => (!error && data ? [data, ...prev] : [{ id: `local-${Date.now()}`, ...payload }, ...prev]));
-    setSubmitting(false);
-    setCreateOpen(false);
+
+      const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Creator';
+      const newReel = { id: `reel-${Date.now()}`, author_name: authorName, caption: caption.trim(), video_url: finalVideoUrl, likes_count: 0, comments_count: 0 };
+      setReels((prev) => [newReel, ...prev]);
+      const payload = { caption: caption.trim(), video_url: finalVideoUrl, author_name: authorName };
+      if (userProfile?.id) payload.user_id = userProfile.id;
+      await supabase.from('reels').insert(payload);
+    } catch (_) {}
+
     setCaption('');
-    setVideoUrl('');
     setVideoFile(null);
+    setPreviewUrl('');
+    setVideoUrlInput('');
+    setUploading(false);
+    setCreateOpen(false);
   }
 
+  function toggleLike(reel) {
+    const wasLiked = !!likedIds[reel.id];
+    setLikedIds((prev) => ({ ...prev, [reel.id]: !wasLiked }));
+    const nextLikes = Math.max(0, Number(reel.likes_count || 0) + (wasLiked ? -1 : 1));
+    setReels((prev) => prev.map((r) => (r.id === reel.id ? { ...r, likes_count: nextLikes } : r)));
+    if (reel.id && !String(reel.id).startsWith('reel-')) {
+      try { supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reel.id); } catch (_) {}
+    }
+  }
   return (
-    <div style={{ backgroundColor: '#000000', minHeight: 'calc(100dvh - 98px)', color: '#FFFFFF', position: 'relative' }}>
-      <div style={{ position: 'sticky', top: '98px', zIndex: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
-        <strong style={{ fontSize: '18px' }}>Reels</strong>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button type="button" onClick={() => setMuted(!muted)} style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', border: 'none', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+    <div style={{ position: 'relative', height: 'calc(100vh - 98px)', backgroundColor: '#000000', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
+      <div style={{ position: 'fixed', top: '104px', left: 0, right: 0, zIndex: 25, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 14px', maxWidth: '680px', margin: '0 auto', pointerEvents: 'none' }}>
+        <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '18px', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Reels</span>
+        <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
+          <button type="button" onClick={() => setMuted(!muted)} style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
-          <button type="button" onClick={() => setCreateOpen(true)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '18px', padding: '0 14px', height: '36px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setCreateOpen(true)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '20px', padding: '6px 12px', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
             <Plus size={16} /> Create
           </button>
         </div>
       </div>
-      {loading ? (
-        <div style={{ padding: '48px 16px', textAlign: 'center', color: '#B0B3B8' }}>Loading Reels...</div>
-      ) : reels.length === 0 ? (
-        <div style={{ padding: '64px 20px', textAlign: 'center' }}>
-          <Play size={44} style={{ margin: '0 auto 12px', color: '#1877F2' }} />
-          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>No Reels yet</h3>
-          <p style={{ fontSize: '14px', color: '#B0B3B8', marginBottom: '16px' }}>Share the first vertical video on ZUKA Reels.</p>
-          <button type="button" onClick={() => setCreateOpen(true)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px 18px', fontWeight: 600, cursor: 'pointer' }}>
-            + Create Reel
-          </button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '24px' }}>
-          {reels.map((reel) => {
-            const isLiked = !!likedIds[reel.id];
-            const isFollowed = !!followedIds[reel.id];
-            const author = reel.author_name || 'ZUKA Creator';
-            return (
-              <div key={reel.id} style={{ position: 'relative', width: '100%', maxWidth: '460px', margin: '0 auto', aspectRatio: '9 / 16', backgroundColor: '#111111', borderRadius: '12px', overflow: 'hidden' }}>
-                <video src={reel.video_url} poster={reel.thumbnail_url || ''} loop playsInline controls muted={muted} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{ position: 'absolute', right: '12px', bottom: '84px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', zIndex: 10 }}>
-                  <button type="button" onClick={() => toggleLike(reel)} style={{ background: 'none', border: 'none', color: isLiked ? '#F3425F' : '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Heart size={22} fill={isLiked ? '#F3425F' : 'none'} /></div>
-                    <span style={{ fontSize: '12px', fontWeight: 600 }}>{reel.likes_count || 0}</span>
-                  </button>
-                  <button type="button" onClick={() => openComments(reel)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageCircle size={22} /></div>
-                    <span style={{ fontSize: '12px', fontWeight: 600 }}>{reel.comments_count || 0}</span>
-                  </button>
-                  <button type="button" onClick={() => navigator.clipboard?.writeText(reel.video_url || window.location.href)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Share2 size={22} /></div>
-                    <span style={{ fontSize: '12px', fontWeight: 600 }}>Share</span>
-                  </button>
-                </div>
-                <div style={{ position: 'absolute', left: '12px', right: '68px', bottom: '56px', zIndex: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{author.charAt(0).toUpperCase()}</div>
-                    <strong style={{ fontSize: '14px' }}>{author}</strong>
-                    <button type="button" onClick={() => setFollowedIds((p) => ({ ...p, [reel.id]: !isFollowed }))} style={{ backgroundColor: isFollowed ? 'rgba(255,255,255,0.25)' : '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '14px', padding: '3px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-                      {isFollowed ? 'Following' : 'Follow'}
-                    </button>
-                  </div>
-                  {reel.caption && <p style={{ fontSize: '13px', margin: 0, lineHeight: 1.35 }}>{reel.caption}</p>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      {activeCommentReel && (
-        <div onClick={() => setActiveCommentReel(null)} style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', color: '#050505', width: '100%', maxWidth: '520px', borderRadius: '16px 16px 0 0', padding: '14px', maxHeight: '70dvh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '8px', marginBottom: '10px' }}>
-              <strong>Comments</strong>
-              <button type="button" onClick={() => setActiveCommentReel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+
+      {createOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 40, backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <form onSubmit={handlePublishReel} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '16px', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ fontSize: '16px', color: '#050505' }}>Create Reel</strong>
+              <button type="button" onClick={() => { setCreateOpen(false); setPreviewUrl(''); setVideoFile(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505' }}><X size={20} /></button>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-              {comments.length === 0 ? <p style={{ color: '#65676B', fontSize: '14px', textAlign: 'center', margin: '16px 0' }}>No comments yet.</p> : comments.map((c) => (
-                <div key={c.id} style={{ backgroundColor: '#F0F2F5', borderRadius: '12px', padding: '8px 12px', fontSize: '14px' }}>
-                  <strong>{c.author_name || 'ZUKA Member'}: </strong>{c.content}
-                </div>
-              ))}
-            </div>
-            <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px' }}>
-              <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write a comment..." style={{ flex: 1, padding: '8px 14px', borderRadius: '20px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-              <button type="submit" style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '18px', padding: '0 16px', fontWeight: 600, cursor: 'pointer' }}>Post</button>
-            </form>
-          </div>
+            <input type="file" accept="video/*" onChange={handleSelectVideo} style={{ fontSize: '13px', padding: '6px', border: '1px solid #CED0D4', borderRadius: '8px', color: '#050505' }} />
+            {(previewUrl || videoUrlInput.trim()) && (
+              <video src={previewUrl || videoUrlInput.trim()} controls muted playsInline style={{ width: '100%', maxHeight: '220px', borderRadius: '8px', backgroundColor: '#000000' }} />
+            )}
+            <input type="url" value={videoUrlInput} onChange={(e) => setVideoUrlInput(e.target.value)} placeholder="Or paste video URL (.mp4)" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px', color: '#050505' }} />
+            <textarea rows={2} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write a caption for your Reel..." style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px', color: '#050505' }} />
+            <button type="submit" disabled={uploading} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>
+              {uploading ? 'Uploading...' : 'Share Reel'}
+            </button>
+          </form>
         </div>
       )}
 
-      {createOpen && (
-        <div onClick={() => setCreateOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', color: '#050505', borderRadius: '12px', width: '100%', maxWidth: '460px', padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '10px', marginBottom: '12px' }}>
-              <strong>Create Reel</strong>
-              <button type="button" onClick={() => setCreateOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-            </div>
-            <form onSubmit={handleCreateReel} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-              <input type="url" placeholder="Or paste video URL (.mp4)" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-              <textarea rows={2} placeholder="Write a caption..." value={caption} onChange={(e) => setCaption(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-              <button type="submit" disabled={submitting} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '11px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
-                {submitting ? 'Uploading...' : 'Share Reel'}
-              </button>
-            </form>
-          </div>
+      {reels.length === 0 ? (
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', padding: '24px', textAlign: 'center' }}>
+          <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>No Reels yet on ZUKA.</p>
+          <button type="button" onClick={() => setCreateOpen(true)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px 18px', fontWeight: 700, cursor: 'pointer' }}>
+            Upload First Reel
+          </button>
         </div>
+      ) : (
+        reels.map((reel) => {
+          const isLiked = !!likedIds[reel.id];
+          return (
+            <div key={reel.id} style={{ position: 'relative', height: 'calc(100vh - 98px)', width: '100%', scrollSnapAlign: 'start', backgroundColor: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <video src={reel.video_url} autoPlay loop muted={muted} playsInline controls style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', left: '12px', bottom: '24px', right: '72px', color: '#FFFFFF', textShadow: '0 1px 4px rgba(0,0,0,0.8)', pointerEvents: 'none' }}>
+                <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>{reel.author_name || 'ZUKA Creator'}</div>
+                {reel.caption && <div style={{ fontSize: '14px' }}>{reel.caption}</div>}
+              </div>
+              <div style={{ position: 'absolute', right: '12px', bottom: '28px', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', color: '#FFFFFF' }}>
+                <button type="button" onClick={() => toggleLike(reel)} style={{ background: 'none', border: 'none', color: isLiked ? '#1877F2' : '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                  <Heart size={28} fill={isLiked ? '#1877F2' : 'none'} />
+                  <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.likes_count || 0}</span>
+                </button>
+                <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                  <MessageCircle size={28} />
+                  <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.comments_count || 0}</span>
+                </button>
+                <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                  <Share2 size={28} />
+                  <span style={{ fontSize: '12px', fontWeight: 700 }}>Share</span>
+                </button>
+              </div>
+            </div>
+          );
+        })
       )}
     </div>
   );

@@ -1,122 +1,147 @@
-import React, { useEffect, useState } from 'react';
-import { Camera, Edit3, MessageCircle, ArrowLeft, Check, UserPlus, CheckCircle2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Camera, Edit3, MessageCircle, ArrowLeft, Check, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import Post from './Post';
+import ZukaBadge from './ZukaBadge';
 
 export default function Profile({ currentUser, targetProfile, onBack, onOpenMessenger, onProfileUpdated }) {
-  const viewedUser = targetProfile || currentUser;
-  const isOwnProfile = !targetProfile || String(targetProfile.id) === String(currentUser?.id);
+  const isOwn = !targetProfile || String(targetProfile.id) === String(currentUser?.id);
+  const initialData = isOwn ? (currentUser || {}) : targetProfile;
 
+  const [profile, setProfile] = useState(initialData);
   const [editing, setEditing] = useState(false);
+  const [fullName, setFullName] = useState(initialData.full_name || initialData.username || '');
+  const [bio, setBio] = useState(initialData.bio || '');
+  const [avatarUrl, setAvatarUrl] = useState(initialData.avatar_url || '');
+  const [coverUrl, setCoverUrl] = useState(initialData.cover_url || '');
   const [saving, setSaving] = useState(false);
-  const [profileData, setProfileData] = useState(viewedUser || {});
-  const [fullName, setFullName] = useState(viewedUser?.full_name || viewedUser?.username || '');
-  const [bio, setBio] = useState(viewedUser?.bio || '');
-  const [avatarUrl, setAvatarUrl] = useState(viewedUser?.avatar_url || '');
-  const [coverUrl, setCoverUrl] = useState(viewedUser?.cover_url || '');
-  const [userPosts, setUserPosts] = useState([]);
-  const [friendsCount, setFriendsCount] = useState(0);
   const [friendSent, setFriendSent] = useState(false);
 
-  useEffect(() => {
-    const active = targetProfile || currentUser;
-    setProfileData(active || {});
-    setFullName(active?.full_name || active?.username || '');
-    setBio(active?.bio || '');
-    setAvatarUrl(active?.avatar_url || '');
-    setCoverUrl(active?.cover_url || '');
-    setEditing(false);
-    loadProfileDetails(active?.id);
-  }, [targetProfile?.id, currentUser?.id]);
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
-  async function loadProfileDetails(uid) {
-    if (!uid) return;
-    const { data: fresh } = await supabase.from('profiles').select('*').eq('id', uid).maybeSingle();
-    if (fresh) {
-      setProfileData(fresh);
-      setFullName(fresh.full_name || fresh.username || '');
-      setBio(fresh.bio || '');
-      setAvatarUrl(fresh.avatar_url || '');
-      setCoverUrl(fresh.cover_url || '');
+  async function uploadImageFile(file, folder) {
+    if (!file) return '';
+    let finalUrl = URL.createObjectURL(file);
+    const clean = (file.name || 'photo.jpg').replace(/[^a-zA-Z0-9._-]/g, '');
+    const path = `${folder}/${Date.now()}_${clean}`;
+    for (const bucket of ['media', 'avatars', 'posts', 'public']) {
+      const { error: upErr } = await supabase.storage.from(bucket).upload(path, file);
+      if (!upErr) {
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+        if (pub?.publicUrl) { finalUrl = pub.publicUrl; break; }
+      }
     }
-
-    const { data: postsData } = await supabase.from('posts').select('*').eq('user_id', uid).order('created_at', { ascending: false });
-    setUserPosts(Array.isArray(postsData) ? postsData : []);
-
-    const { data: rels } = await supabase.from('friendships').select('id').eq('status', 'accepted').or(`requester_id.eq.${uid},addressee_id.eq.${uid}`);
-    setFriendsCount(Array.isArray(rels) ? rels.length : 0);
+    return finalUrl;
   }
 
-  async function handleSaveProfile(e) {
-    e.preventDefault();
-    if (!currentUser?.id || !isOwnProfile) return;
+  async function handlePickMedia(e, type) {
+    const file = e.target.files?.[0];
+    if (!file) return;
     setSaving(true);
-    const updates = { full_name: fullName.trim(), bio: bio.trim(), avatar_url: avatarUrl.trim(), cover_url: coverUrl.trim() };
-    const { data, error } = await supabase.from('profiles').update(updates).eq('id', currentUser.id).select().single();
-    if (!error && data) {
-      setProfileData(data);
-      if (onProfileUpdated) onProfileUpdated(data);
+    const url = await uploadImageFile(file, type === 'avatar' ? 'avatars' : 'covers');
+    const field = type === 'avatar' ? 'avatar_url' : 'cover_url';
+    if (type === 'avatar') setAvatarUrl(url); else setCoverUrl(url);
+    const updated = { ...profile, [field]: url };
+    setProfile(updated);
+    if (onProfileUpdated) onProfileUpdated(updated);
+    if (profile.id) {
+      try { await supabase.from('profiles').update({ [field]: url }).eq('id', profile.id); } catch (_) {}
+    }
+    setSaving(false);
+  }
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    const updated = { ...profile, full_name: fullName.trim() || profile.full_name, bio: bio.trim(), avatar_url: avatarUrl, cover_url: coverUrl };
+    setProfile(updated);
+    if (onProfileUpdated) onProfileUpdated(updated);
+    if (profile.id) {
+      try {
+        await supabase.from('profiles').update({ full_name: updated.full_name, bio: updated.bio, avatar_url: updated.avatar_url, cover_url: updated.cover_url }).eq('id', profile.id);
+      } catch (_) {}
     }
     setSaving(false);
     setEditing(false);
   }
 
   async function handleAddFriend() {
-    if (!currentUser?.id || !viewedUser?.id) return;
     setFriendSent(true);
-    await supabase.from('friendships').insert({ requester_id: currentUser.id, addressee_id: viewedUser.id, status: 'pending' });
+    if (currentUser?.id && profile.id) {
+      try { await supabase.from('friend_requests').insert({ sender_id: currentUser.id, receiver_id: profile.id, status: 'pending' }); } catch (_) {}
+    }
   }
-
-  const displayName = fullName || profileData?.username || 'ZUKA Member';
+  const displayName = profile.full_name || profile.username || 'ZUKA Member';
 
   return (
-    <div style={{ backgroundColor: '#F0F2F5', minHeight: 'calc(100dvh - 98px)', paddingBottom: '40px' }}>
+    <div style={{ backgroundColor: '#F0F2F5', minHeight: 'calc(100vh - 98px)', paddingBottom: '48px' }}>
       <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB' }}>
-        <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button type="button" onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', display: 'flex' }}>
-            <ArrowLeft size={22} />
-          </button>
-          <strong style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span>{displayName}</span>
-            {profileData?.is_verified && <CheckCircle2 size={16} color="#1877F2" fill="#E7F3FF" />}
-          </strong>
-        </div>
-
-        <div style={{ position: 'relative', height: '170px', background: coverUrl ? `url(${coverUrl}) center/cover` : 'linear-gradient(135deg, #1877F2, #42B72A)' }}>
-          {isOwnProfile && (
-            <button type="button" onClick={() => setEditing(true)} style={{ position: 'absolute', right: '12px', bottom: '12px', backgroundColor: '#FFFFFF', color: '#050505', border: 'none', borderRadius: '8px', padding: '6px 10px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <Camera size={15} /> Edit cover
+        {!isOwn && (
+          <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '1px solid #E4E6EB' }}>
+            <button type="button" onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '15px', color: '#050505' }}>
+              <ArrowLeft size={20} /> Back
             </button>
+          </div>
+        )}
+
+        <div style={{ position: 'relative', height: '170px', background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1877F2 0%, #42B72A 100%)' }}>
+          {isOwn && (
+            <>
+              <input ref={coverInputRef} type="file" accept="image/*" onChange={(e) => handlePickMedia(e, 'cover')} style={{ display: 'none' }} />
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                style={{ position: 'absolute', bottom: '10px', right: '12px', zIndex: 10, backgroundColor: '#FFFFFF', color: '#050505', border: 'none', borderRadius: '8px', padding: '7px 12px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', cursor: 'pointer' }}
+              >
+                <Camera size={16} /> Edit cover
+              </button>
+            </>
           )}
         </div>
 
         <div style={{ padding: '0 16px 16px', position: 'relative' }}>
-          <div style={{ width: '104px', height: '104px', borderRadius: '50%', border: '4px solid #FFFFFF', backgroundColor: '#1877F2', color: '#FFFFFF', marginTop: '-52px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '38px', fontWeight: 800, overflow: 'hidden' }}>
-            {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 800, margin: '8px 0 2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>{displayName}</span>
-            {profileData?.is_verified && <CheckCircle2 size={18} color="#1877F2" fill="#E7F3FF" />}
-          </h1>
-          <div style={{ fontSize: '14px', color: '#65676B', fontWeight: 600 }}>{friendsCount} Friends</div>
-          {bio && <p style={{ fontSize: '15px', margin: '8px 0 0', lineHeight: 1.4 }}>{bio}</p>}
-
-          <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
-            {isOwnProfile ? (
+          <div style={{ position: 'relative', width: '104px', height: '104px', marginTop: '-52px', zIndex: 12 }}>
+            <div style={{ width: '104px', height: '104px', borderRadius: '50%', border: '4px solid #FFFFFF', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '38px', fontWeight: 800 }}>
+              {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
+            </div>
+            {isOwn && (
               <>
-                <button type="button" onClick={() => setEditing(!editing)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '9px 14px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
-                  <Edit3 size={16} /> Edit Profile
+                <input ref={avatarInputRef} type="file" accept="image/*" onChange={(e) => handlePickMedia(e, 'avatar')} style={{ display: 'none' }} />
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  aria-label="Upload profile photo"
+                  style={{ position: 'absolute', bottom: '2px', right: '2px', zIndex: 15, width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#E4E6EB', color: '#050505', border: '2px solid #FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                >
+                  <Camera size={16} />
                 </button>
-                <button type="button" onClick={() => onOpenMessenger && onOpenMessenger(null)} style={{ flex: 1, backgroundColor: '#E4E6EB', color: '#050505', border: 'none', borderRadius: '8px', padding: '9px 14px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+              </>
+            )}
+          </div>
+
+          <h1 style={{ margin: '10px 0 2px', fontSize: '22px', fontWeight: 800, color: '#050505', display: 'flex', alignItems: 'center' }}>
+            <span>{displayName}</span>
+            {profile.is_verified && <ZukaBadge size={20} />}
+          </h1>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: '#65676B', marginBottom: '6px' }}>0 Friends</div>
+          {profile.bio && <p style={{ margin: '0 0 12px', fontSize: '15px', color: '#050505' }}>{profile.bio}</p>}
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+            {isOwn ? (
+              <>
+                <button type="button" onClick={() => setEditing(!editing)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                  <Edit3 size={16} /> {editing ? 'Cancel Edit' : 'Edit Profile'}
+                </button>
+                <button type="button" onClick={() => onOpenMessenger && onOpenMessenger(null)} style={{ flex: 1, backgroundColor: '#E4E6EB', color: '#050505', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                   <MessageCircle size={16} /> Messenger
                 </button>
               </>
             ) : (
               <>
-                <button type="button" onClick={handleAddFriend} disabled={friendSent} style={{ flex: 1, backgroundColor: friendSent ? '#E4E6EB' : '#1877F2', color: friendSent ? '#050505' : '#FFFFFF', border: 'none', borderRadius: '8px', padding: '9px 14px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                <button type="button" onClick={handleAddFriend} disabled={friendSent} style={{ flex: 1, backgroundColor: friendSent ? '#E4E6EB' : '#1877F2', color: friendSent ? '#050505' : '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                   <UserPlus size={16} /> {friendSent ? 'Request Sent' : 'Add Friend'}
                 </button>
-                <button type="button" onClick={() => onOpenMessenger && onOpenMessenger(profileData)} style={{ flex: 1, backgroundColor: '#E7F3FF', color: '#1877F2', border: 'none', borderRadius: '8px', padding: '9px 14px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => onOpenMessenger && onOpenMessenger(profile)} style={{ flex: 1, backgroundColor: '#E4E6EB', color: '#050505', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                   <MessageCircle size={16} /> Message
                 </button>
               </>
@@ -125,28 +150,24 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
         </div>
       </div>
 
-      {editing && isOwnProfile && (
-        <form onSubmit={handleSaveProfile} style={{ backgroundColor: '#FFFFFF', margin: '10px', padding: '14px', borderRadius: '10px', border: '1px solid #E4E6EB', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <strong style={{ fontSize: '16px' }}>Edit Profile Details</strong>
-          <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-          <textarea rows={2} placeholder="Bio" value={bio} onChange={(e) => setBio(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-          <input type="url" placeholder="Avatar Image URL" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-          <input type="url" placeholder="Cover Photo URL" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-          <button type="submit" disabled={saving} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
-            <Check size={16} /> {saving ? 'Saving...' : 'Save Changes'}
+      {isOwn && editing && (
+        <form onSubmit={handleSave} style={{ backgroundColor: '#FFFFFF', margin: '10px', borderRadius: '10px', padding: '14px', border: '1px solid #E4E6EB', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ fontWeight: 800, fontSize: '16px' }}>Edit Profile Details</div>
+          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full Name" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px' }} />
+          <textarea rows={2} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Bio" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px' }} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button type="button" onClick={() => avatarInputRef.current?.click()} style={{ flex: 1, padding: '9px', borderRadius: '8px', border: '1px solid #1877F2', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+              Choose Profile Photo
+            </button>
+            <button type="button" onClick={() => coverInputRef.current?.click()} style={{ flex: 1, padding: '9px', borderRadius: '8px', border: '1px solid #1877F2', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+              Choose Cover Photo
+            </button>
+          </div>
+          <button type="submit" disabled={saving} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+            <Check size={18} /> {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </form>
       )}
-
-      <div style={{ marginTop: '10px' }}>
-        {userPosts.length === 0 ? (
-          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', margin: '0 10px', borderRadius: '8px', textAlign: 'center', color: '#65676B', fontSize: '14px' }}>
-            No posts to show yet.
-          </div>
-        ) : (
-          userPosts.map((p) => <Post key={p.id} post={p} currentUserId={currentUser?.id} onDeletePost={(id) => setUserPosts((prev) => prev.filter((x) => x.id !== id))} />)
-        )}
-      </div>
     </div>
   );
 }
