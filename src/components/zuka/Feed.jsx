@@ -91,7 +91,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
   return (
     <div style={{ width: '100%', paddingBottom: '48px' }}>
       <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} onOpenProfile={onOpenProfile} />
-      <Stories userProfile={userProfile} stories={stories} onUploadStory={handleUploadStory} />
+      <Stories userProfile={userProfile} stories={stories} onUploadStory={handleUploadStory} onDeleteStory={(id) => setStories((prev) => prev.filter((x) => x.id !== id))} />
       <div>
         {posts.length === 0 ? (
           <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E4E6EB', borderRadius: '8px', padding: '24px', margin: '0 8px', textAlign: 'center', color: '#65676B', fontSize: '15px' }}>
