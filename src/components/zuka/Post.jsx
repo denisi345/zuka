@@ -38,9 +38,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
     setCommentText('');
     setComments((prev) => [...prev, { id: `c-${Date.now()}`, author_name: 'You', content: text }]);
     if (post.id && !String(post.id).startsWith('temp-')) {
-      try {
-        await supabase.from('comments').insert({ post_id: post.id, user_id: currentUserId || null, content: text });
-      } catch (_) {}
+      try { await supabase.from('comments').insert({ post_id: post.id, user_id: currentUserId || null, content: text }); } catch (_) {}
     }
   }
 
@@ -54,6 +52,8 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
 
   const author = post.author_name || 'ZUKA Member';
   const isOwner = currentUserId && post.user_id && String(currentUserId) === String(post.user_id);
+  const mediaSrc = post.video_url || post.image_url || '';
+  const isVideo = post.media_type === 'video' || Boolean(post.video_url) || /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(mediaSrc);
 
   return (
     <article style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', marginBottom: '8px', position: 'relative' }}>
@@ -100,9 +100,13 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
         </p>
       )}
 
-      {post.image_url && (
+      {mediaSrc && (
         <div style={{ width: '100%', backgroundColor: '#000000' }}>
-          <img src={post.image_url} alt="" style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }} />
+          {isVideo ? (
+            <video src={mediaSrc} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: '520px', display: 'block', backgroundColor: '#000000' }} />
+          ) : (
+            <img src={mediaSrc} alt="" style={{ width: '100%', maxHeight: '520px', objectFit: 'cover', display: 'block' }} />
+          )}
         </div>
       )}
 

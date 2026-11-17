@@ -27,13 +27,13 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
     } catch (_) {}
   }
 
-  async function handleCreatePost(text, imageUrl = '') {
+  async function handleCreatePost(text, mediaUrl = '', mediaType = 'image') {
     const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, is_verified: userProfile?.is_verified, content: text, image_url: imageUrl, time_label: 'Just now' };
+    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, is_verified: userProfile?.is_verified, content: text, image_url: mediaUrl, media_type: mediaType, time_label: 'Just now' };
     setPosts((prev) => [optimistic, ...prev]);
     try {
       const payload = { content: text, author_name: authorName };
-      if (imageUrl) payload.image_url = imageUrl;
+      if (mediaUrl) payload.image_url = mediaUrl;
       if (userProfile?.id) payload.user_id = userProfile.id;
       await supabase.from('posts').insert(payload);
     } catch (_) {}
