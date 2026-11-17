@@ -13,22 +13,24 @@ export default function CreatePost({ userProfile, onCreatePost, onOpenProfile })
     if (!text.trim() && !mediaFile) return;
     setPosting(true);
     let mediaUrl = '';
-    const isVideo = mediaFile && mediaFile.type.startsWith('video/');
+    const isVideo = mediaFile && mediaFile.type?.startsWith('video/');
 
-    if (mediaFile) {
-      mediaUrl = URL.createObjectURL(mediaFile);
-      const clean = mediaFile.name.replace(/[^a-zA-Z0-9._-]/g, '');
-      const path = `posts/${Date.now()}_${clean}`;
-      for (const bucket of ['media', 'posts', 'videos', 'public']) {
-        const { error: upErr } = await supabase.storage.from(bucket).upload(path, mediaFile);
-        if (!upErr) {
-          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-          if (pub?.publicUrl) { mediaUrl = pub.publicUrl; break; }
+    try {
+      if (mediaFile) {
+        mediaUrl = URL.createObjectURL(mediaFile);
+        const clean = (mediaFile.name || 'upload.jpg').replace(/[^a-zA-Z0-9._-]/g, '');
+        const path = `posts/${Date.now()}_${clean}`;
+        for (const bucket of ['media', 'posts', 'videos', 'public']) {
+          const { error: upErr } = await supabase.storage.from(bucket).upload(path, mediaFile);
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+            if (pub?.publicUrl) { mediaUrl = pub.publicUrl; break; }
+          }
         }
       }
-    }
+      if (onCreatePost) await onCreatePost(text.trim(), mediaUrl, isVideo ? 'video' : 'image');
+    } catch (_) {}
 
-    if (onCreatePost) await onCreatePost(text.trim(), mediaUrl, isVideo ? 'video' : 'image');
     setText('');
     setMediaFile(null);
     setPosting(false);
@@ -67,7 +69,7 @@ export default function CreatePost({ userProfile, onCreatePost, onOpenProfile })
       {open && (
         <form onSubmit={handleSubmit} style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #E4E6EB', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="What's on your mind?" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px', boxSizing: 'border-box', outline: 'none' }} />
-          <input type="file" accept="image/*,video/*" onChange={(e) => setMediaFile(e.target.files ? e.target.files : null)} style={{ fontSize: '13px', padding: '6px', border: '1px solid #CED0D4', borderRadius: '8px' }} />
+          <input type="file" accept="image/*,video/*" onChange={(e) => setMediaFile(e.target.files?.[0] || null)} style={{ fontSize: '13px', padding: '6px', border: '1px solid #CED0D4', borderRadius: '8px' }} />
           <button type="submit" disabled={posting} style={{ alignSelf: 'flex-end', backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', fontWeight: 700, padding: '8px 18px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}>
             {posting ? 'Posting...' : 'Post'}
           </button>
