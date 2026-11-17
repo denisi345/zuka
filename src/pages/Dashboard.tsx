@@ -1,3 +1,4 @@
+import FacebookMenu from "@/components/zuka/FacebookMenu";
 import React, { useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,24 +36,15 @@ const Dashboard = () => {
       />
 
       {menuOpen && (
-        <div style={{ position: "fixed", top: "54px", right: "12px", zIndex: 50, width: "240px", backgroundColor: "#FFFFFF", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: "1px solid #E4E6EB", padding: "12px" }}>
-          <button
-            type="button"
-            onClick={() => { setViewedProfile(null); setActiveTab("profile"); setMenuOpen(false); }}
-            style={{ width: "100%", textAlign: "left", fontWeight: 700, fontSize: "16px", padding: "8px", borderBottom: "1px solid #E4E6EB", background: "none", borderTop: "none", borderLeft: "none", borderRight: "none", cursor: "pointer", color: "#050505" }}
-          >
-            {profile?.full_name || profile?.username || "ZUKA Member"}
-            <div style={{ fontSize: "12px", color: "#1877F2", fontWeight: 600, marginTop: "2px" }}>See your profile</div>
-          </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            style={{ width: "100%", textAlign: "left", padding: "10px 8px", marginTop: "4px", color: "#E41E3F", fontWeight: 600, background: "none", border: "none", borderRadius: "8px", cursor: "pointer" }}
-          >
-            Log Out
-          </button>
-        </div>
-      )}
+    <FacebookMenu
+      profile={profile}
+      onClose={() => setMenuOpen(false)}
+      onNavigateTab={(tab) => setActiveTab(tab)}
+      onOpenProfile={() => { setViewedProfile(null); setActiveTab("profile"); }}
+      onOpenAI={() => { setChatTarget({ id: "zuka-ai", full_name: "ZUKA AI", username: "zuka_ai", is_ai: true, is_verified: true }); setActiveTab("messenger"); }}
+      onLogout={handleLogout}
+    />
+  )}
 
       <div style={{ maxWidth: "1440px", margin: "0 auto", display: "flex", justifyContent: "space-between", paddingTop: "4px" }}>
         <div className="hidden lg:block w-[320px] shrink-0">
