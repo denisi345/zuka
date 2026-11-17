@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Plus, X, Volume2, VolumeX } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Plus, X, Volume2, VolumeX, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Reels({ userProfile }) {
@@ -12,6 +12,11 @@ export default function Reels({ userProfile }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [videoUrlInput, setVideoUrlInput] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  const [commentReelId, setCommentReelId] = useState(null);
+  const [reelComments, setReelComments] = useState({});
+  const [commentInput, setCommentInput] = useState('');
+  const [sharedToast, setSharedToast] = useState(false);
 
   useEffect(() => { loadReels(); }, []);
 
@@ -41,7 +46,7 @@ export default function Reels({ userProfile }) {
         const clean = (videoFile.name || 'reel.mp4').replace(/[^a-zA-Z0-9._-]/g, '');
         const path = `reels/${Date.now()}_${clean}`;
         for (const bucket of ['media', 'reels', 'videos', 'public']) {
-          const { error: upErr } = await supabase.storage.from(bucket).upload(path, videoFile, { contentType: videoFile.type || "video/mp4", upsert: true });
+          const { error: upErr } = await supabase.storage.from(bucket).upload(path, videoFile, { contentType: videoFile.type || 'video/mp4', upsert: true });
           if (!upErr) {
             const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
             if (pub?.publicUrl) { finalVideoUrl = pub.publicUrl; break; }
@@ -74,8 +79,37 @@ export default function Reels({ userProfile }) {
       try { supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reel.id); } catch (_) {}
     }
   }
+
+  function handleAddReelComment(e) {
+    e.preventDefault();
+    const txt = commentInput.trim();
+    if (!txt || !commentReelId) return;
+    const author = userProfile?.full_name || userProfile?.username || 'You';
+    setReelComments((prev) => ({
+      ...prev,
+      [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, content: txt }]
+    }));
+    setReels((prev) => prev.map((r) => (r.id === commentReelId ? { ...r, comments_count: Number(r.comments_count || 0) + 1 } : r)));
+    setCommentInput('');
+  }
+
+  async function handleShareReel(reel) {
+    const shareText = `${reel.author_name || 'ZUKA Reel'}: ${reel.caption || 'Watch on ZUKA'}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'ZUKA Reels', text: shareText, url: window.location.href }); return; } catch (_) {}
+    }
+    try { await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`); } catch (_) {}
+    setSharedToast(true);
+    setTimeout(() => setSharedToast(false), 2200);
+  }
   return (
     <div style={{ position: 'relative', height: 'calc(100vh - 98px)', backgroundColor: '#000000', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
+      {sharedToast && (
+        <div style={{ position: 'fixed', top: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, backgroundColor: '#1877F2', color: '#FFFFFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>
+          Link copied to share!
+        </div>
+      )}
+
       <div style={{ position: 'fixed', top: '104px', left: 0, right: 0, zIndex: 25, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 14px', maxWidth: '680px', margin: '0 auto', pointerEvents: 'none' }}>
         <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '18px', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Reels</span>
         <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
@@ -108,6 +142,34 @@ export default function Reels({ userProfile }) {
         </div>
       )}
 
+      {commentReelId && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 45, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '680px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '14px', maxHeight: '65vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '8px', marginBottom: '8px' }}>
+              <strong style={{ fontSize: '15px', color: '#050505' }}>Comments</strong>
+              <button type="button" onClick={() => setCommentReelId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505' }}><X size={20} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+              {(reelComments[commentReelId] || []).length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#65676B', fontSize: '13px', padding: '20px 0' }}>No comments yet. Be the first!</div>
+              ) : (
+                (reelComments[commentReelId] || []).map((c) => (
+                  <div key={c.id} style={{ backgroundColor: '#F0F2F5', padding: '8px 12px', borderRadius: '12px', fontSize: '13px', color: '#050505' }}>
+                    <strong>{c.author}: </strong>{c.content}
+                  </div>
+                ))
+              )}
+            </div>
+            <form onSubmit={handleAddReelComment} style={{ display: 'flex', gap: '8px' }}>
+              <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Write a comment..." style={{ flex: 1, padding: '9px 14px', borderRadius: '20px', border: '1px solid #CED0D4', fontSize: '14px' }} />
+              <button type="submit" style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <Send size={16} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {reels.length === 0 ? (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', padding: '24px', textAlign: 'center' }}>
           <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>No Reels yet on ZUKA.</p>
@@ -121,20 +183,20 @@ export default function Reels({ userProfile }) {
           return (
             <div key={reel.id} style={{ position: 'relative', height: 'calc(100vh - 98px)', width: '100%', scrollSnapAlign: 'start', backgroundColor: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <video src={reel.video_url} autoPlay loop muted={muted} playsInline controls style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', left: '12px', bottom: '24px', right: '72px', color: '#FFFFFF', textShadow: '0 1px 4px rgba(0,0,0,0.8)', pointerEvents: 'none' }}>
+              <div style={{ position: 'absolute', left: '12px', bottom: '68px', right: '72px', color: '#FFFFFF', textShadow: '0 1px 4px rgba(0,0,0,0.8)', pointerEvents: 'none' }}>
                 <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>{reel.author_name || 'ZUKA Creator'}</div>
                 {reel.caption && <div style={{ fontSize: '14px' }}>{reel.caption}</div>}
               </div>
-              <div style={{ position: 'absolute', right: '12px', bottom: '28px', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', color: '#FFFFFF' }}>
+              <div style={{ position: 'absolute', right: '12px', bottom: '76px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', color: '#FFFFFF' }}>
                 <button type="button" onClick={() => toggleLike(reel)} style={{ background: 'none', border: 'none', color: isLiked ? '#1877F2' : '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                   <Heart size={28} fill={isLiked ? '#1877F2' : 'none'} />
                   <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.likes_count || 0}</span>
                 </button>
-                <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setCommentReelId(reel.id)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                   <MessageCircle size={28} />
                   <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.comments_count || 0}</span>
                 </button>
-                <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => handleShareReel(reel)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                   <Share2 size={28} />
                   <span style={{ fontSize: '12px', fontWeight: 700 }}>Share</span>
                 </button>
