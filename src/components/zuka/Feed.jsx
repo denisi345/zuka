@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import CreatePost from './CreatePost';
 import Stories from './Stories';
 import Post from './Post';
+import { fetchLiveNewsAndFunny } from './liveAutoFeed';
 
 export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) {
   const [posts, setPosts] = useState([]);
@@ -19,10 +20,11 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
       }
     } catch (_) {}
 
+    let userPosts = [];
     try {
       const { data: postRows } = await supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(30);
       if (Array.isArray(postRows)) {
-        const merged = postRows.map((p) => {
+        userPosts = postRows.map((p) => {
           const owner = p.user_id ? profileMap[String(p.user_id)] : null;
           const isOfficial = p.author_name === 'ZUKA Official';
           return {
@@ -32,9 +34,21 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
             is_verified: isOfficial ? true : Boolean(owner?.is_verified || p.is_verified)
           };
         });
-        setPosts(merged);
       }
     } catch (_) {}
+
+    let autoEnabled = true;
+    try {
+      const { data: ceoRow } = await supabase.from('ceo_settings').select('auto_feed_enabled').limit(1).maybeSingle();
+      if (ceoRow && typeof ceoRow.auto_feed_enabled === 'boolean') autoEnabled = ceoRow.auto_feed_enabled;
+    } catch (_) {}
+
+    if (autoEnabled) {
+      const liveItems = await fetchLiveNewsAndFunny();
+      setPosts([...userPosts, ...liveItems]);
+    } else {
+      setPosts(userPosts);
+    }
 
     try {
       const { data: storyRows } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(15);
