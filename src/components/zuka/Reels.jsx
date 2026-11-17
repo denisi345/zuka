@@ -41,7 +41,7 @@ export default function Reels({ userProfile }) {
         const clean = (videoFile.name || 'reel.mp4').replace(/[^a-zA-Z0-9._-]/g, '');
         const path = `reels/${Date.now()}_${clean}`;
         for (const bucket of ['media', 'reels', 'videos', 'public']) {
-          const { error: upErr } = await supabase.storage.from(bucket).upload(path, videoFile);
+          const { error: upErr } = await supabase.storage.from(bucket).upload(path, videoFile, { contentType: videoFile.type || "video/mp4", upsert: true });
           if (!upErr) {
             const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
             if (pub?.publicUrl) { finalVideoUrl = pub.publicUrl; break; }
