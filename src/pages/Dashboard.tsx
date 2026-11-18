@@ -1,20 +1,20 @@
-import ZukaEvents from "@/components/zuka/ZukaEvents";
-import ZukaPages from "@/components/zuka/ZukaPages";
-import ZukaGroups from "@/components/zuka/ZukaGroups";
-import SavedItems from "@/components/zuka/SavedItems";
+const ZukaEvents = lazy(() => import("@/components/zuka/ZukaEvents"));
+const ZukaPages = lazy(() => import("@/components/zuka/ZukaPages"));
+const ZukaGroups = lazy(() => import("@/components/zuka/ZukaGroups"));
+const SavedItems = lazy(() => import("@/components/zuka/SavedItems"));
 import ZukaCallModal from "@/components/zuka/ZukaCallModal";
 import FacebookMenu from "@/components/zuka/FacebookMenu";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/zuka/Header";
 import LeftSidebar from "@/components/zuka/LeftSidebar";
 import Feed from "@/components/zuka/Feed";
 import { FriendsView, NotificationsView } from "@/components/zuka/FriendsAndNotifs";
-import Messenger from "@/components/zuka/Messenger";
-import Reels from "@/components/zuka/Reels";
-import Marketplace from "@/components/zuka/Marketplace";
-import Profile from "@/components/zuka/Profile";
+const Messenger = lazy(() => import("@/components/zuka/Messenger"));
+const Reels = lazy(() => import("@/components/zuka/Reels"));
+const Marketplace = lazy(() => import("@/components/zuka/Marketplace"));
+const Profile = lazy(() => import("@/components/zuka/Profile"));
 import RightSidebar from "@/components/zuka/RightSidebar";
 
 const Dashboard = () => {
@@ -104,20 +104,25 @@ const Dashboard = () => {
               onMessageUser={(person) => { setChatTarget(person); setActiveTab("messenger"); }}
             />
           )}
-          {activeTab === "messenger" && <Messenger currentUser={profile} initialPeer={chatTarget} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />}
+          <Suspense fallback={<div style={{ padding: "32px", textAlign: "center", color: "#65676B", fontWeight: 600 }}>Loading...</div>}>
+        {activeTab === "messenger" && <Messenger currentUser={profile} initialPeer={chatTarget} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />}
           {activeTab === "reels" && <Reels userProfile={profile} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />}
           {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
           {activeTab === "marketplace" && (
-            <Marketplace
-              userProfile={profile}
-              onMessageSeller={(sellerId, sellerName, msg) => {
-                if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg })
-        {activeTab === "saved" && <SavedItems currentUserId={profile?.id} onBack={() => setActiveTab("feed")} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />};
-                setActiveTab("messenger");
-              }}
-            />
-          )}
-        </main>
+          <Marketplace
+            userProfile={profile}
+            onMessageSeller={(sellerId, sellerName, msg) => {
+              if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg });
+              setActiveTab("messenger");
+            }}
+          />
+        )}
+        {activeTab === "saved" && <SavedItems currentUserId={profile?.id} onBack={() => setActiveTab("feed")} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />}
+        {activeTab === "groups" && <ZukaGroups currentUser={profile} onBack={() => setActiveTab("feed")} />}
+        {activeTab === "pages" && <ZukaPages currentUser={profile} onBack={() => setActiveTab("feed")} />}
+        {activeTab === "events" && <ZukaEvents currentUser={profile} onBack={() => setActiveTab("feed")} />}
+        </Suspense>
+      </main>
 
         <div className="hidden xl:block w-[320px] shrink-0">
           <RightSidebar userProfile={profile} />

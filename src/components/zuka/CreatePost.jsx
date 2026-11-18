@@ -1,3 +1,4 @@
+import { compressImageFile } from "./imageCompressor";
 import React, { useState, useRef, useEffect } from 'react';
 import { Image, Video, Music, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,7 +66,7 @@ export default function CreatePost({ userProfile, onCreatePost }) {
     let uploadedMediaUrl = '';
     let uploadedAudioUrl = '';
     try {
-      if (mediaFile) uploadedMediaUrl = await uploadToStorage(mediaFile, 'posts');
+      if (mediaFile) { const readyFile = mediaType === "image" ? await compressImageFile(mediaFile) : mediaFile; uploadedMediaUrl = await uploadToStorage(readyFile, "posts"); }
       if (audioFile) uploadedAudioUrl = await uploadToStorage(audioFile, 'audio');
     } catch (_) {}
 

@@ -8,7 +8,7 @@ import { sendZukaNotification } from './notifyHelper';
 import { formatTimeAgo } from './timeAgo';
 import { toggleSavePost } from './savedHelper';
 
-export default function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
+function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
   const storageKey = `zuka_liked_${post.id}`;
   const [liked, setLiked] = useState(() => localStorage.getItem(storageKey) === '1');
   const [likesCount, setLikesCount] = useState(Number(post.likes_count || 0));
@@ -164,7 +164,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
       {post.image_url && (
         isVideo
           ? <video src={post.image_url} autoPlay loop muted playsInline controls style={{ width: '100%', maxHeight: '420px', backgroundColor: '#000000', display: 'block' }} />
-          : <img src={post.image_url} alt="" onClick={() => setPhotoOpen(true)} style={{ width: '100%', maxHeight: '460px', objectFit: 'cover', display: 'block', cursor: 'pointer' }} />
+          : <img loading="lazy" decoding="async" src={post.image_url} alt="" onClick={() => setPhotoOpen(true)} style={{ width: '100%', maxHeight: '460px', objectFit: 'cover', display: 'block', cursor: 'pointer' }} />
       )}
 
       {(likesCount > 0 || comments.length > 0) && (
@@ -282,3 +282,5 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
     </article>
   );
 }
+
+export default React.memo(Post);
