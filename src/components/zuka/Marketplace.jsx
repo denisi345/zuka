@@ -255,6 +255,12 @@ export default function Marketplace({ userProfile, onMessageSeller }) {
               </select>
               <input type="text" placeholder="Location" required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
               <input type="file" accept="image/*" onChange={(e) => setForm({ ...form, file: e.target.files ? e.target.files[0] : null })} style={{ padding: '8px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
+              {(previewUrl || form.image_url?.trim()) && (
+                <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", border: "1px solid #CED0D4", backgroundColor: "#F0F2F5" }}>
+                  <img src={previewUrl || form.image_url} alt="Listing Preview" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", display: "block" }} />
+                  <button type="button" onClick={() => { setImageFile(null); setPreviewUrl(""); setForm({ ...form, image_url: "" }); }} style={{ position: "absolute", top: "8px", right: "8px", width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.7)", color: "#FFFFFF", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={16} /></button>
+                </div>
+              )}
               <input type="url" placeholder="Image URL (optional)" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
               <textarea rows={3} placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
               <button type="submit" disabled={submitting} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '11px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>{submitting ? 'Publishing...' : 'Publish Listing'}</button>
