@@ -40,7 +40,19 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
     let autoEnabled = true;
     try {
       const { data: ceoRow } = await supabase.from('ceo_settings').select('auto_feed_enabled').limit(1).maybeSingle();
-      if (ceoRow && typeof ceoRow.auto_feed_enabled === 'boolean') autoEnabled = ceoRow.auto_feed_enabled;
+      if (ceoRow && typeof ceoRow.auto_feed_enabled === "boolean") autoEnabled = ceoRow.auto_feed_enabled;
+      if (autoEnabled) {
+        try {
+          const aiRes = await fetch("/api/zuka-news");
+          const aiJson = await aiRes.json();
+          if (Array.isArray(aiJson.items) && aiJson.items.length > 0) {
+            setPosts((prev) => {
+              const userOnly = prev.filter((x) => !String(x.id).startsWith("live-news-") && !String(x.id).startsWith("funny-ai-"));
+              return [...aiJson.items, ...userOnly];
+            });
+          }
+        } catch (_) {}
+      }
     } catch (_) {}
 
     if (autoEnabled) {
