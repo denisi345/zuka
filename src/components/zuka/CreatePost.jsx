@@ -88,7 +88,7 @@ export default function CreatePost({ userProfile, onCreatePost }) {
           <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px' }}>
             {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initial}
           </div>
-          <span style={{ position: 'absolute', bottom: '0px', right: '0px', width: '11px', height: '11px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
+          <span style={{ position: 'absolute', bottom: '0px', right: '0px', width: "13px", height: "13px", borderRadius: "50%", backgroundColor: "#31A24C", border: "2.5px solid #FFFFFF", zIndex: 5 }} />
         </div>
         <button type="button" onClick={() => setOpen(true)} style={{ flex: 1, height: '40px', borderRadius: '20px', border: '1px solid #CED0D4', backgroundColor: '#F0F2F5', color: '#65676B', textAlign: 'left', padding: '0 16px', fontSize: '15px', cursor: 'pointer' }}>
           What's on your mind?
