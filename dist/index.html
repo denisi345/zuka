@@ -1,26 +1,23 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1877F2" />
+    <link rel="icon" type="image/svg+xml" href="/zuka-icon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <title>ZUKA</title>
-    <meta name="description" content="Track habits and stay accountable with friends." />
-    <meta name="author" content="SupaSocial" />
-
-    <meta property="og:title" content="SupaSocial" />
-    <meta property="og:description" content="Track habits and stay accountable with friends." />
-    <meta property="og:type" content="website" />
-
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="SupaSocial.jpeg" />
-    <script type="module" crossorigin src="/assets/index-DP1M-nhP.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-B_aTnG6P.css">
+    <script type="module" crossorigin src="/assets/index-DCMrKpQv.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DvuAqZAS.css">
   </head>
-
   <body>
     <div id="root"></div>
-
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var r of regs) { r.unregister(); }
+        });
+      }
+    </script>
   </body>
 </html>
