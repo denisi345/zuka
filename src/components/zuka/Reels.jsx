@@ -3,6 +3,158 @@ import { ThumbsUp, MessageCircle, Share2, Plus, X, Volume2, VolumeX, Send, Play,
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
 
+function ReelCard({ reel, muted, isLiked, isFollowed, currentUserId, onToggleLike, onToggleFollow, onOpenComments, onShare, onOpenMenu }) {
+  const containerRef = useRef(null);
+  const videoRef = useRef(null);
+  const tapTimerRef = useRef(null);
+  const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [heartBurst, setHeartBurst] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    const v = videoRef.current;
+    if (!el || !v) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          v.muted = muted;
+          v.play().then(() => setPaused(false)).catch(() => {
+            v.muted = true;
+            v.play().then(() => setPaused(false)).catch(() => {});
+          });
+        } else {
+          v.pause();
+        }
+      },
+      { threshold: 0.65 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [reel.video_url]);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
+
+  function handleVideoClick() {
+    if (tapTimerRef.current) {
+      clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = null;
+      if (!isLiked) onToggleLike(reel);
+      setHeartBurst(true);
+      setTimeout(() => setHeartBurst(false), 750);
+      return;
+    }
+    tapTimerRef.current = setTimeout(() => {
+      tapTimerRef.current = null;
+      const v = videoRef.current;
+      if (!v) return;
+      if (v.paused) {
+        v.play().catch(() => {});
+        setPaused(false);
+      } else {
+        v.pause();
+        setPaused(true);
+      }
+    }, 220);
+  }
+
+  function handleSeek(e) {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v || !v.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    v.currentTime = ratio * v.duration;
+    setProgress(ratio * 100);
+  }
+
+  const author = reel.author_name || 'ZUKA Creator';
+  const isOwn = currentUserId && String(reel.user_id) === String(currentUserId);
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', height: 'calc(100vh - 98px)', width: '100%', scrollSnapAlign: 'start', backgroundColor: '#000000', overflow: 'hidden' }}>
+      <video
+        ref={videoRef}
+        src={reel.video_url}
+        loop
+        playsInline
+        preload="metadata"
+        onClick={handleVideoClick}
+        onTimeUpdate={() => {
+          const v = videoRef.current;
+          if (v && v.duration) setProgress((v.currentTime / v.duration) * 100);
+        }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+      />
+
+      {paused && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+            <Play size={32} fill="#FFFFFF" />
+          </div>
+        </div>
+      )}
+
+      {heartBurst && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ width: '84px', height: '84px', borderRadius: '50%', backgroundColor: 'rgba(24,119,242,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+            <ThumbsUp size={42} fill="#FFFFFF" />
+          </div>
+        </div>
+      )}
+
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '140px', background: 'linear-gradient(to top, rgba(0,0,0,0.82), transparent)', pointerEvents: 'none' }} />
+
+      <div style={{ position: 'absolute', left: '12px', bottom: '18px', right: '74px', color: '#FFFFFF', textShadow: '0 1px 4px rgba(0,0,0,0.85)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1.5px solid #FFFFFF', backgroundColor: '#1877F2', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '15px', flexShrink: 0 }}>
+            {reel.avatar_url ? <img src={reel.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : author.charAt(0).toUpperCase()}
+          </div>
+          <span style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center' }}>
+            {author}
+            {reel.is_verified && <ZukaBadge size={15} />}
+          </span>
+          {!isOwn && (
+            <button type="button" onClick={() => onToggleFollow(reel.id)} style={{ marginLeft: '4px', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.85)', backgroundColor: isFollowed ? 'rgba(255,255,255,0.25)' : 'transparent', color: '#FFFFFF', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+              {isFollowed ? 'Following' : 'Follow'}
+            </button>
+          )}
+        </div>
+        {reel.caption && <div style={{ fontSize: '14px', lineHeight: '1.35', marginBottom: '6px' }}>{reel.caption}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', opacity: 0.92 }}>
+          <Music size={13} />
+          <span>Original audio · {author}</span>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', right: '10px', bottom: '20px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', color: '#FFFFFF' }}>
+        <button type="button" onClick={() => onToggleLike(reel)} style={{ background: 'none', border: 'none', color: isLiked ? '#1877F2' : '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
+          <ThumbsUp size={27} fill={isLiked ? '#1877F2' : 'none'} />
+          <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.likes_count || 0}</span>
+        </button>
+        <button type="button" onClick={() => onOpenComments(reel.id)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
+          <MessageCircle size={27} />
+          <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.comments_count || 0}</span>
+        </button>
+        <button type="button" onClick={() => onShare(reel)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
+          <Share2 size={27} />
+          <span style={{ fontSize: '12px', fontWeight: 700 }}>Share</span>
+        </button>
+        <button type="button" onClick={() => onOpenMenu(reel)} style={{ background: 'none', border: 'none', color: '#FFFFFF', padding: '2px', cursor: 'pointer' }}>
+          <MoreHorizontal size={24} />
+        </button>
+      </div>
+
+      <div onClick={handleSeek} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '10px', display: 'flex', alignItems: 'flex-end', cursor: 'pointer', zIndex: 25 }}>
+        <div style={{ width: '100%', height: '3px', backgroundColor: 'rgba(255,255,255,0.28)' }}>
+          <div style={{ height: '100%', width: `${progress}%`, backgroundColor: '#FFFFFF' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
 export default function Reels({ userProfile }) {
   const [reels, setReels] = useState([]);
   const [muted, setMuted] = useState(false);
@@ -21,7 +173,12 @@ export default function Reels({ userProfile }) {
   const [menuReelId, setMenuReelId] = useState(null);
   const [sharedToast, setSharedToast] = useState(false);
 
-  useEffect(() => { loadReels(); const h = () => setCreateOpen(true); window.addEventListener("zuka:open-reel", h); return () => window.removeEventListener("zuka:open-reel", h); }, []);
+  useEffect(() => {
+    loadReels();
+    const openH = () => setCreateOpen(true);
+    window.addEventListener('zuka:open-reel', openH);
+    return () => window.removeEventListener('zuka:open-reel', openH);
+  }, []);
 
   async function loadReels() {
     let profMap = {};
@@ -29,18 +186,12 @@ export default function Reels({ userProfile }) {
       const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified');
       if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
     } catch (_) {}
-
     try {
       const { data } = await supabase.from('reels').select('*').order('created_at', { ascending: false }).limit(25);
       if (Array.isArray(data)) {
         setReels(data.map((r) => {
           const owner = r.user_id ? profMap[String(r.user_id)] : null;
-          return {
-            ...r,
-            author_name: owner?.full_name || owner?.username || r.author_name || 'ZUKA Creator',
-            avatar_url: owner?.avatar_url || r.avatar_url || '',
-            is_verified: Boolean(owner?.is_verified || r.is_verified)
-          };
+          return { ...r, author_name: owner?.full_name || owner?.username || r.author_name || 'ZUKA Creator', avatar_url: owner?.avatar_url || r.avatar_url || '', is_verified: Boolean(owner?.is_verified || r.is_verified) };
         }));
       }
     } catch (_) {}
@@ -79,7 +230,6 @@ export default function Reels({ userProfile }) {
     } catch (_) {}
     setCaption(''); setVideoFile(null); setPreviewUrl(''); setVideoUrlInput(''); setUploading(false); setCreateOpen(false);
   }
-
   function toggleLike(reel) {
     const wasLiked = !!likedIds[reel.id];
     setLikedIds((prev) => ({ ...prev, [reel.id]: !wasLiked }));
@@ -89,124 +239,13 @@ export default function Reels({ userProfile }) {
       try { supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reel.id); } catch (_) {}
     }
   }
-function ReelCard({ reel, muted, isLiked, isFollowed, currentUserId, onToggleLike, onToggleFollow, onOpenComments, onShare, onOpenMenu }) {
-  const videoRef = useRef(null);
-  const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = muted;
-    v.play().catch(() => {
-      v.muted = true;
-      v.play().catch(() => {});
-    });
-  }, [reel.video_url]);
-
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
-  }, [muted]);
-
-  function handleTapVideo() {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      v.play().catch(() => {});
-      setPaused(false);
-    } else {
-      v.pause();
-      setPaused(true);
-    }
-  }
-
-  function handleTimeUpdate() {
-    const v = videoRef.current;
-    if (v && v.duration) setProgress((v.currentTime / v.duration) * 100);
-  }
-
-  const author = reel.author_name || 'ZUKA Creator';
-  const isOwn = currentUserId && String(reel.user_id) === String(currentUserId);
-
-  return (
-    <div style={{ position: 'relative', height: 'calc(100vh - 98px)', width: '100%', scrollSnapAlign: 'start', backgroundColor: '#000000', overflow: 'hidden' }}>
-      <video
-        ref={videoRef}
-        src={reel.video_url}
-        loop
-        playsInline
-        onClick={handleTapVideo}
-        onTimeUpdate={handleTimeUpdate}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
-      />
-
-      {paused && (
-        <div onClick={handleTapVideo} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
-            <Play size={32} fill="#FFFFFF" />
-          </div>
-        </div>
-      )}
-
-      <div style={{ position: 'absolute', left: '12px', bottom: '18px', right: '74px', color: '#FFFFFF', textShadow: '0 1px 4px rgba(0,0,0,0.85)', pointerEvents: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1.5px solid #FFFFFF', backgroundColor: '#1877F2', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '15px', flexShrink: 0 }}>
-            {reel.avatar_url ? <img src={reel.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : author.charAt(0).toUpperCase()}
-          </div>
-          <span style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center' }}>
-            {author}
-            {reel.is_verified && <ZukaBadge size={15} />}
-          </span>
-          {!isOwn && (
-            <button
-              type="button"
-              onClick={() => onToggleFollow(reel.id)}
-              style={{ marginLeft: '4px', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.85)', backgroundColor: isFollowed ? 'rgba(255,255,255,0.25)' : 'transparent', color: '#FFFFFF', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
-            >
-              {isFollowed ? 'Following' : 'Follow'}
-            </button>
-          )}
-        </div>
-        {reel.caption && <div style={{ fontSize: '14px', lineHeight: '1.35', marginBottom: '6px' }}>{reel.caption}</div>}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', opacity: 0.92 }}>
-          <Music size={13} />
-          <span>Original audio · {author}</span>
-        </div>
-      </div>
-
-      <div style={{ position: 'absolute', right: '10px', bottom: '20px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', color: '#FFFFFF' }}>
-        <button type="button" onClick={() => onToggleLike(reel)} style={{ background: 'none', border: 'none', color: isLiked ? '#1877F2' : '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-          <ThumbsUp size={27} fill={isLiked ? '#1877F2' : 'none'} />
-          <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.likes_count || 0}</span>
-        </button>
-        <button type="button" onClick={() => onOpenComments(reel.id)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-          <MessageCircle size={27} />
-          <span style={{ fontSize: '12px', fontWeight: 700 }}>{reel.comments_count || 0}</span>
-        </button>
-        <button type="button" onClick={() => onShare(reel)} style={{ background: 'none', border: 'none', color: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-          <Share2 size={27} />
-          <span style={{ fontSize: '12px', fontWeight: 700 }}>Share</span>
-        </button>
-        <button type="button" onClick={() => onOpenMenu(reel)} style={{ background: 'none', border: 'none', color: '#FFFFFF', padding: '2px', cursor: 'pointer' }}>
-          <MoreHorizontal size={24} />
-        </button>
-      </div>
-
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '2.5px', backgroundColor: 'rgba(255,255,255,0.28)' }}>
-        <div style={{ height: '100%', width: `${progress}%`, backgroundColor: '#FFFFFF' }} />
-      </div>
-    </div>
-  );
-}
   function handleAddComment(e) {
     e.preventDefault();
     const txt = commentInput.trim();
     if (!txt || !commentReelId) return;
     const author = userProfile?.full_name || userProfile?.username || 'You';
-    setReelComments((prev) => ({
-      ...prev,
-      [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, content: txt }]
-    }));
+    setReelComments((prev) => ({ ...prev, [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, content: txt }] }));
     setReels((prev) => prev.map((r) => (r.id === commentReelId ? { ...r, comments_count: Number(r.comments_count || 0) + 1 } : r)));
     setCommentInput('');
   }
@@ -231,20 +270,12 @@ function ReelCard({ reel, muted, isLiked, isFollowed, currentUserId, onToggleLik
 
   return (
     <div style={{ position: 'relative', height: 'calc(100vh - 98px)', backgroundColor: '#000000', overflowY: 'scroll', scrollSnapType: 'y mandatory' }}>
-      {sharedToast && (
-        <div style={{ position: 'fixed', top: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, backgroundColor: '#1877F2', color: '#FFFFFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>
-          Link copied to share!
-        </div>
-      )}
+      {sharedToast && <div style={{ position: 'fixed', top: '150px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, backgroundColor: '#1877F2', color: '#FFFFFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700 }}>Link copied to share!</div>}
       <div style={{ position: 'fixed', top: '104px', left: 0, right: 0, zIndex: 25, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 14px', maxWidth: '680px', margin: '0 auto', pointerEvents: 'none' }}>
         <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '18px', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Reels</span>
         <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
-          <button type="button" onClick={() => setMuted(!muted)} style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-            {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-          </button>
-          <button type="button" onClick={() => setCreateOpen(true)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '20px', padding: '6px 12px', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <Plus size={16} /> Create
-          </button>
+          <button type="button" onClick={() => setMuted(!muted)} style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '20px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
+          <button type="button" onClick={() => setCreateOpen(true)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '20px', padding: '6px 12px', fontWeight: 700, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><Plus size={16} /> Create</button>
         </div>
       </div>
       {createOpen && (
