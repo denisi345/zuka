@@ -190,6 +190,19 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
   const [floatingEmoji, setFloatingEmoji] = useState('');
   const [sentNotice, setSentNotice] = useState('');
   const videoRef = useRef(null);
+  useEffect(() => {
+    if (!isVid) return;
+    let rafId;
+    const syncBar = () => {
+      const v = videoRef.current;
+      if (v && v.duration && Number.isFinite(v.duration) && onVideoProgress) {
+        onVideoProgress(Math.min(100, (v.currentTime / v.duration) * 100));
+      }
+      rafId = requestAnimationFrame(syncBar);
+    };
+    rafId = requestAnimationFrame(syncBar);
+    return () => cancelAnimationFrame(rafId);
+  }, [story?.id, isVid]);
 
   const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(story.media_url || '');
   const isOwner = currentUser?.id && String(story.user_id) === String(currentUser.id);
