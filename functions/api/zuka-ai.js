@@ -1,6 +1,6 @@
 export async function onRequestPost(context) {
   try {
-    const apiKey = (context.env.GEMINI_API_KEY || "").trim();
+    const apiKey = ((context.env.GEMINI_API_KEY || context.env.VITE_GEMINI_API_KEY) || "").trim();
     if (!apiKey) {
       return new Response(JSON.stringify({ reply: "GEMINI_API_KEY is missing in Cloudflare Pages Production Environment Variables." }), {
         headers: { "Content-Type": "application/json" }
@@ -24,7 +24,7 @@ export async function onRequestPost(context) {
       contents.push({ role: "user", parts: [{ text: "Hello ZUKA AI" }] });
     }
 
-    const endpoint = "https://googleapis.com" + apiKey;
+    const endpoint = "https://googleapis.com" + encodeURIComponent(apiKey);
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
