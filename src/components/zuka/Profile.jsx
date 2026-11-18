@@ -133,9 +133,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
                 <button type="button" onClick={() => setEditing(!editing)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                   <Edit3 size={16} /> {editing ? 'Cancel Edit' : 'Edit Profile'}
                 </button>
-                <button type="button" onClick={() => onOpenMessenger && onOpenMessenger(null)} style={{ flex: 1, backgroundColor: '#E4E6EB', color: '#050505', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
-                  <MessageCircle size={16} /> Messenger
-                </button>
+                <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent("zuka:open-story")); }} style={{ flex: 1, backgroundColor: "#1877F2", color: "#FFFFFF", border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer" }}>+ Add to story</button>
               </>
             ) : (
               <>
