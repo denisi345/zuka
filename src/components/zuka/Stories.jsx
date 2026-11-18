@@ -290,7 +290,14 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
         </div>
       )}
 
-      <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <div
+        onContextMenu={(e) => e.preventDefault()}
+        onTouchStart={() => { if (onPauseChange) onPauseChange(true); if (videoRef.current) videoRef.current.pause(); }}
+        onTouchEnd={() => { if (!replyText.trim() && !menuOpen) { if (onPauseChange) onPauseChange(false); if (videoRef.current) videoRef.current.play().catch(() => {}); } }}
+        onMouseDown={() => { if (onPauseChange) onPauseChange(true); if (videoRef.current) videoRef.current.pause(); }}
+        onMouseUp={() => { if (!replyText.trim() && !menuOpen) { if (onPauseChange) onPauseChange(false); if (videoRef.current) videoRef.current.play().catch(() => {}); } }}
+        style={{ position: "relative", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
+      >
         {isVid ? (
           <video
             ref={(el) => {
@@ -315,10 +322,10 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
               if (onVideoProgress) onVideoProgress(100);
               onNext();
             }}
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", WebkitTouchCallout: "none" }}
           />
         ) : (
-          <img src={story.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={story.media_url} alt="" draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", WebkitTouchCallout: "none" }} />
         )}
 
         {activeIndex > 0 && (
