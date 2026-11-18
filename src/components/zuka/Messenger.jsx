@@ -165,10 +165,12 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
             <button type="button" onClick={() => setActivePeer(null)} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', color: '#050505' }}>
               <ArrowLeft size={22} />
             </button>
-            <div style={{ position: 'relative', width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+            <div style={{ position: "relative", width: "38px", height: "38px", flexShrink: 0 }}>
+    <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: "#1877F2", color: "#FFFFFF", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>
               {activePeer.is_ai ? <Sparkles size={19} /> : activePeer.avatar_url ? <img src={activePeer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : peerName.charAt(0).toUpperCase()}
-              <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
-            </div>
+              </div>
+    <span style={{ position: "absolute", bottom: "0px", right: "0px", width: "11px", height: "11px", borderRadius: "50%", backgroundColor: "#31A24C", border: "2px solid #FFFFFF", zIndex: 5 }} />
+  </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{peerName}</span>
@@ -314,10 +316,12 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
           const pName = (p.full_name || p.username || "Friend").split(" ").at(0) || "Friend";
           return (
             <div key={`active-${p.id}`} onClick={() => setActivePeer(p)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '64px', flexShrink: 0, cursor: 'pointer', paddingTop: '12px' }}>
-              <div style={{ position: 'relative', width: '54px', height: '54px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px' }}>
+              <div style={{ position: "relative", width: "54px", height: "54px" }}>
+    <div style={{ width: "54px", height: "54px", borderRadius: "50%", backgroundColor: "#1877F2", color: "#FFFFFF", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "20px" }}>
                 {p.avatar_url ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : pName.charAt(0).toUpperCase()}
-                <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
-              </div>
+                </div>
+    <span style={{ position: "absolute", bottom: "1px", right: "1px", width: "14px", height: "14px", borderRadius: "50%", backgroundColor: "#31A24C", border: "2.5px solid #FFFFFF", zIndex: 5 }} />
+  </div>
               <span style={{ fontSize: '11px', color: '#050505', marginTop: '4px', maxWidth: '62px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pName}</span>
             </div>
           );
@@ -344,10 +348,12 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
           const name = peer.full_name || peer.username || 'ZUKA Member';
           return (
             <div key={peer.id} onClick={() => setActivePeer(peer)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', cursor: 'pointer' }}>
-              <div style={{ position: 'relative', width: '54px', height: '54px', borderRadius: '50%', backgroundColor: '#E4E6EB', color: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px', flexShrink: 0 }}>
+              <div style={{ position: "relative", width: "54px", height: "54px", flexShrink: 0 }}>
+    <div style={{ width: "54px", height: "54px", borderRadius: "50%", backgroundColor: "#E4E6EB", color: "#050505", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "20px" }}>
                 {peer.avatar_url ? <img src={peer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.charAt(0).toUpperCase()}
-                <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
-              </div>
+                </div>
+    <span style={{ position: "absolute", bottom: "1px", right: "1px", width: "14px", height: "14px", borderRadius: "50%", backgroundColor: "#31A24C", border: "2.5px solid #FFFFFF", zIndex: 5 }} />
+  </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
                   <span>{name}</span>
