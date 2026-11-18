@@ -111,10 +111,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
           </div>
         ) : (
           posts.map((post) => (
-            <Post
-              key={post.id}
-              post={post}
-              currentUserId={userProfile?.id}
+            <Post key={post.id} post={post} currentUserId={userProfile?.id} onOpenUserProfile={onOpenUserProfile}
               onOpenUserProfile={onOpenUserProfile}
               onDeletePost={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
             />

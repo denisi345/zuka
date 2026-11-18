@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
 
 export default function Profile({ currentUser, targetProfile, onBack, onOpenMessenger, onProfileUpdated }) {
+  if (!profile) return <div style={{ padding: "24px", textAlign: "center", backgroundColor: "#FFFFFF" }}>Profile not found.</div>;
   const isOwn = !targetProfile || String(targetProfile.id) === String(currentUser?.id);
   const initialData = isOwn ? (currentUser || {}) : targetProfile;
 
