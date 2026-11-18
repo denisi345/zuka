@@ -1,11 +1,11 @@
-import { downloadImageToDevice } from "./downloadMedia";
-import { formatTimeAgo } from "./timeAgo";
-import PhotoViewer from "./PhotoViewer";
 import React, { useState } from 'react';
-import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2 } from 'lucide-react';
+import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2, Edit3, Pin, EyeOff, AlertCircle, UserMinus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
+import PhotoViewer from './PhotoViewer';
 import { sendZukaNotification } from './notifyHelper';
+import { formatTimeAgo } from './timeAgo';
+import { toggleSavePost } from './savedHelper';
 
 export default function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
   const storageKey = `zuka_liked_${post.id}`;
@@ -14,15 +14,23 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
-  const [sharedBanner, setSharedBanner] = useState('');
+  const [toastMsg, setToastMsg] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [followed, setFollowed] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState(false);
+  const [contentText, setContentText] = useState(post.content || '');
+  const [pinned, setPinned] = useState(false);
 
   const isLiveOrDemo = String(post.id).startsWith('live-') || String(post.id).startsWith('funny-') || String(post.id).startsWith('temp-');
   const authorName = post.author_name || 'ZUKA Member';
   const isOwner = currentUserId && String(post.user_id) === String(currentUserId);
   const isVideo = post.media_type === 'video' || /\.(mp4|webm|mov|m4v)(\?|$)/i.test(post.image_url || '');
+
+  function showToast(msg) {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 2400);
+  }
 
   function handleLike() {
     const nextLiked = !liked;
@@ -36,7 +44,6 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
       if (nextLiked) sendZukaNotification({ receiverId: post.user_id, senderId: currentUserId, type: 'like', message: 'Someone liked your post on ZUKA.' });
     }
   }
-
   async function handleToggleComments() {
     const next = !commentsOpen;
     setCommentsOpen(next);
@@ -63,13 +70,21 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   }
 
   async function handleShare() {
-    const shareText = `${authorName}: ${post.content || ''}`.slice(0, 200);
+    const shareText = `${authorName}: ${contentText}`.slice(0, 200);
     if (navigator.share) {
       try { await navigator.share({ title: 'ZUKA', text: shareText, url: window.location.href }); return; } catch (_) {}
     }
     try { await navigator.clipboard.writeText(`${shareText}\n${window.location.href}`); } catch (_) {}
-    setSharedBanner('Link copied!');
-    setTimeout(() => setSharedBanner(''), 2200);
+    showToast('Link copied');
+  }
+
+  async function handleSaveEditedPost(e) {
+    e.preventDefault();
+    setEditingPost(false);
+    showToast('Post updated');
+    if (!isLiveOrDemo) {
+      try { await supabase.from('posts').update({ content: contentText }).eq('id', post.id); } catch (_) {}
+    }
   }
 
   async function handleDelete() {
@@ -79,9 +94,21 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
     }
     if (onDeletePost) onDeletePost(post.id);
   }
+
   return (
     <article style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', marginTop: '8px', position: 'relative' }}>
-      {sharedBanner && <div style={{ position: "fixed", top: "112px", left: "50%", transform: "translateX(-50%)", zIndex: 90, backgroundColor: "#1877F2", color: "#FFFFFF", padding: "9px 18px", borderRadius: "22px", fontSize: "13px", fontWeight: 700, boxShadow: "0 4px 12px rgba(0,0,0,0.25)", whiteSpace: "nowrap" }}>{sharedBanner}</div>}
+      {toastMsg && (
+        <div style={{ position: 'fixed', top: '112px', left: '50%', transform: 'translateX(-50%)', zIndex: 90, backgroundColor: '#1877F2', color: '#FFFFFF', padding: '9px 18px', borderRadius: '22px', fontSize: '13px', fontWeight: 700, boxShadow: '0 4px 12px rgba(0,0,0,0.25)', whiteSpace: 'nowrap' }}>
+          {toastMsg}
+        </div>
+      )}
+
+      {pinned && (
+        <div style={{ padding: '6px 12px 0', fontSize: '12px', fontWeight: 700, color: '#65676B', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Pin size={13} color="#1877F2" /> Pinned post
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 12px 6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
           <div
@@ -115,19 +142,28 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
           </button>
         </div>
       </div>
-
-      {post.content && <div style={{ padding: '4px 12px 10px', fontSize: '15px', color: '#050505', lineHeight: '1.4', whiteSpace: 'pre-line' }}>{post.content}</div>}
+      {editingPost ? (
+        <form onSubmit={handleSaveEditedPost} style={{ padding: '6px 12px 10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <textarea rows={3} value={contentText} onChange={(e) => setContentText(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px', boxSizing: 'border-box' }} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <button type="button" onClick={() => setEditingPost(false)} style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#E4E6EB', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            <button type="submit" style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#1877F2', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Save</button>
+          </div>
+        </form>
+      ) : (
+        contentText && <div style={{ padding: '4px 12px 10px', fontSize: '15px', color: '#050505', lineHeight: '1.4', whiteSpace: 'pre-line' }}>{contentText}</div>
+      )}
 
       {post.image_url && (
         isVideo
           ? <video src={post.image_url} autoPlay loop muted playsInline controls style={{ width: '100%', maxHeight: '420px', backgroundColor: '#000000', display: 'block' }} />
-          : <img src={post.image_url} alt="" style={{ width: '100%', maxHeight: '460px', objectFit: 'cover', display: 'block' }} />
+          : <img src={post.image_url} alt="" onClick={() => setPhotoOpen(true)} style={{ width: '100%', maxHeight: '460px', objectFit: 'cover', display: 'block', cursor: 'pointer' }} />
       )}
 
-      {(likesCount > 0 || comments.length > 0 || sharedBanner) && (
+      {(likesCount > 0 || comments.length > 0) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: '13px', color: '#65676B', borderBottom: '1px solid #E4E6EB' }}>
           <span>{likesCount > 0 ? `👍 ${likesCount}` : ''}</span>
-          <span>{sharedBanner || (comments.length > 0 ? `${comments.length} Comments` : '')}</span>
+          <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
         </div>
       )}
 
@@ -160,25 +196,51 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
       )}
 
       {menuOpen && (
-        <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '680px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button type="button" onClick={() => { setMenuOpen(false); downloadImageToDevice(post.image_url, (msg) => { setSharedBanner(msg); setTimeout(() => setSharedBanner(""), 3000); }); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>
-              <Bookmark size={18} /> Save post
-            </button>
-            <button type="button" onClick={() => { setMenuOpen(false); handleShare(); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>
-              <Link2 size={18} /> Copy link
+        <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 65, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '680px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '10px 14px 20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ width: '40px', height: '4px', backgroundColor: '#CED0D4', borderRadius: '2px', margin: '0 auto 6px' }} />
+            <button type="button" onClick={() => { setMenuOpen(false); toggleSavePost({ ...post, content: contentText }); showToast('Saved successfully'); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
+              <Bookmark size={20} /> Save post
             </button>
             {isOwner && (
-              <button type="button" onClick={handleDelete} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#FFEBEE', color: '#D32F2F', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                <Trash2 size={18} /> Move to trash (Delete post)
+              <>
+                <button type="button" onClick={() => { setMenuOpen(false); setPinned(!pinned); showToast(!pinned ? 'Pinned to profile' : 'Unpinned'); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
+                  <Pin size={20} /> {pinned ? 'Unpin post' : 'Pin post'}
+                </button>
+                <button type="button" onClick={() => { setMenuOpen(false); setEditingPost(true); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
+                  <Edit3 size={20} /> Edit post
+                </button>
+              </>
+            )}
+            {!isOwner && (
+              <>
+                <button type="button" onClick={() => { setMenuOpen(false); if (onDeletePost) onDeletePost(post.id); showToast('Post hidden'); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
+                  <EyeOff size={20} /> Hide post
+                </button>
+                <button type="button" onClick={() => { setMenuOpen(false); setFollowed(false); showToast(`Unfollowed ${authorName}`); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
+                  <UserMinus size={20} /> Unfollow {authorName}
+                </button>
+              </>
+            )}
+            <button type="button" onClick={() => { setMenuOpen(false); handleShare(); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
+              <Link2 size={20} /> Copy link
+            </button>
+            {isOwner ? (
+              <button type="button" onClick={handleDelete} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#FFEBEE', color: '#D32F2F', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', textAlign: 'left' }}>
+                <Trash2 size={20} /> Move to trash
+              </button>
+            ) : (
+              <button type="button" onClick={() => { setMenuOpen(false); showToast('Post reported'); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#FFEBEE', color: '#D32F2F', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', textAlign: 'left' }}>
+                <AlertCircle size={20} /> Report post
               </button>
             )}
           </div>
         </div>
       )}
+
       {photoOpen && (
         <PhotoViewer
-          post={post}
+          post={{ ...post, content: contentText }}
           liked={liked}
           likesCount={likesCount}
           commentsCount={comments.length}
