@@ -1,3 +1,4 @@
+import ProfileTimeline from "./ProfileTimeline";
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Edit3, MessageCircle, ArrowLeft, Check, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -167,6 +168,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
           </button>
         </form>
       )}
+      <ProfileTimeline profile={profile} isOwnProfile={isOwnProfile} />
     </div>
   );
 }
