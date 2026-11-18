@@ -186,6 +186,7 @@ export default function Stories({ userProfile }) {
 function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory, onPauseChange, onVideoProgress }) {
   const [replyText, setReplyText] = useState("");
   const [vidProgress, setVidProgress] = useState(0);
+  const isVid = /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(story.media_url || "") || String(story.media_url || "").includes("video");
   const [muted, setMuted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [floatingEmoji, setFloatingEmoji] = useState('');
@@ -204,8 +205,6 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
     rafId = requestAnimationFrame(syncBar);
     return () => cancelAnimationFrame(rafId);
   }, [story?.id, isVid]);
-
-  const isVid = /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(story.media_url || "") || String(story.media_url || "").includes("video");
   const isOwner = currentUser?.id && String(story.user_id) === String(currentUser.id);
   const authorName = story.author_name || 'ZUKA Member';
 
