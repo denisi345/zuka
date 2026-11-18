@@ -23,7 +23,8 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
     { label: 'Messenger', desc: 'Chat with friends', icon: <MessageCircle size={22} color="#A033FF" />, action: () => { onNavigateTab('messenger'); onClose(); } },
     { label: 'ZUKA AI', desc: 'Ask anything instantly', icon: <Sparkles size={22} color="#42B72A" />, action: () => { if (onOpenAI) onOpenAI(); else onNavigateTab('messenger'); onClose(); } },
     { label: 'Feeds', desc: 'Latest posts & news', icon: <Newspaper size={22} color="#F7B928" />, action: () => { onNavigateTab('feed'); onClose(); } },
-    { label: "Saved", desc: "Saved posts & photos", icon: <Bookmark size={22} color="#A033FF" />, action: () => { onNavigateTab("saved"); onClose(); } }
+    { label: "Saved", desc: "Saved posts & photos", icon: <Bookmark size={22} color="#A033FF" />, action: () => { onNavigateTab("saved"); onClose(); } },
+    { label: "Groups", desc: "Connect with communities", icon: <Users size={22} color="#1877F2" />, action: () => { onNavigateTab("groups"); onClose(); } }
   ];
 
   return (
