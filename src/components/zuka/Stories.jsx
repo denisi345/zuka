@@ -1,29 +1,58 @@
-import { formatTimeAgo } from "./timeAgo";
-import React, { useRef, useState, useEffect } from 'react';
-import { Plus, X, Trash2, Volume2, VolumeX } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Plus, X, Trash2, MoreVertical, ChevronLeft, ChevronRight, Volume2, VolumeX, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-export default function Stories({ userProfile, stories = [], onUploadStory, onDeleteStory, onPauseChange }) {
-  const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
+function formatStoryTime(ts) {
+  if (!ts) return 'Just now';
+  const diff = Math.max(1, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return '1d';
+}
+
+export default function Stories({ userProfile }) {
+  const [stories, setStories] = useState([]);
   const [activeIndex, setActiveIndex] = useState(null);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  useEffect(() => { const h = () => fileRef.current?.click(); window.addEventListener("zuka:open-story", h); return () => window.removeEventListener("zuka:open-story", h); }, []);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
-  async function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file || !onUploadStory) return;
-    setUploading(true);
-    try { await onUploadStory(file); } catch (_) {}
-    setUploading(false);
+  useEffect(() => {
+    loadStories();
+  }, []);
+
+  async function loadStories() {
+    let profMap = {};
+    try {
+      const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url');
+      if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
+    } catch (_) {}
+
+    try {
+      const { data } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(30);
+      if (Array.isArray(data)) {
+        const mapped = data.map((s) => {
+          const owner = s.user_id ? profMap[String(s.user_id)] : null;
+          return {
+            ...s,
+            author_name: owner?.full_name || owner?.username || s.author_name || 'ZUKA Member',
+            avatar_url: owner?.avatar_url || s.avatar_url || ''
+          };
+        });
+        setStories(mapped);
+      }
+    } catch (_) {}
   }
 
   useEffect(() => {
     if (activeIndex === null || isPaused) return;
-    const cur = stories[activeIndex];
-    if (cur && /\.(mp4|webm|mov)(\?|$)/i.test(cur.media_url || "")) return;
+    const current = stories[activeIndex];
+    if (!current) return;
+    const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(current.media_url || '');
+    if (isVideo) return;
+
     setProgress(0);
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -39,42 +68,92 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [activeIndex, stories.length, isPaused]);
+  }, [activeIndex, isPaused, stories]);
+
+  async function handleFileSelect(e) {
+    const file = e.target.files?.at(0) || null;
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    let mediaUrl = URL.createObjectURL(file);
+    try {
+      const clean = (file.name || 'story').replace(/[^a-zA-Z0-9._-]/g, '');
+      const path = `stories/${Date.now()}_${clean}`;
+      for (const bucket of ['media', 'stories', 'posts', 'public']) {
+        const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
+        if (!error) {
+          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+          if (pub?.publicUrl) {
+            mediaUrl = pub.publicUrl;
+            break;
+          }
+        }
+      }
+      const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
+      const payload = { media_url: mediaUrl, author_name: authorName };
+      if (userProfile?.id) payload.user_id = userProfile.id;
+      const { data: inserted } = await supabase.from('stories').insert(payload).select().single();
+      const created = inserted
+        ? { ...inserted, author_name: authorName, avatar_url: userProfile?.avatar_url || '' }
+        : { id: `st-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, avatar_url: userProfile?.avatar_url || '', media_url: mediaUrl, created_at: new Date().toISOString() };
+      setStories((prev) => [created, ...prev]);
+    } catch (_) {}
+    setUploading(false);
+  }
+
+  async function handleDeleteStory(storyId) {
+    setActiveIndex(null);
+    setStories((prev) => prev.filter((s) => s.id !== storyId));
+    if (storyId && !String(storyId).startsWith('st-')) {
+      try { await supabase.from('stories').delete().eq('id', storyId); } catch (_) {}
+    }
+  }
+  const groupedCount = {};
+  stories.forEach((s) => {
+    const k = String(s.user_id || s.author_name || s.id);
+    groupedCount[k] = (groupedCount[k] || 0) + 1;
+  });
 
   const activeStory = activeIndex !== null ? stories[activeIndex] : null;
-  const myInitial = (userProfile?.full_name || userProfile?.username || 'Z').charAt(0).toUpperCase();
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '10px 8px', marginTop: '8px' }}>
-      <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleFileChange} style={{ display: 'none' }} />
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        <div
-          onClick={() => !uploading && fileRef.current?.click()}
-          style={{ width: '108px', height: '186px', borderRadius: '12px', border: '1px solid #E4E6EB', overflow: 'hidden', flexShrink: 0, display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', cursor: 'pointer', position: 'relative' }}
-        >
-          <div style={{ height: '124px', backgroundColor: '#E4E6EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 800, color: '#65676B', overflow: 'hidden' }}>
-            {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : myInitial}
+    <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '10px 0 10px 10px' }}>
+      <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingRight: '10px' }}>
+        <div onClick={() => fileInputRef.current?.click()} style={{ width: '104px', height: '176px', borderRadius: '12px', border: '1px solid #CED0D4', backgroundColor: '#F0F2F5', flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', position: 'relative' }}>
+          <div style={{ height: '116px', backgroundColor: '#E4E6EB', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {userProfile?.avatar_url ? (
+              <img src={userProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: '32px', fontWeight: 800, color: '#1877F2' }}>{(userProfile?.full_name || 'M').charAt(0).toUpperCase()}</span>
+            )}
           </div>
-          <div style={{ width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1877F2', border: '3px solid #FFFFFF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '-17px auto 0', zIndex: 2 }}>
-            <Plus size={20} />
+          <div style={{ position: 'absolute', top: '98px', left: '50%', transform: 'translateX(-50%)', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1877F2', border: '3px solid #FFFFFF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Plus size={20} strokeWidth={3} />
           </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, color: '#050505', padding: '0 4px', textAlign: 'center' }}>
-            {uploading ? 'Posting...' : 'Create story'}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '8px', fontSize: '12px', fontWeight: 700, color: '#050505', backgroundColor: '#FFFFFF' }}>
+            {uploading ? 'Uploading...' : 'Create story'}
           </div>
         </div>
+
         {stories.map((st, idx) => {
-          const name = st.author_name || 'Member';
-          const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(st.media_url || '');
+          const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(st.media_url || '');
+          const name = st.author_name || 'ZUKA Member';
+          const count = groupedCount[String(st.user_id || st.author_name || st.id)] || 1;
           return (
-            <div
-              key={st.id || idx}
-              onClick={() => setActiveIndex(idx)}
-              style={{ width: '108px', height: '186px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, position: 'relative', backgroundColor: '#1C1E21', cursor: 'pointer', border: '1px solid #E4E6EB' }}
-            >
-              {isVid ? <video src={st.media_url} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <img src={st.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '34px', height: '34px', borderRadius: '50%', border: '3px solid #1877F2', backgroundColor: '#1877F2', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px' }}>
-                {name.charAt(0).toUpperCase()}
+            <div key={st.id} onClick={() => { setProgress(0); setActiveIndex(idx); }} style={{ width: '104px', height: '176px', borderRadius: '12px', backgroundColor: '#18191A', flexShrink: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+              {isVideo ? (
+                <video src={st.media_url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <img src={st.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent 55%)' }} />
+              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '34px', height: '34px', borderRadius: '50%', border: '3px solid #1877F2', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px' }}>
+                {st.avatar_url ? <img src={st.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.charAt(0).toUpperCase()}
               </div>
+              {count > 1 && (
+                <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#1877F2', color: '#FFFFFF', fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '6px' }}>{count}</span>
+              )}
               <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', color: '#FFFFFF', fontSize: '12px', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {name}
               </div>
@@ -82,94 +161,207 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
           );
         })}
       </div>
-      {activeStory && <StoryFullScreen story={activeStory} stories={stories} activeIndex={activeIndex} progress={progress} currentUser={userProfile} onClose={() => setActiveIndex(null)} onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))} onNext={() => setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null))} onDeleteStory={onDeleteStory} onPauseChange={setIsPaused} onVideoProgress={setProgress} />}
+
+      {activeStory && (
+        <FacebookStoryViewer
+          story={activeStory}
+          stories={stories}
+          activeIndex={activeIndex}
+          progress={progress}
+          currentUser={userProfile}
+          onClose={() => { setIsPaused(false); setActiveIndex(null); }}
+          onPrev={() => { setProgress(0); setActiveIndex((i) => Math.max(0, i - 1)); }}
+          onNext={() => {
+            setProgress(0);
+            setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null));
+          }}
+          onDeleteStory={handleDeleteStory}
+          onPauseChange={setIsPaused}
+          onVideoProgress={setProgress}
+        />
+      )}
     </div>
   );
 }
-function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory , onVideoProgress}) {
-  const [replyText, setReplyText] = useState("");
-  const [storyMuted, setStoryMuted] = useState(false);
-  const storyVideoRef = React.useRef(null);
+function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory, onPauseChange, onVideoProgress }) {
+  const [replyText, setReplyText] = useState('');
+  const [muted, setMuted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [floatingEmoji, setFloatingEmoji] = useState('');
   const [sentNotice, setSentNotice] = useState('');
+  const videoRef = useRef(null);
+
   const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(story.media_url || '');
   const isOwner = currentUser?.id && String(story.user_id) === String(currentUser.id);
   const authorName = story.author_name || 'ZUKA Member';
 
   async function sendStoryReply(textToSend) {
-    if (!textToSend) return;
+    const clean = String(textToSend || '').trim();
+    if (!clean) return;
     setSentNotice('Sent to Messenger!');
-    setTimeout(() => setSentNotice(''), 1800);
-    if (currentUser?.id && story.user_id && String(currentUser.id) !== String(story.user_id)) {
+    setTimeout(() => setSentNotice(''), 2000);
+    const targetId = story.user_id || currentUser?.id;
+    const formatted = `Replied to your story: ${clean}`;
+    if (currentUser?.id && targetId) {
       try {
         await supabase.from('messages').insert({
           sender_id: currentUser.id,
-          receiver_id: story.user_id,
-          content: `Replied to your story: ${textToSend}`
+          receiver_id: targetId,
+          content: formatted
         });
       } catch (_) {}
     }
+    try {
+      const raw = localStorage.getItem('zuka_story_replies') || '[]';
+      const arr = JSON.parse(raw);
+      arr.unshift({
+        id: `sr-${Date.now()}`,
+        peer_id: targetId,
+        peer_name: authorName,
+        peer_avatar: story.avatar_url || '',
+        content: formatted,
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('zuka_story_replies', JSON.stringify(arr.slice(0, 30)));
+      window.dispatchEvent(new CustomEvent('zuka:story-reply'));
+    } catch (_) {}
   }
 
+  function handleSendForm(e) {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+    sendStoryReply(replyText);
+    setReplyText('');
+    if (onPauseChange) onPauseChange(false);
+  }
+
+  function handleReaction(emoji) {
+    setFloatingEmoji(emoji);
+    setTimeout(() => setFloatingEmoji(''), 1100);
+    sendStoryReply(emoji);
+  }
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: '#000000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <div style={{ position: 'relative', zIndex: 10, padding: '10px 12px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 85, backgroundColor: '#000000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ padding: '10px 10px 0', zIndex: 10 }}>
         <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-          {stories.map((_, i) => (
-            <div key={i} style={{ flex: 1, height: '3px', backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', backgroundColor: '#FFFFFF', width: i < activeIndex ? '100%' : i === activeIndex ? `${progress}%` : '0%' }} />
+          {stories.map((s, idx) => (
+            <div key={s.id} style={{ flex: 1, height: '2.5px', backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', backgroundColor: '#FFFFFF', width: idx < activeIndex ? '100%' : idx === activeIndex ? `${progress}%` : '0%' }} />
             </div>
           ))}
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#FFFFFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1877F2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-              {authorName.charAt(0).toUpperCase()}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1877F2', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }}>
+              {story.avatar_url ? <img src={story.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '14px' }}>{authorName}</div>
-              <div style={{ fontSize: '11px', opacity: 0.8 }}>{formatTimeAgo(typeof story !== "undefined" ? story?.created_at : typeof n !== "undefined" ? n?.created_at : null)}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{authorName}</div>
+              <div style={{ fontSize: '11px', color: '#E4E6EB' }}>{formatStoryTime(story.created_at)}</div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {isOwner && (
-              <button type="button" onClick={async () => { if (story.id && !String(story.id).startsWith('st-')) { try { await supabase.from('stories').delete().eq('id', story.id); } catch (_) {} } if (onDeleteStory) onDeleteStory(story.id); onClose(); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
-                <Trash2 size={20} />
-              </button>
-            )}
-            {isVid && (
-              <button type="button" onClick={(e) => { e.stopPropagation(); const next = !storyMuted; setStoryMuted(next); if (storyVideoRef.current) { storyVideoRef.current.muted = next; if (!next) storyVideoRef.current.play().catch(() => {}); } }} style={{ background: "none", border: "none", color: "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                {storyMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
-              </button>
-            )}
-            <button type="button" onClick={() => { if (onPauseChange) onPauseChange(false); onClose(); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
-              <X size={26} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button type="button" onClick={() => { const next = !menuOpen; setMenuOpen(next); if (onPauseChange) onPauseChange(next); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', display: 'flex', padding: '4px' }}>
+              <MoreVertical size={22} />
+            </button>
+            <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', display: 'flex', padding: '4px' }}>
+              <X size={24} />
             </button>
           </div>
         </div>
       </div>
 
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {isVid ? <video src={story.media_url} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <img src={story.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}
-        <div onClick={onPrev} style={{ position: 'absolute', left: 0, top: '70px', bottom: '80px', width: '32%', zIndex: 5 }} />
-        <div onClick={onNext} style={{ position: 'absolute', right: 0, top: '70px', bottom: '80px', width: '68%', zIndex: 5 }} />
+      {menuOpen && (
+        <div onClick={() => { setMenuOpen(false); if (onPauseChange) onPauseChange(false); }} style={{ position: 'fixed', inset: 0, zIndex: 30, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '58px 14px 0' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#242526', color: '#FFFFFF', borderRadius: '10px', width: '190px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
+            {isVid && (
+              <button type="button" onClick={() => { const next = !muted; setMuted(next); if (videoRef.current) videoRef.current.muted = next; setMenuOpen(false); if (onPauseChange) onPauseChange(false); }} style={{ width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: '#FFFFFF', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                {muted ? <Volume2 size={18} /> : <VolumeX size={18} />} {muted ? 'Unmute video' : 'Mute video'}
+              </button>
+            )}
+            {isOwner && (
+              <button type="button" onClick={() => onDeleteStory(story.id)} style={{ width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: '#F3425F', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Trash2 size={18} /> Delete story
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        {isVid ? (
+          <video
+            ref={(el) => {
+              videoRef.current = el;
+              if (el) {
+                el.muted = muted;
+                el.play().catch(() => {
+                  el.muted = true;
+                  setMuted(true);
+                  el.play().catch(() => {});
+                });
+              }
+            }}
+            src={story.media_url}
+            autoPlay
+            playsInline
+            onTimeUpdate={(e) => {
+              const v = e.currentTarget;
+              if (v.duration && onVideoProgress) onVideoProgress(Math.min(100, (v.currentTime / v.duration) * 100));
+            }}
+            onEnded={() => {
+              if (onVideoProgress) onVideoProgress(100);
+              onNext();
+            }}
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        ) : (
+          <img src={story.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        )}
+
+        {activeIndex > 0 && (
+          <button type="button" onClick={onPrev} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.4)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <ChevronLeft size={20} />
+          </button>
+        )}
+        <button type="button" onClick={onNext} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.4)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <ChevronRight size={20} />
+        </button>
+
+        {floatingEmoji && (
+          <div style={{ position: 'absolute', fontSize: '68px', pointerEvents: 'none' }}>{floatingEmoji}</div>
+        )}
+        {sentNotice && (
+          <div style={{ position: 'absolute', bottom: '18px', backgroundColor: '#1877F2', color: '#FFFFFF', padding: '6px 14px', borderRadius: '18px', fontSize: '12px', fontWeight: 700 }}>{sentNotice}</div>
+        )}
       </div>
 
-      {floatingEmoji && <div style={{ position: 'relative', zIndex: 20, textAlign: 'center', fontSize: '58px', pointerEvents: 'none' }}>{floatingEmoji}</div>}
-      {sentNotice && <div style={{ position: 'relative', zIndex: 20, alignSelf: 'center', backgroundColor: '#1877F2', color: '#FFFFFF', padding: '6px 14px', borderRadius: '16px', fontSize: '12px', fontWeight: 700 }}>{sentNotice}</div>}
-
-      <div style={{ position: 'relative', zIndex: 15, padding: '10px 12px 16px', background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-          {['👍', '❤️', '😂', '😮', '😢', '😡'].map((em) => (
-            <button key={em} type="button" onClick={() => { setFloatingEmoji(em); setTimeout(() => setFloatingEmoji(''), 1200); sendStoryReply(em); }} style={{ background: 'none', border: 'none', fontSize: '26px', cursor: 'pointer', padding: '2px' }}>
+      <div style={{ padding: '8px 10px 14px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}>
+        <form onSubmit={handleSendForm} style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid rgba(255,255,255,0.55)', borderRadius: '22px', padding: '4px 10px', backgroundColor: 'rgba(0,0,0,0.35)' }}>
+          <input
+            type="text"
+            value={replyText}
+            onFocus={() => { if (onPauseChange) onPauseChange(true); }}
+            onBlur={() => { if (!replyText.trim() && onPauseChange) onPauseChange(false); }}
+            onChange={(e) => { setReplyText(e.target.value); if (onPauseChange) onPauseChange(true); }}
+            placeholder="Send message..."
+            style={{ flex: 1, background: 'none', border: 'none', color: '#FFFFFF', fontSize: '14px', outline: 'none', padding: '4px 0' }}
+          />
+          {replyText.trim() && (
+            <button type="submit" style={{ background: 'none', border: 'none', color: '#1877F2', cursor: 'pointer', display: 'flex', padding: '2px' }}>
+              <Send size={18} />
+            </button>
+          )}
+        </form>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          {['❤️', '👍', '😂', '😮', '😢'].map((em) => (
+            <button key={em} type="button" onClick={() => handleReaction(em)} style={{ background: 'none', border: 'none', fontSize: '23px', padding: 0, cursor: 'pointer', lineHeight: 1 }}>
               {em}
             </button>
           ))}
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); const t = replyText.trim(); if (t) { setReplyText(''); sendStoryReply(t); } }} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." onFocus={() => onPauseChange && onPauseChange(true)} onBlur={() => onPauseChange && onPauseChange(false)} style={{ flex: 1, padding: '10px 16px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.55)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFFFFF', fontSize: '14px', outline: 'none' }} />
-          <button type="submit" style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '20px', padding: '9px 14px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Send</button>
-        </form>
       </div>
     </div>
   );
