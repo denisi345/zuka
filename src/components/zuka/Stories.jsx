@@ -50,7 +50,7 @@ export default function Stories({ userProfile }) {
     if (activeIndex === null || isPaused) return;
     const current = stories[activeIndex];
     if (!current) return;
-    const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(current.media_url || '');
+    const isVideo = /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(current.media_url || "") || String(current.media_url || "").includes("video");
     if (isVideo) return;
 
     setProgress(0);
@@ -184,7 +184,8 @@ export default function Stories({ userProfile }) {
   );
 }
 function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory, onPauseChange, onVideoProgress }) {
-  const [replyText, setReplyText] = useState('');
+  const [replyText, setReplyText] = useState("");
+  const [vidProgress, setVidProgress] = useState(0);
   const [muted, setMuted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [floatingEmoji, setFloatingEmoji] = useState('');
@@ -196,7 +197,7 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
     const syncBar = () => {
       const v = videoRef.current;
       if (v && v.duration && Number.isFinite(v.duration) && onVideoProgress) {
-        onVideoProgress(Math.min(100, (v.currentTime / v.duration) * 100));
+        { const pct = Math.min(100, (v.currentTime / v.duration) * 100); setVidProgress(pct); if (onVideoProgress) onVideoProgress(pct); }
       }
       rafId = requestAnimationFrame(syncBar);
     };
@@ -204,7 +205,7 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
     return () => cancelAnimationFrame(rafId);
   }, [story?.id, isVid]);
 
-  const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(story.media_url || '');
+  const isVid = /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(story.media_url || "") || String(story.media_url || "").includes("video");
   const isOwner = currentUser?.id && String(story.user_id) === String(currentUser.id);
   const authorName = story.author_name || 'ZUKA Member';
 
@@ -259,7 +260,7 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
         <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
           {stories.map((s, idx) => (
             <div key={s.id} style={{ flex: 1, height: '2.5px', backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', backgroundColor: '#FFFFFF', width: idx < activeIndex ? '100%' : idx === activeIndex ? `${progress}%` : '0%' }} />
+              <div style={{ height: '100%', backgroundColor: '#FFFFFF', width: idx < activeIndex ? '100%' : idx === activeIndex ? `${isVid ? vidProgress : progress}%` : "0%" }} />
             </div>
           ))}
         </div>
@@ -329,12 +330,9 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
             playsInline
             onTimeUpdate={(e) => {
               const v = e.currentTarget;
-              if (v.duration && onVideoProgress) onVideoProgress(Math.min(100, (v.currentTime / v.duration) * 100));
+              if (v.duration && onVideoProgress) { const pct = Math.min(100, (v.currentTime / v.duration) * 100); setVidProgress(pct); if (onVideoProgress) onVideoProgress(pct); }
             }}
-            onEnded={() => {
-              if (onVideoProgress) onVideoProgress(100);
-              onNext();
-            }}
+            onEnded={() => { setVidProgress(100); if (onVideoProgress) onVideoProgress(100); setTimeout(() => onNext(), 120); }}
             draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", WebkitTouchCallout: "none" }}
           />
         ) : (
