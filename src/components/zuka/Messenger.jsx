@@ -130,13 +130,46 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
   }
 
   async function handleImagePick(e) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
+    const file = e.target.files?.at(0) || null;
+    e.target.value = "";
     if (!file || !activePeer) return;
+    if (activePeer.is_ai) {
+      const previewUrl = URL.createObjectURL(file);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const result = String(reader.result || "");
+        const base64 = result.split(",").at(1) || "";
+        const userMsg = {
+          id: "u-" + Date.now(),
+          sender_id: currentUser?.id || "me",
+          content: "[photo]" + previewUrl,
+          imageBase64: base64,
+          imageMime: file.type || "image/jpeg",
+          created_at: new Date().toISOString()
+        };
+        const nextHistory = [...aiHistory, userMsg];
+        setAiHistory(nextHistory);
+        setAiTyping(true);
+        try {
+          const res = await fetch("/api/zuka-ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: nextHistory })
+          });
+          const data = await res.json();
+          setAiHistory((prev) => [...prev, { id: "ai-" + Date.now(), sender_id: "zuka-ai", content: data.reply || "No response.", created_at: new Date().toISOString() }]);
+        } catch (_) {
+          setAiHistory((prev) => [...prev, { id: "ai-" + Date.now(), sender_id: "zuka-ai", content: "Could not analyze image right now.", created_at: new Date().toISOString() }]);
+        }
+        setAiTyping(false);
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
     let url = URL.createObjectURL(file);
-    const clean = (file.name || 'chat.jpg').replace(/[^a-zA-Z0-9._-]/g, '');
+    const clean = (file.name || "chat.jpg").replace(/[^a-zA-Z0-9._-]/g, "");
     const path = `chat/${Date.now()}_${clean}`;
-    for (const bucket of ['media', 'posts', 'public']) {
+    for (const bucket of ["media", "posts", "public"]) {
       const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
       if (!error) {
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);

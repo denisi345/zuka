@@ -8,10 +8,18 @@ export async function onRequestPost(context) {
     }
     const body = await context.request.json();
     const rawHistory = Array.isArray(body.messages) ? body.messages.filter((m) => m.id !== "ai-welcome").slice(-10) : [];
-    const contents = rawHistory.map((m) => ({
-      role: m.sender_id === "zuka-ai" ? "model" : "user",
-      parts: [{ text: String(m.content || "") }]
-    }));
+    const contents = rawHistory.map((m) => {
+      const parts = [];
+      if (m.imageBase64 && m.imageMime) {
+        parts.push({ inlineData: { mimeType: m.imageMime, data: m.imageBase64 } });
+      }
+      const txt = String(m.content || "").replace(/^\[photo\].*$/, "").trim();
+      parts.push({ text: txt || "Please analyze this image in detail." });
+      return {
+        role: m.sender_id === "zuka-ai" ? "model" : "user",
+        parts
+      };
+    });
     if (contents.length === 0) {
       contents.push({ role: "user", parts: [{ text: "Hello ZUKA AI" }] });
     }
@@ -22,7 +30,7 @@ export async function onRequestPost(context) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         systemInstruction: {
-          parts: [{ text: "You are ZUKA AI, a brilliant, helpful, and deeply knowledgeable AI assistant built inside the ZUKA social app. Give thorough, clear, well-structured, and intelligent answers in whatever language the user speaks (English, Swahili, etc.)." }]
+          parts: [{ text: "You are ZUKA AI, a brilliant, helpful, and deeply knowledgeable multimodal AI assistant built inside the ZUKA social app. Analyze images and text thoroughly, clearly, and intelligently in whatever language the user speaks (English, Swahili, etc.)." }]
         },
         contents
       })
