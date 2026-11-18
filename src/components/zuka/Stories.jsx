@@ -1,3 +1,4 @@
+import { formatTimeAgo } from "./timeAgo";
 import React, { useRef, useState, useEffect } from 'react';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,7 +123,7 @@ function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, o
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '14px' }}>{authorName}</div>
-              <div style={{ fontSize: '11px', opacity: 0.8 }}>Just now</div>
+              <div style={{ fontSize: '11px', opacity: 0.8 }}>{formatTimeAgo(typeof story !== "undefined" ? story?.created_at : typeof n !== "undefined" ? n?.created_at : null)}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

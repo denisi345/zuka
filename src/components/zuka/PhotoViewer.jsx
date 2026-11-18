@@ -1,3 +1,4 @@
+import { formatTimeAgo } from "./timeAgo";
 import React, { useState } from 'react';
 import { X, MoreVertical, ThumbsUp, MessageCircle, Share2, Download, EyeOff, AlertCircle } from 'lucide-react';
 import ZukaBadge from './ZukaBadge';
@@ -58,7 +59,7 @@ export default function PhotoViewer({ post, liked, likesCount, commentsCount, on
           <span>{authorName}</span>
           {post.is_verified && <ZukaBadge size={16} />}
         </div>
-        <div style={{ fontSize: '12px', color: '#B0B3B8', marginBottom: '6px' }}>{post.time_label || 'Just now'} · 🌐</div>
+        <div style={{ fontSize: '12px', color: '#B0B3B8', marginBottom: '6px' }}>{formatTimeAgo(post.created_at, post.time_label)} · 🌐</div>
 
         {text && (
           <div style={{ fontSize: '14px', lineHeight: '1.4', marginBottom: '10px', whiteSpace: 'pre-line' }}>

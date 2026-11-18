@@ -1,3 +1,4 @@
+import { formatTimeAgo } from "./timeAgo";
 import PhotoViewer from "./PhotoViewer";
 import React, { useState } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2 } from 'lucide-react';
@@ -99,7 +100,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
                 </button>
               )}
             </div>
-            <div style={{ fontSize: '12px', color: '#65676B', marginTop: '1px' }}>{post.time_label || 'Just now'} · 🌐</div>
+            <div style={{ fontSize: '12px', color: '#65676B', marginTop: '1px' }}>{formatTimeAgo(post.created_at, post.time_label)} · 🌐</div>
           </div>
         </div>
 

@@ -1,3 +1,4 @@
+import { formatTimeAgo } from "./timeAgo";
 import React, { useEffect, useState } from 'react';
 import { Bell, Heart, MessageCircle, UserPlus, CheckCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,7 +96,7 @@ export default function Notifications({ currentUser, onClearUnread }) {
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '14px', color: '#050505', fontWeight: 600 }}>{n.message || n.content || 'New activity on ZUKA'}</div>
-                <div style={{ fontSize: '12px', color: '#65676B', marginTop: '2px' }}>Just now</div>
+                <div style={{ fontSize: '12px', color: '#65676B', marginTop: '2px' }}>{formatTimeAgo(typeof story !== "undefined" ? story?.created_at : typeof n !== "undefined" ? n?.created_at : null)}</div>
               </div>
             </div>
           ))}
