@@ -86,7 +86,7 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
     </div>
   );
 }
-function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory }) {
+function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory , onVideoProgress}) {
   const [replyText, setReplyText] = useState("");
   const [storyMuted, setStoryMuted] = useState(false);
   const storyVideoRef = React.useRef(null);
