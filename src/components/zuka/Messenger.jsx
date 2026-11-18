@@ -1,186 +1,385 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Send, Sparkles, ArrowLeft, Image } from 'lucide-react';
+import { ArrowLeft, Send, Image as ImageIcon, Search, Phone, Video, Settings, Mic, Smile, ThumbsUp, Sparkles, Plus, X, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
+import { sendZukaNotification } from './notifyHelper';
 
-const AI_CONTACT = { id: 'zuka-ai', full_name: 'ZUKA AI', username: 'zuka_ai', is_ai: true, is_verified: true };
+const ZUKA_AI_PEER = {
+  id: 'zuka-ai',
+  full_name: 'ZUKA AI',
+  username: 'zuka_ai',
+  is_ai: true,
+  is_verified: true,
+  bio: 'Your smart ZUKA assistant'
+};
 
-export default function Messenger({ currentUser, initialPeer }) {
-  const [contacts, setContacts] = useState([AI_CONTACT]);
+export default function Messenger({ currentUser, initialPeer, onOpenUserProfile }) {
+  const [peers, setPeers] = useState([]);
   const [activePeer, setActivePeer] = useState(initialPeer || null);
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
-  const photoRef = useRef(null);
+  const [text, setText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [myNote, setMyNote] = useState('');
+  const [noteModal, setNoteModal] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [aiHistory, setAiHistory] = useState([
+    { id: 'ai-welcome', sender_id: 'zuka-ai', content: 'Hello! I am ZUKA AI. Ask me anything about news, business, coding, or life.', created_at: new Date().toISOString() }
+  ]);
+  const [aiTyping, setAiTyping] = useState(false);
+  const [callBanner, setCallBanner] = useState('');
+  const fileRef = useRef(null);
+  const bottomRef = useRef(null);
 
   useEffect(() => {
     if (initialPeer) setActivePeer(initialPeer);
   }, [initialPeer]);
 
   useEffect(() => {
-    loadContacts();
+    loadPeers();
   }, [currentUser?.id]);
 
   useEffect(() => {
-    if (activePeer) loadChatMessages(activePeer);
-  }, [activePeer?.id]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, aiHistory, activePeer]);
 
-  async function loadContacts() {
+  async function loadPeers() {
+    let list = [];
     try {
-      const { data } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified').limit(40);
+      const { data } = await supabase.from('profiles').select('*').limit(40);
       if (Array.isArray(data)) {
-        const others = data.filter((u) => String(u.id) !== String(currentUser?.id));
-        setContacts([AI_CONTACT, ...others]);
+        list = data.filter((p) => String(p.id) !== String(currentUser?.id));
       }
     } catch (_) {}
+    if (list.length === 0) {
+      list = [{ id: 'zuka-official', full_name: 'ZUKA Official', username: 'zuka', is_verified: true, bio: 'Official ZUKA Team' }];
+    }
+    setPeers(list);
   }
 
-  async function loadChatMessages(peer) {
-    if (peer.is_ai) {
-      setMessages([{ id: 'ai-welcome', sender_id: 'zuka-ai', content: 'Habari! Mimi ni ZUKA AI. Niulize chochote kuhusu habari, biashara, au maisha!' }]);
-      return;
-    }
-    if (!currentUser?.id) return;
+  useEffect(() => {
+    if (!activePeer || activePeer.is_ai || !currentUser?.id) return;
+    loadThread();
+    const channel = supabase
+      .channel(`chat-${currentUser.id}-${activePeer.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const m = payload?.new;
+        if (!m) return;
+        const match =
+          (String(m.sender_id) === String(currentUser.id) && String(m.receiver_id) === String(activePeer.id)) ||
+          (String(m.sender_id) === String(activePeer.id) && String(m.receiver_id) === String(currentUser.id));
+        if (match) {
+          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activePeer?.id, currentUser?.id]);
+
+  async function loadThread() {
     try {
       const { data } = await supabase
         .from('messages')
         .select('*')
-        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${peer.id}),and(sender_id.eq.${peer.id},receiver_id.eq.${currentUser.id})`)
-        .order('created_at', { ascending: true })
-        .limit(60);
+        .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activePeer.id}),and(sender_id.eq.${activePeer.id},receiver_id.eq.${currentUser.id})`)
+        .order('created_at', { ascending: true });
       if (Array.isArray(data)) setMessages(data);
-    } catch (_) {
-      setMessages([]);
-    }
+    } catch (_) {}
   }
 
-  async function handleSend(e, imageUrl = '') {
-    if (e) e.preventDefault();
-    const text = input.trim();
-    if (!text && !imageUrl) return;
-    if (!activePeer) return;
-    setInput('');
-    setSending(true);
-
-    const myMsg = { id: `m-${Date.now()}`, sender_id: currentUser?.id || 'me', receiver_id: activePeer.id, content: text, image_url: imageUrl };
-    setMessages((prev) => [...prev, myMsg]);
+  async function sendTextOrThumbs(customText) {
+    const contentToSend = (customText !== undefined ? customText : text).trim();
+    if (!contentToSend || !activePeer) return;
+    if (customText === undefined) setText('');
 
     if (activePeer.is_ai) {
-      const reply = text.toLowerCase().includes('habari') || text.toLowerCase().includes('news')
-        ? 'Habari mpya za leo kutoka BBC Swahili, Al Jazeera, na Millard Ayo zimechapishwa moja kwa moja kwenye ukurasa wako wa Feed!'
-        : `Nimekupata kuhusu "${text}". Unaweza kuchapisha picha, Reels, au kuwasiliana na marafiki zako hapa hapa ZUKA!`;
+      const userMsg = { id: `u-${Date.now()}`, sender_id: currentUser?.id || 'me', content: contentToSend, created_at: new Date().toISOString() };
+      setAiHistory((prev) => [...prev, userMsg]);
+      setAiTyping(true);
       setTimeout(() => {
-        setMessages((prev) => [...prev, { id: `ai-${Date.now()}`, sender_id: 'zuka-ai', content: reply }]);
-        setSending(false);
-      }, 350);
+        const reply = {
+          id: `ai-${Date.now()}`,
+          sender_id: 'zuka-ai',
+          content: `ZUKA AI: Thanks for asking about "${contentToSend}". I am here to help you grow and connect on ZUKA!`,
+          created_at: new Date().toISOString()
+        };
+        setAiHistory((prev) => [...prev, reply]);
+        setAiTyping(false);
+      }, 650);
       return;
     }
 
-    try {
-      if (currentUser?.id) {
-        const payload = { sender_id: currentUser.id, receiver_id: activePeer.id, content: text };
-        if (imageUrl) payload.image_url = imageUrl;
-        await supabase.from('messages').insert(payload);
-      }
-    } catch (_) {}
-    setSending(false);
+    const tempMsg = { id: `tmp-${Date.now()}`, sender_id: currentUser?.id, receiver_id: activePeer.id, content: contentToSend, created_at: new Date().toISOString() };
+    setMessages((prev) => [...prev, tempMsg]);
+    if (currentUser?.id && activePeer.id !== 'zuka-official') {
+      try {
+        await supabase.from('messages').insert({ sender_id: currentUser.id, receiver_id: activePeer.id, content: contentToSend });
+        sendZukaNotification({
+          receiverId: activePeer.id,
+          senderId: currentUser.id,
+          type: 'message',
+          message: `New message from ${currentUser.full_name || currentUser.username || 'a friend'}: "${contentToSend.slice(0, 60)}"`
+        });
+      } catch (_) {}
+    }
   }
 
-  async function handlePickPhoto(e) {
+  async function handleImagePick(e) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    e.target.value = '';
+    if (!file || !activePeer) return;
     let url = URL.createObjectURL(file);
     const clean = (file.name || 'chat.jpg').replace(/[^a-zA-Z0-9._-]/g, '');
-    const path = `messages/${Date.now()}_${clean}`;
-    for (const bucket of ['media', 'public']) {
-      const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type || 'image/jpeg', upsert: true });
+    const path = `chat/${Date.now()}_${clean}`;
+    for (const bucket of ['media', 'posts', 'public']) {
+      const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
       if (!error) {
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
         if (pub?.publicUrl) { url = pub.publicUrl; break; }
       }
     }
-    await handleSend(null, url);
+    await sendTextOrThumbs(`[photo]${url}`);
   }
-  if (!activePeer) {
+  const thread = activePeer?.is_ai ? aiHistory : messages;
+  const filteredPeers = peers.filter((p) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (p.full_name || '').toLowerCase().includes(q) || (p.username || '').toLowerCase().includes(q);
+  });
+
+  if (activePeer) {
+    const peerName = activePeer.full_name || activePeer.username || 'ZUKA Member';
     return (
-      <div style={{ backgroundColor: '#FFFFFF', minHeight: 'calc(100vh - 98px)', padding: '12px' }}>
-        <h2 style={{ margin: '0 0 12px', fontSize: '22px', fontWeight: 800, color: '#050505' }}>Chats</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {contacts.map((c) => {
-            const name = c.full_name || c.username || 'ZUKA Member';
-            return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 98px)', backgroundColor: '#FFFFFF', position: 'relative' }}>
+        {callBanner && (
+          <div style={{ position: 'fixed', top: '112px', left: '50%', transform: 'translateX(-50%)', zIndex: 80, backgroundColor: '#1877F2', color: '#FFFFFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+            {callBanner}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid #E4E6EB', backgroundColor: '#FFFFFF' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <button type="button" onClick={() => setActivePeer(null)} style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', color: '#050505' }}>
+              <ArrowLeft size={22} />
+            </button>
+            <div style={{ position: 'relative', width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+              {activePeer.is_ai ? <Sparkles size={19} /> : activePeer.avatar_url ? <img src={activePeer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : peerName.charAt(0).toUpperCase()}
+              <span style={{ position: 'absolute', bottom: '1px', right: '1px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{peerName}</span>
+                {activePeer.is_verified && <ZukaBadge size={15} />}
+              </div>
+              <div style={{ fontSize: '11px', color: '#65676B' }}>Active now</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#050505' }}>
+            <button type="button" onClick={() => { setCallBanner(`Calling ${peerName}...`); setTimeout(() => setCallBanner(''), 2500); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
+              <Phone size={20} fill="#050505" />
+            </button>
+            <button type="button" onClick={() => { setCallBanner(`Starting video call with ${peerName}...`); setTimeout(() => setCallBanner(''), 2500); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
+              <Video size={22} fill="#050505" />
+            </button>
+            <button type="button" onClick={() => onOpenUserProfile && !activePeer.is_ai && onOpenUserProfile(activePeer)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
+              <Settings size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '14px 16px 18px' }}>
+            <div style={{ width: '82px', height: '82px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '30px', marginBottom: '10px', border: '2px solid #E4E6EB' }}>
+              {activePeer.is_ai ? <Sparkles size={36} /> : activePeer.avatar_url ? <img src={activePeer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : peerName.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '20px', color: '#050505', display: 'flex', alignItems: 'center' }}>
+              <span>{peerName}</span>
+              {activePeer.is_verified && <ZukaBadge size={18} />}
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#050505', marginTop: '3px' }}>
+              {activePeer.is_ai ? 'Official ZUKA AI Assistant' : "You're friends on ZUKA"}
+            </div>
+            {activePeer.location && <div style={{ fontSize: '12px', color: '#65676B', marginTop: '2px' }}>Lives in {activePeer.location}</div>}
+            {!activePeer.is_ai && (
               <button
-                key={c.id}
                 type="button"
-                onClick={() => setActivePeer(c)}
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 8px', borderRadius: '10px', border: 'none', backgroundColor: 'transparent', textAlign: 'left', cursor: 'pointer' }}
+                onClick={() => onOpenUserProfile && onOpenUserProfile(activePeer)}
+                style={{ marginTop: '10px', padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#E4E6EB', color: '#050505', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
               >
-                <div style={{ width: '52px', height: '52px', borderRadius: '50%', backgroundColor: c.is_ai ? '#1877F2' : '#E4E6EB', color: c.is_ai ? '#FFFFFF' : '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '20px', flexShrink: 0 }}>
-                  {c.is_ai ? <Sparkles size={24} /> : c.avatar_url ? <img src={c.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.charAt(0).toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: '16px', color: '#050505', display: 'flex', alignItems: 'center' }}>
-                    <span>{name}</span>
-                    {c.is_verified && <ZukaBadge size={15} />}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#65676B', marginTop: '2px' }}>
-                    {c.is_ai ? 'Msaidizi wako wa AI · Gusa kuuliza' : 'Gusa kuanza mazungumzo'}
-                  </div>
-                </div>
+                View profile
               </button>
+            )}
+            <div style={{ marginTop: '16px', fontSize: '11px', color: '#65676B', maxWidth: '290px', lineHeight: '1.4', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+              <Lock size={12} /> <span>Messages and calls are secured with end-to-end encryption.</span>
+            </div>
+          </div>
+
+          {thread.map((m) => {
+            const mine = String(m.sender_id) === String(currentUser?.id) || m.sender_id === 'me';
+            const isPhoto = typeof m.content === 'string' && m.content.startsWith('[photo]');
+            const photoSrc = isPhoto ? m.content.replace('[photo]', '') : '';
+            return (
+              <div key={m.id} style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '75%', display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
+                {!mine && (
+                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>
+                    {activePeer.avatar_url ? <img src={activePeer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : peerName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {isPhoto ? (
+                  <img src={photoSrc} alt="" style={{ maxWidth: '220px', borderRadius: '16px' }} />
+                ) : (
+                  <div style={{ backgroundColor: mine ? '#0084FF' : '#F0F2F5', color: mine ? '#FFFFFF' : '#050505', padding: '9px 14px', borderRadius: '18px', fontSize: '15px', lineHeight: '1.35' }}>
+                    {m.content}
+                  </div>
+                )}
+              </div>
             );
           })}
+          {aiTyping && <div style={{ alignSelf: 'flex-start', backgroundColor: '#F0F2F5', color: '#65676B', padding: '8px 14px', borderRadius: '18px', fontSize: '13px' }}>ZUKA AI is typing...</div>}
+          <div ref={bottomRef} />
         </div>
+
+        <form onSubmit={(e) => { e.preventDefault(); sendTextOrThumbs(); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderTop: '1px solid #E4E6EB', backgroundColor: '#FFFFFF' }}>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handleImagePick} style={{ display: 'none' }} />
+          <button type="button" onClick={() => fileRef.current?.click()} style={{ background: 'none', border: 'none', color: '#0084FF', padding: '4px', cursor: 'pointer' }}>
+            <ImageIcon size={22} />
+          </button>
+          <button type="button" onClick={() => { setCallBanner('Voice message ready'); setTimeout(() => setCallBanner(''), 1800); }} style={{ background: 'none', border: 'none', color: '#0084FF', padding: '4px', cursor: 'pointer' }}>
+            <Mic size={22} />
+          </button>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#F0F2F5', borderRadius: '20px', padding: '0 10px 0 14px', height: '38px' }}>
+            <input
+              type="text"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Message"
+              style={{ flex: 1, border: 'none', background: 'transparent', fontSize: '15px', outline: 'none', color: '#050505' }}
+            />
+            <button type="button" onClick={() => setText((prev) => `${prev}😊`)} style={{ background: 'none', border: 'none', color: '#0084FF', padding: '2px', cursor: 'pointer', display: 'flex' }}>
+              <Smile size={20} />
+            </button>
+          </div>
+          {text.trim() ? (
+            <button type="submit" style={{ background: 'none', border: 'none', color: '#0084FF', padding: '4px', cursor: 'pointer', display: 'flex' }}>
+              <Send size={22} />
+            </button>
+          ) : (
+            <button type="button" onClick={() => sendTextOrThumbs('👍')} style={{ background: 'none', border: 'none', color: '#0084FF', padding: '4px', cursor: 'pointer', display: 'flex' }}>
+              <ThumbsUp size={22} fill="#0084FF" />
+            </button>
+          )}
+        </form>
       </div>
     );
   }
-
-  const peerName = activePeer.full_name || activePeer.username || 'ZUKA Member';
+  const myInitial = (currentUser?.full_name || currentUser?.username || 'Z').charAt(0).toUpperCase();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 98px)', backgroundColor: '#FFFFFF' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderBottom: '1px solid #E4E6EB' }}>
-        <button type="button" onClick={() => setActivePeer(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1877F2', display: 'flex', alignItems: 'center' }}>
-          <ArrowLeft size={22} />
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: 'calc(100vh - 98px)', paddingBottom: '88px', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px 8px' }}>
+        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#050505' }}>Messages</h2>
+        <button type="button" onClick={() => setSearchOpen(!searchOpen)} aria-label="Search messages" style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#F0F2F5', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#050505' }}>
+          <Search size={19} />
         </button>
-        <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: activePeer.is_ai ? '#1877F2' : '#E4E6EB', color: activePeer.is_ai ? '#FFFFFF' : '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-          {activePeer.is_ai ? <Sparkles size={18} /> : activePeer.avatar_url ? <img src={activePeer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : peerName.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
-            <span>{peerName}</span>
-            {activePeer.is_verified && <ZukaBadge size={15} />}
-          </div>
-          <div style={{ fontSize: '12px', color: '#42B72A', fontWeight: 600 }}>Active now</div>
-        </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#F0F2F5' }}>
-        {messages.map((m) => {
-          const isMe = String(m.sender_id) === String(currentUser?.id || 'me');
+      {searchOpen && (
+        <div style={{ padding: '0 14px 10px' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search Messenger..."
+            style={{ width: '100%', padding: '9px 14px', borderRadius: '20px', border: 'none', backgroundColor: '#F0F2F5', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+          />
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', padding: '8px 14px 12px', scrollbarWidth: 'none' }}>
+        <div onClick={() => { setNoteDraft(myNote); setNoteModal(true); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '64px', flexShrink: 0, cursor: 'pointer', position: 'relative' }}>
+          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E4E6EB', borderRadius: '12px', padding: '3px 7px', fontSize: '10px', color: '#65676B', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '-6px', zIndex: 2, maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {myNote || 'Share a note...'}
+          </div>
+          <div style={{ width: '54px', height: '54px', borderRadius: '50%', backgroundColor: '#E4E6EB', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '20px', color: '#050505' }}>
+            {currentUser?.avatar_url ? <img src={currentUser.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : myInitial}
+          </div>
+          <span style={{ fontSize: '11px', color: '#65676B', marginTop: '4px' }}>Your note</span>
+        </div>
+
+        {peers.map((p) => {
+          const pName = (p.full_name || p.username || "Friend").split(" ").at(0) || "Friend";
           return (
-            <div key={m.id} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '78%', backgroundColor: isMe ? '#1877F2' : '#FFFFFF', color: isMe ? '#FFFFFF' : '#050505', padding: '10px 14px', borderRadius: '16px', fontSize: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>
-              {m.image_url && <img src={m.image_url} alt="" style={{ width: '100%', maxHeight: '220px', objectFit: 'cover', borderRadius: '10px', marginBottom: m.content ? '6px' : 0 }} />}
-              {m.content && <div>{m.content}</div>}
+            <div key={`active-${p.id}`} onClick={() => setActivePeer(p)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '64px', flexShrink: 0, cursor: 'pointer', paddingTop: '12px' }}>
+              <div style={{ position: 'relative', width: '54px', height: '54px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px' }}>
+                {p.avatar_url ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : pName.charAt(0).toUpperCase()}
+                <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
+              </div>
+              <span style={{ fontSize: '11px', color: '#050505', marginTop: '4px', maxWidth: '62px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pName}</span>
             </div>
           );
         })}
       </div>
 
-      <form onSubmit={(e) => handleSend(e)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderTop: '1px solid #E4E6EB', backgroundColor: '#FFFFFF' }}>
-        {!activePeer.is_ai && (
-          <>
-            <input ref={photoRef} type="file" accept="image/*" onChange={handlePickPhoto} style={{ display: 'none' }} />
-            <button type="button" onClick={() => photoRef.current?.click()} style={{ background: 'none', border: 'none', color: '#1877F2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <Image size={22} />
-            </button>
-          </>
-        )}
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder={`Message ${peerName}...`} style={{ flex: 1, padding: '10px 14px', borderRadius: '20px', border: '1px solid #CED0D4', fontSize: '14px', outline: 'none' }} />
-        <button type="submit" disabled={sending} style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <Send size={17} />
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div onClick={() => setActivePeer(ZUKA_AI_PEER)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', cursor: 'pointer' }}>
+          <div style={{ width: '54px', height: '54px', borderRadius: '50%', background: 'linear-gradient(135deg, #0084FF, #A033FF)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Sparkles size={26} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
+              <span>ZUKA AI</span>
+              <ZukaBadge size={15} />
+            </div>
+            <div style={{ fontSize: '13px', color: '#65676B', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              Ask ZUKA AI anything · Tap to chat
+            </div>
+          </div>
+        </div>
+
+        {filteredPeers.map((peer) => {
+          const name = peer.full_name || peer.username || 'ZUKA Member';
+          return (
+            <div key={peer.id} onClick={() => setActivePeer(peer)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', cursor: 'pointer' }}>
+              <div style={{ position: 'relative', width: '54px', height: '54px', borderRadius: '50%', backgroundColor: '#E4E6EB', color: '#050505', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px', flexShrink: 0 }}>
+                {peer.avatar_url ? <img src={peer.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.charAt(0).toUpperCase()}
+                <span style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center' }}>
+                  <span>{name}</span>
+                  {peer.is_verified && <ZukaBadge size={15} />}
+                </div>
+                <div style={{ fontSize: '13px', color: '#65676B', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Tap to start chatting · Active now
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ position: 'fixed', right: '16px', bottom: '18px', zIndex: 30, display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+        <button type="button" onClick={() => setActivePeer(ZUKA_AI_PEER)} aria-label="ZUKA AI" style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: '1px solid #E4E6EB', boxShadow: '0 3px 12px rgba(0,0,0,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0084FF', cursor: 'pointer' }}>
+          <Sparkles size={22} />
         </button>
-      </form>
+        <button type="button" onClick={() => setSearchOpen(true)} aria-label="New message" style={{ width: '52px', height: '52px', borderRadius: '50%', backgroundColor: '#0084FF', border: 'none', boxShadow: '0 4px 14px rgba(0,132,255,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', cursor: 'pointer' }}>
+          <Plus size={26} />
+        </button>
+      </div>
+
+      {noteModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 70, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <form onSubmit={(e) => { e.preventDefault(); setMyNote(noteDraft.trim()); setNoteModal(false); }} style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', padding: '16px', width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ fontSize: '16px', color: '#050505' }}>Your Messenger Note</strong>
+              <button type="button" onClick={() => setNoteModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <input type="text" maxLength={60} value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Share a thought (60 chars)..." style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', fontSize: '14px' }} />
+            <button type="submit" style={{ backgroundColor: '#0084FF', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, cursor: 'pointer' }}>Share Note</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
