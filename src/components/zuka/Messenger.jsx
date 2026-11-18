@@ -93,19 +93,22 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
     if (customText === undefined) setText('');
 
     if (activePeer.is_ai) {
-      const userMsg = { id: `u-${Date.now()}`, sender_id: currentUser?.id || 'me', content: contentToSend, created_at: new Date().toISOString() };
-      setAiHistory((prev) => [...prev, userMsg]);
+      const userMsg = { id: "u-" + Date.now(), sender_id: currentUser?.id || "me", content: contentToSend, created_at: new Date().toISOString() };
+      const nextHistory = [...aiHistory, userMsg];
+      setAiHistory(nextHistory);
       setAiTyping(true);
-      setTimeout(() => {
-        const reply = {
-          id: `ai-${Date.now()}`,
-          sender_id: 'zuka-ai',
-          content: `ZUKA AI: Thanks for asking about "${contentToSend}". I am here to help you grow and connect on ZUKA!`,
-          created_at: new Date().toISOString()
-        };
-        setAiHistory((prev) => [...prev, reply]);
-        setAiTyping(false);
-      }, 650);
+      try {
+        const res = await fetch("/api/zuka-ai", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: nextHistory })
+        });
+        const data = await res.json();
+        setAiHistory((prev) => [...prev, { id: "ai-" + Date.now(), sender_id: "zuka-ai", content: data.reply || "No response.", created_at: new Date().toISOString() }]);
+      } catch (_) {
+        setAiHistory((prev) => [...prev, { id: "ai-" + Date.now(), sender_id: "zuka-ai", content: "Could not reach ZUKA AI right now.", created_at: new Date().toISOString() }]);
+      }
+      setAiTyping(false);
       return;
     }
 
