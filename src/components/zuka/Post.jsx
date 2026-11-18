@@ -1,3 +1,4 @@
+import { downloadImageToDevice } from "./downloadMedia";
 import { formatTimeAgo } from "./timeAgo";
 import PhotoViewer from "./PhotoViewer";
 import React, { useState } from 'react';
@@ -80,6 +81,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   }
   return (
     <article style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', marginTop: '8px', position: 'relative' }}>
+      {sharedBanner && <div style={{ position: "fixed", top: "112px", left: "50%", transform: "translateX(-50%)", zIndex: 90, backgroundColor: "#1877F2", color: "#FFFFFF", padding: "9px 18px", borderRadius: "22px", fontSize: "13px", fontWeight: 700, boxShadow: "0 4px 12px rgba(0,0,0,0.25)", whiteSpace: "nowrap" }}>{sharedBanner}</div>}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 12px 6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
           <div
@@ -160,7 +162,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
       {menuOpen && (
         <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '680px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button type="button" onClick={() => { setMenuOpen(false); setSharedBanner('Saved post!'); setTimeout(() => setSharedBanner(''), 2000); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>
+            <button type="button" onClick={() => { setMenuOpen(false); downloadImageToDevice(post.image_url, (msg) => { setSharedBanner(msg); setTimeout(() => setSharedBanner(""), 3000); }); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>
               <Bookmark size={18} /> Save post
             </button>
             <button type="button" onClick={() => { setMenuOpen(false); handleShare(); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', color: '#050505' }}>

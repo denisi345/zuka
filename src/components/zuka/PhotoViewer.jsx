@@ -1,3 +1,4 @@
+import { downloadImageToDevice } from "./downloadMedia";
 import { formatTimeAgo } from "./timeAgo";
 import React, { useState } from 'react';
 import { X, MoreVertical, ThumbsUp, MessageCircle, Share2, Download, EyeOff, AlertCircle } from 'lucide-react';
@@ -20,19 +21,7 @@ export default function PhotoViewer({ post, liked, likesCount, commentsCount, on
     setTimeout(() => setToast(''), 2200);
   }
 
-  function handleSavePhoto() {
-    setOptionsOpen(false);
-    try {
-      const a = document.createElement('a');
-      a.href = post.image_url;
-      a.download = `zuka_${Date.now()}.jpg`;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } catch (_) {}
-    showNotice('Photo saved!');
-  }
+  function handleSavePhoto() { setOptionsOpen(false); downloadImageToDevice(post.image_url, showNotice); }
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 70, backgroundColor: '#000000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#FFFFFF' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', zIndex: 10 }}>
