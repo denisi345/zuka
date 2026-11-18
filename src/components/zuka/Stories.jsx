@@ -22,6 +22,8 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
 
   useEffect(() => {
     if (activeIndex === null || isPaused) return;
+    const cur = stories[activeIndex];
+    if (cur && /\.(mp4|webm|mov)(\?|$)/i.test(cur.media_url || "")) return;
     setProgress(0);
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -80,7 +82,7 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
           );
         })}
       </div>
-      {activeStory && <StoryFullScreen story={activeStory} stories={stories} activeIndex={activeIndex} progress={progress} currentUser={userProfile} onClose={() => setActiveIndex(null)} onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))} onNext={() => setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null))} onDeleteStory={onDeleteStory} onPauseChange={setIsPaused} />}
+      {activeStory && <StoryFullScreen story={activeStory} stories={stories} activeIndex={activeIndex} progress={progress} currentUser={userProfile} onClose={() => setActiveIndex(null)} onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))} onNext={() => setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null))} onDeleteStory={onDeleteStory} onPauseChange={setIsPaused} onVideoProgress={setProgress} />}
     </div>
   );
 }
