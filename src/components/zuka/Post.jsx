@@ -1,3 +1,4 @@
+import PostAudioSheet from "./PostAudioSheet";
 import React, { useState } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2, Edit3, Pin, EyeOff, AlertCircle, UserMinus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +22,12 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   const [editingPost, setEditingPost] = useState(false);
   const [contentText, setContentText] = useState(post.content || '');
   const [pinned, setPinned] = useState(false);
+  const [audioSheetOpen, setAudioSheetOpen] = useState(false);
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const audioRef = React.useRef(null);
+  const audioMatch = String(contentText || "").match(/\[zuka_audio:([^|\]]+)\|([^\]]+)\]/);
+  const parsedAudio = audioMatch ? { title: audioMatch.at(1), url: audioMatch.at(2) } : null;
+  const cleanText = String(contentText || "").replace(/\n?\[zuka_audio:[^\]]+\]/g, "").trim();
 
   const isLiveOrDemo = String(post.id).startsWith('live-') || String(post.id).startsWith('funny-') || String(post.id).startsWith('temp-');
   const authorName = post.author_name || 'ZUKA Member';
@@ -70,7 +77,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   }
 
   async function handleShare() {
-    const shareText = `${authorName}: ${contentText}`.slice(0, 200);
+    const shareText = `${authorName}: ${cleanText}`.slice(0, 200);
     if (navigator.share) {
       try { await navigator.share({ title: 'ZUKA', text: shareText, url: window.location.href }); return; } catch (_) {}
     }
@@ -129,7 +136,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
                 </button>
               )}
             </div>
-            <div style={{ fontSize: '12px', color: '#65676B', marginTop: '1px' }}>{formatTimeAgo(post.created_at, post.time_label)} · 🌐</div>
+            <div style={{ fontSize: '12px', color: '#65676B', marginTop: '1px' }}>{formatTimeAgo(post.created_at, post.time_label)} · {parsedAudio ? <span onClick={() => setAudioSheetOpen(true)} style={{ color: "#050505", fontWeight: 600, cursor: "pointer" }}>🎵 {parsedAudio.title} · </span> : null}🌐</div>
           </div>
         </div>
 
@@ -144,14 +151,14 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
       </div>
       {editingPost ? (
         <form onSubmit={handleSaveEditedPost} style={{ padding: '6px 12px 10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <textarea rows={3} value={contentText} onChange={(e) => setContentText(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px', boxSizing: 'border-box' }} />
+          <textarea rows={3} value={cleanText} onChange={(e) => setContentText(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px', boxSizing: 'border-box' }} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <button type="button" onClick={() => setEditingPost(false)} style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#E4E6EB', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
             <button type="submit" style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#1877F2', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Save</button>
           </div>
         </form>
       ) : (
-        contentText && <div style={{ padding: '4px 12px 10px', fontSize: '15px', color: '#050505', lineHeight: '1.4', whiteSpace: 'pre-line' }}>{contentText}</div>
+        cleanText && <div style={{ padding: '4px 12px 10px', fontSize: '15px', color: '#050505', lineHeight: '1.4', whiteSpace: 'pre-line' }}>{cleanText}</div>
       )}
 
       {post.image_url && (
@@ -249,6 +256,27 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
           onComment={() => setCommentsOpen(true)}
           onShare={handleShare}
           onHidePost={() => onDeletePost && onDeletePost(post.id)}
+        />
+      )}
+      {parsedAudio && (
+        <div style={{ padding: "8px 12px", backgroundColor: "#F7F8FA", borderTop: "1px solid #E4E6EB", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+          <audio ref={audioRef} src={parsedAudio.url} onEnded={() => setAudioPlaying(false)} style={{ display: "none" }} />
+          <div onClick={() => setAudioSheetOpen(true)} style={{ fontSize: "13px", fontWeight: 700, color: "#050505", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            🎵 {parsedAudio.title}
+          </div>
+          <button type="button" onClick={() => { if (!audioRef.current) return; if (audioPlaying) { audioRef.current.pause(); setAudioPlaying(false); } else { audioRef.current.play().catch(() => {}); setAudioPlaying(true); } }} style={{ padding: "5px 12px", borderRadius: "16px", border: "none", backgroundColor: "#1877F2", color: "#FFFFFF", fontSize: "12px", fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+            {audioPlaying ? "Pause" : "Play"}
+          </button>
+        </div>
+      )}
+      {audioSheetOpen && parsedAudio && (
+        <PostAudioSheet
+          audio={parsedAudio}
+          authorName={authorName}
+          playing={audioPlaying}
+          onTogglePlay={() => { if (!audioRef.current) return; if (audioPlaying) { audioRef.current.pause(); setAudioPlaying(false); } else { audioRef.current.play().catch(() => {}); setAudioPlaying(true); } }}
+          onClose={() => setAudioSheetOpen(false)}
+          onReport={() => showToast("Audio reported")}
         />
       )}
     </article>
