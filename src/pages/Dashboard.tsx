@@ -1,6 +1,6 @@
 import ZukaCallModal from "@/components/zuka/ZukaCallModal";
 import FacebookMenu from "@/components/zuka/FacebookMenu";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/zuka/Header";
