@@ -1,3 +1,4 @@
+import ZukaEvents from "@/components/zuka/ZukaEvents";
 import ZukaPages from "@/components/zuka/ZukaPages";
 import ZukaGroups from "@/components/zuka/ZukaGroups";
 import SavedItems from "@/components/zuka/SavedItems";
