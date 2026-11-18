@@ -78,7 +78,7 @@ const Dashboard = () => {
             />
           )}
           {activeTab === "messenger" && <Messenger currentUser={profile} initialPeer={chatTarget} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />}
-          {activeTab === "reels" && <Reels userProfile={profile} />}
+          {activeTab === "reels" && <Reels userProfile={profile} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />}
           {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
           {activeTab === "marketplace" && (
             <Marketplace

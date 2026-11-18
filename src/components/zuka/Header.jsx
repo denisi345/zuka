@@ -51,8 +51,8 @@ export default function Header({ activeTab, setActiveTab, onOpenMenu, unreadCoun
     window.dispatchEvent(new CustomEvent('zuka:refresh-feed'));
   }
   return (
-    <header style={{ position: 'sticky', top: 0, zIndex: 30, backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', height: '52px', position: 'relative' }}>
+    <header style={{ position: "sticky", top: 0, zIndex: 30, backgroundColor: activeTab === "reels" ? "#18191A" : "#FFFFFF", borderBottom: activeTab === "reels" ? "1px solid #242526" : "1px solid #E4E6EB" }}>
+      <div style={{ display: activeTab === "reels" ? "none" : "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", height: "52px", position: "relative" }}>
         <button type="button" onClick={() => setActiveTab('feed')} style={{ background: 'none', border: 'none', padding: 0, fontSize: '28px', fontWeight: 800, color: '#1877F2', letterSpacing: '-0.8px', cursor: 'pointer' }}>
           ZUKA
         </button>
@@ -92,9 +92,9 @@ export default function Header({ activeTab, setActiveTab, onOpenMenu, unreadCoun
       <nav style={{ display: 'flex', height: '46px' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = activeTab === item.id; const isReelsDark = activeTab === "reels";
           return (
-            <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} aria-label={item.label} style={{ flex: 1, position: 'relative', background: 'none', border: 'none', borderBottom: isActive ? '3px solid #1877F2' : '3px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? '#1877F2' : '#65676B', cursor: 'pointer' }}>
+            <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} aria-label={item.label} style={{ flex: 1, position: 'relative', background: 'none', border: 'none', borderBottom: isActive ? (isReelsDark ? "3px solid #FFFFFF" : "3px solid #1877F2") : "3px solid transparent", display: 'flex', alignItems: 'center', justifyContent: 'center', color: isActive ? (isReelsDark ? "#FFFFFF" : "#1877F2") : (isReelsDark ? "#B0B3B8" : "#65676B"), cursor: 'pointer' }}>
               <Icon size={23} strokeWidth={isActive ? 2.4 : 2} />
               {item.badge > 0 && <span style={{ position: 'absolute', top: '6px', right: '18%', backgroundColor: '#E41E3F', color: '#FFFFFF', fontSize: '10px', fontWeight: 700, borderRadius: '10px', padding: '1px 5px', lineHeight: '14px' }}>{item.badge}</span>}
             </button>
