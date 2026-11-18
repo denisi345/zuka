@@ -1,3 +1,4 @@
+import PhotoViewer from "./PhotoViewer";
 import React, { useState } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
   const [sharedBanner, setSharedBanner] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [followed, setFollowed] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const isLiveOrDemo = String(post.id).startsWith('live-') || String(post.id).startsWith('funny-') || String(post.id).startsWith('temp-');
   const authorName = post.author_name || 'ZUKA Member';
@@ -170,6 +172,19 @@ export default function Post({ post, currentUserId, onOpenUserProfile, onDeleteP
             )}
           </div>
         </div>
+      )}
+      {photoOpen && (
+        <PhotoViewer
+          post={post}
+          liked={liked}
+          likesCount={likesCount}
+          commentsCount={comments.length}
+          onClose={() => setPhotoOpen(false)}
+          onLike={handleLike}
+          onComment={() => setCommentsOpen(true)}
+          onShare={handleShare}
+          onHidePost={() => onDeletePost && onDeletePost(post.id)}
+        />
       )}
     </article>
   );
