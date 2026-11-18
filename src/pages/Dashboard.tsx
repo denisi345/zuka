@@ -1,3 +1,4 @@
+import ZukaCallModal from "@/components/zuka/ZukaCallModal";
 import FacebookMenu from "@/components/zuka/FacebookMenu";
 import React, { useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const [localProfile, setLocalProfile] = useState(null);
   const profile = localProfile || storeProfile;
   React.useEffect(() => { if (!storeProfile?.id) return; import("@/integrations/supabase/client").then(({ supabase }) => { supabase.from("profiles").select("*").eq("id", storeProfile.id).maybeSingle().then(({ data }) => { if (data) setLocalProfile(data); }); }); }, [storeProfile?.id]);
+  const [incomingCall, setIncomingCall] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("feed");
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatTarget, setChatTarget] = useState(null);
@@ -27,8 +29,29 @@ const Dashboard = () => {
     window.location.href = "/login";
   }
 
+  useEffect(() => {
+    if (!profile?.id) return;
+    const ringCh = supabase.channel(`ring-${profile.id}`)
+      .on("broadcast", { event: "incoming-call" }, ({ payload }) => {
+        if (payload?.caller && payload?.offer) {
+          setIncomingCall(payload);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ringCh); };
+  }, [profile?.id]);
+
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#F0F2F5", color: "#050505" }}>
+      {incomingCall && profile && (
+        <ZukaCallModal
+          currentUser={profile}
+          peer={incomingCall.caller}
+          mode={incomingCall.mode || "audio"}
+          incomingOffer={incomingCall.offer}
+          onClose={() => setIncomingCall(null)}
+        />
+      )}
       <Header
         activeTab={activeTab}
         setActiveTab={(tab) => { setActiveTab(tab); setMenuOpen(false); }}
