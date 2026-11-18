@@ -1,6 +1,6 @@
 import { formatTimeAgo } from "./timeAgo";
 import React, { useRef, useState, useEffect } from 'react';
-import { Plus, X, Trash2 } from 'lucide-react';
+import { Plus, X, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Stories({ userProfile, stories = [], onUploadStory, onDeleteStory, onPauseChange }) {
@@ -85,7 +85,9 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
   );
 }
 function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory }) {
-  const [replyText, setReplyText] = useState('');
+  const [replyText, setReplyText] = useState("");
+  const [storyMuted, setStoryMuted] = useState(false);
+  const storyVideoRef = React.useRef(null);
   const [floatingEmoji, setFloatingEmoji] = useState('');
   const [sentNotice, setSentNotice] = useState('');
   const isVid = /\.(mp4|webm|mov)(\?|$)/i.test(story.media_url || '');
@@ -131,6 +133,11 @@ function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, o
             {isOwner && (
               <button type="button" onClick={async () => { if (story.id && !String(story.id).startsWith('st-')) { try { await supabase.from('stories').delete().eq('id', story.id); } catch (_) {} } if (onDeleteStory) onDeleteStory(story.id); onClose(); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
                 <Trash2 size={20} />
+              </button>
+            )}
+            {isVid && (
+              <button type="button" onClick={(e) => { e.stopPropagation(); const next = !storyMuted; setStoryMuted(next); if (storyVideoRef.current) { storyVideoRef.current.muted = next; if (!next) storyVideoRef.current.play().catch(() => {}); } }} style={{ background: "none", border: "none", color: "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                {storyMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
               </button>
             )}
             <button type="button" onClick={() => { if (onPauseChange) onPauseChange(false); onClose(); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>

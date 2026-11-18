@@ -14,7 +14,7 @@ import { FriendsView, NotificationsView } from "@/components/zuka/FriendsAndNoti
 const Messenger = lazy(() => import("@/components/zuka/Messenger"));
 const Reels = lazy(() => import("@/components/zuka/Reels"));
 const Marketplace = lazy(() => import("@/components/zuka/Marketplace"));
-const Profile = lazy(() => import("@/components/zuka/Profile"));
+import Profile from "@/components/zuka/Profile";
 import RightSidebar from "@/components/zuka/RightSidebar";
 
 const Dashboard = () => {
