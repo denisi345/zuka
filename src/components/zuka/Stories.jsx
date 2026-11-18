@@ -192,13 +192,16 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
   const [floatingEmoji, setFloatingEmoji] = useState('');
   const [sentNotice, setSentNotice] = useState('');
   const videoRef = useRef(null);
+  const activeBarRef = useRef(null);
   useEffect(() => {
     if (!isVid) return;
     let rafId;
     const syncBar = () => {
       const v = videoRef.current;
-      if (v && v.duration && Number.isFinite(v.duration) && onVideoProgress) {
-        { const pct = Math.min(100, (v.currentTime / v.duration) * 100); setVidProgress(pct); if (onVideoProgress) onVideoProgress(pct); }
+      const bar = activeBarRef.current;
+      if (v && bar && v.duration && Number.isFinite(v.duration)) {
+        const ratio = Math.min(1, Math.max(0, v.currentTime / v.duration));
+        bar.style.transform = `scaleX(${ratio})`;
       }
       rafId = requestAnimationFrame(syncBar);
     };
@@ -259,7 +262,17 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
         <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
           {stories.map((s, idx) => (
             <div key={s.id} style={{ flex: 1, height: '2.5px', backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', backgroundColor: '#FFFFFF', width: idx < activeIndex ? '100%' : idx === activeIndex ? `${isVid ? vidProgress : progress}%` : "0%" }} />
+              <div
+                ref={idx === activeIndex ? activeBarRef : null}
+                style={{
+                  height: "100%",
+                  backgroundColor: "#FFFFFF",
+                  width: idx < activeIndex ? "100%" : idx === activeIndex ? (isVid ? "100%" : `${progress}%`) : "0%",
+                  transform: idx === activeIndex && isVid ? "scaleX(0)" : "none",
+                  transformOrigin: "left center",
+                  willChange: "transform"
+                }}
+              />
             </div>
           ))}
         </div>
@@ -331,7 +344,7 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
               const v = e.currentTarget;
               if (v.duration && onVideoProgress) { const pct = Math.min(100, (v.currentTime / v.duration) * 100); setVidProgress(pct); if (onVideoProgress) onVideoProgress(pct); }
             }}
-            onEnded={() => { setVidProgress(100); if (onVideoProgress) onVideoProgress(100); setTimeout(() => onNext(), 120); }}
+            onEnded={() => { if (activeBarRef.current) activeBarRef.current.style.transform = "scaleX(1)"; setTimeout(() => onNext(), 90); }}
             draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", WebkitTouchCallout: "none" }}
           />
         ) : (
