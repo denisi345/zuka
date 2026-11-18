@@ -1,3 +1,4 @@
+import SavedItems from "@/components/zuka/SavedItems";
 import ZukaCallModal from "@/components/zuka/ZukaCallModal";
 import FacebookMenu from "@/components/zuka/FacebookMenu";
 import React, { useState, useEffect } from "react";
@@ -107,7 +108,8 @@ const Dashboard = () => {
             <Marketplace
               userProfile={profile}
               onMessageSeller={(sellerId, sellerName, msg) => {
-                if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg });
+                if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg })
+        {activeTab === "saved" && <SavedItems currentUserId={profile?.id} onBack={() => setActiveTab("feed")} onOpenUserProfile={(u) => { setViewedProfile(u); setActiveTab("profile"); }} />};
                 setActiveTab("messenger");
               }}
             />

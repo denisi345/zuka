@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Film, Store, MessageCircle, Sparkles, Newspaper, Settings, HelpCircle, ChevronDown, ChevronUp, Moon, Sun, LogOut, X } from 'lucide-react';
+import { Users, Film, Store, MessageCircle, Sparkles, Newspaper, Bookmark, Settings, HelpCircle, ChevronDown, ChevronUp, Moon, Sun, LogOut, X } from 'lucide-react';
 import ZukaBadge from './ZukaBadge';
 
 export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenProfile, onOpenAI, onLogout }) {
@@ -22,7 +22,8 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
     { label: 'Marketplace', desc: 'Buy & sell near you', icon: <Store size={22} color="#1877F2" />, action: () => { onNavigateTab('marketplace'); onClose(); } },
     { label: 'Messenger', desc: 'Chat with friends', icon: <MessageCircle size={22} color="#A033FF" />, action: () => { onNavigateTab('messenger'); onClose(); } },
     { label: 'ZUKA AI', desc: 'Ask anything instantly', icon: <Sparkles size={22} color="#42B72A" />, action: () => { if (onOpenAI) onOpenAI(); else onNavigateTab('messenger'); onClose(); } },
-    { label: 'Feeds', desc: 'Latest posts & news', icon: <Newspaper size={22} color="#F7B928" />, action: () => { onNavigateTab('feed'); onClose(); } }
+    { label: 'Feeds', desc: 'Latest posts & news', icon: <Newspaper size={22} color="#F7B928" />, action: () => { onNavigateTab('feed'); onClose(); } },
+    { label: "Saved", desc: "Saved posts & photos", icon: <Bookmark size={22} color="#A033FF" />, action: () => { onNavigateTab("saved"); onClose(); } }
   ];
 
   return (
