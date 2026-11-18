@@ -3,11 +3,12 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-export default function Stories({ userProfile, stories = [], onUploadStory, onDeleteStory }) {
+export default function Stories({ userProfile, stories = [], onUploadStory, onDeleteStory, onPauseChange }) {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   useEffect(() => { const h = () => fileRef.current?.click(); window.addEventListener("zuka:open-story", h); return () => window.removeEventListener("zuka:open-story", h); }, []);
 
   async function handleFileChange(e) {
@@ -20,7 +21,7 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
   }
 
   useEffect(() => {
-    if (activeIndex === null) return;
+    if (activeIndex === null || isPaused) return;
     setProgress(0);
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -36,7 +37,7 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [activeIndex, stories.length]);
+  }, [activeIndex, stories.length, isPaused]);
 
   const activeStory = activeIndex !== null ? stories[activeIndex] : null;
   const myInitial = (userProfile?.full_name || userProfile?.username || 'Z').charAt(0).toUpperCase();
@@ -79,7 +80,7 @@ export default function Stories({ userProfile, stories = [], onUploadStory, onDe
           );
         })}
       </div>
-      {activeStory && <StoryFullScreen story={activeStory} stories={stories} activeIndex={activeIndex} progress={progress} currentUser={userProfile} onClose={() => setActiveIndex(null)} onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))} onNext={() => setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null))} onDeleteStory={onDeleteStory} />}
+      {activeStory && <StoryFullScreen story={activeStory} stories={stories} activeIndex={activeIndex} progress={progress} currentUser={userProfile} onClose={() => setActiveIndex(null)} onPrev={() => setActiveIndex((i) => Math.max(0, i - 1))} onNext={() => setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null))} onDeleteStory={onDeleteStory} onPauseChange={setIsPaused} />}
     </div>
   );
 }
@@ -132,7 +133,7 @@ function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, o
                 <Trash2 size={20} />
               </button>
             )}
-            <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
+            <button type="button" onClick={() => { if (onPauseChange) onPauseChange(false); onClose(); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer' }}>
               <X size={26} />
             </button>
           </div>
@@ -157,7 +158,7 @@ function StoryFullScreen({ story, stories, activeIndex, progress, currentUser, o
           ))}
         </div>
         <form onSubmit={(e) => { e.preventDefault(); const t = replyText.trim(); if (t) { setReplyText(''); sendStoryReply(t); } }} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." style={{ flex: 1, padding: '10px 16px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.55)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFFFFF', fontSize: '14px', outline: 'none' }} />
+          <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." onFocus={() => onPauseChange && onPauseChange(true)} onBlur={() => onPauseChange && onPauseChange(false)} style={{ flex: 1, padding: '10px 16px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.55)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFFFFF', fontSize: '14px', outline: 'none' }} />
           <button type="submit" style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '20px', padding: '9px 14px', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Send</button>
         </form>
       </div>
