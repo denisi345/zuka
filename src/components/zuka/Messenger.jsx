@@ -1,3 +1,4 @@
+import ZukaCallModal from "./ZukaCallModal";
 import React, { useEffect, useState, useRef } from 'react';
 import { ArrowLeft, Send, Image as ImageIcon, Search, Phone, Video, Settings, Mic, Smile, ThumbsUp, Sparkles, Plus, X, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +28,8 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
     { id: 'ai-welcome', sender_id: 'zuka-ai', content: 'Hello! I am ZUKA AI. Ask me anything about news, business, coding, or life.', created_at: new Date().toISOString() }
   ]);
   const [aiTyping, setAiTyping] = useState(false);
-  const [callBanner, setCallBanner] = useState('');
+  const [callBanner, setCallBanner] = useState("");
+  const [activeCall, setActiveCall] = useState(null);
   const fileRef = useRef(null);
   const bottomRef = useRef(null);
 
@@ -153,7 +155,8 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
   if (activePeer) {
     const peerName = activePeer.full_name || activePeer.username || 'ZUKA Member';
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 98px)', backgroundColor: '#FFFFFF', position: 'relative' }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 98px)", backgroundColor: "#FFFFFF", position: "relative" }}>
+        {activeCall && <ZukaCallModal currentUser={currentUser} peer={activeCall.peer} mode={activeCall.mode} onClose={() => setActiveCall(null)} />}
         {callBanner && (
           <div style={{ position: 'fixed', top: '112px', left: '50%', transform: 'translateX(-50%)', zIndex: 80, backgroundColor: '#1877F2', color: '#FFFFFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>
             {callBanner}
@@ -181,10 +184,10 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#050505' }}>
-            <button type="button" onClick={() => { setCallBanner(`Calling ${peerName}...`); setTimeout(() => setCallBanner(''), 2500); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
+            <button type="button" onClick={() => { if (!activePeer.is_ai) setActiveCall({ peer: activePeer, mode: "audio" }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
               <Phone size={20} fill="#050505" />
             </button>
-            <button type="button" onClick={() => { setCallBanner(`Starting video call with ${peerName}...`); setTimeout(() => setCallBanner(''), 2500); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
+            <button type="button" onClick={() => { if (!activePeer.is_ai) setActiveCall({ peer: activePeer, mode: "video" }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
               <Video size={22} fill="#050505" />
             </button>
             <button type="button" onClick={() => onOpenUserProfile && !activePeer.is_ai && onOpenUserProfile(activePeer)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505', padding: '4px' }}>
