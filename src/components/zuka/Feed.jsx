@@ -1,3 +1,4 @@
+import ZukaAdSlot from "./ZukaAdSlot";
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import CreatePost from './CreatePost';
@@ -118,6 +119,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
           ))
         )}
       </div>
+      <ZukaAdSlot />
     </div>
   );
 }
