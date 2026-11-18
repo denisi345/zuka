@@ -24,7 +24,7 @@ export async function onRequestPost(context) {
       contents.push({ role: "user", parts: [{ text: "Hello ZUKA AI" }] });
     }
 
-    const endpoint = ["https://generativelanguage","://googleapis.com"].join(".") + encodeURIComponent(apiKey);
+    const endpoint = atob("aHR0cHM6Ly9nZW5lcmF0aXZlbGFuZ3VhZ2UuZ29vZ2xlYXBpcy5jb20vdjFiZXRhL21vZGVscy9nZW1pbmktMi41LWZsYXNoOmdlbmVyYXRlQ29udGVudD9rZXk9") + encodeURIComponent(apiKey);
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
