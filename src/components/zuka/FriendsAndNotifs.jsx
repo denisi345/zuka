@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useEffect, useState } from 'react';
 import { UserPlus, UserCheck, MessageCircle, Search, Bell, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,7 @@ export function FriendsView({ userProfile, onMessageUser }) {
 
   async function loadFriendsData() {
     setLoading(true);
-    const { data: profs } = await supabase.from('profiles').select('id, username, full_name, avatar_url').limit(80);
+    const { data: profs } = await supabase.from('profiles').select('id, username, full_name, avatar_url, is_verified').limit(80);
     if (Array.isArray(profs)) {
       setProfiles(profs.filter((p) => String(p.id) !== String(userProfile?.id)));
     }
@@ -131,7 +132,7 @@ export function FriendsView({ userProfile, onMessageUser }) {
                   {person.avatar_url ? <img src={person.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.charAt(0).toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}>{name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}><span>{name}</span>{person.is_verified && <ZukaBadge size={15} />}</div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     {isIncoming ? (
                       <>
