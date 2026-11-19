@@ -34,7 +34,7 @@ export default function Stories({ userProfile }) {
     try {
       const { data } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(30);
       if (Array.isArray(data)) {
-        const mapped = data.map((s) => {
+        const mapped = data.filter((s) => !s.created_at || Date.now() - new Date(s.created_at).getTime() < 86400000).map((s) => {
           const owner = s.user_id ? profMap[String(s.user_id)] : null;
           return {
             ...s,
@@ -138,7 +138,7 @@ export default function Stories({ userProfile }) {
           </div>
         </div>
 
-        {stories.map((st, idx) => {
+        {stories.filter((st, i, arr) => arr.findIndex((x) => String(x.user_id || x.author_name || x.id) === String(st.user_id || st.author_name || st.id)) === i).map((st) => { const idx = stories.indexOf(st);
           const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(st.media_url || '');
           const name = st.author_name || 'ZUKA Member';
           const count = groupedCount[String(st.user_id || st.author_name || st.id)] || 1;
