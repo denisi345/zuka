@@ -18,6 +18,8 @@ export default function Stories({ userProfile }) {
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [draftStory, setDraftStory] = useState(null);
+  const [draftText, setDraftText] = useState("");
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -72,7 +74,48 @@ export default function Stories({ userProfile }) {
     return () => clearInterval(interval);
   }, [activeIndex, isPaused, stories]);
 
-  async function handleFileSelect(e) {
+  function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const isVideo = file.type.startsWith('video/');
+    const previewUrl = URL.createObjectURL(file);
+    setDraftText('');
+    setDraftStory({ file, previewUrl, isVideo });
+    e.target.value = '';
+  }
+
+  async function publishDraftStory() {
+    if (!draftStory?.file || uploading) return;
+    const { file, isVideo } = draftStory;
+    setUploading(true);
+    try {
+      let mediaUrl = '';
+      const ext = (file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg')).toLowerCase();
+      const path = `stories/${userProfile?.id || 'guest'}_${Date.now()}.${ext}`;
+      for (const bucket of ['post-media', 'avatars', 'stories']) {
+        const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
+        if (!error) {
+          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+          if (pub?.publicUrl) { mediaUrl = pub.publicUrl; break; }
+        }
+      }
+      if (!mediaUrl && !isVideo) {
+        mediaUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = () => res(''); r.readAsDataURL(file); });
+      }
+      if (mediaUrl) {
+        const payload = { media_url: mediaUrl, media_type: isVideo ? 'video' : 'image', author_name: userProfile?.full_name || 'Zuka User', author_avatar: userProfile?.avatar_url || '', caption: draftText.trim() };
+        if (userProfile?.id) payload.user_id = userProfile.id;
+        const { data: inserted } = await supabase.from('stories').insert(payload).select().single();
+        const newSt = { id: inserted?.id || Date.now(), user_id: userProfile?.id || '', author_name: payload.author_name, author_avatar: payload.author_avatar, media_url: mediaUrl, media_type: payload.media_type, caption: payload.caption, created_at: new Date().toISOString() };
+        setStories((prev) => [newSt, ...prev]);
+      }
+      setDraftStory(null);
+      setDraftText('');
+    } catch (_) {}
+    setUploading(false);
+  }
+
+  async function _unusedOldHandleFileSelect(e) {
     const file = e.target.files?.at(0) || null;
     e.target.value = '';
     if (!file) return;
@@ -121,6 +164,29 @@ export default function Stories({ userProfile }) {
   return (
     <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '10px 0 10px 10px' }}>
       <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+      {draftStory && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', zIndex: 2, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
+            <button onClick={() => { if (!uploading) setDraftStory(null); }} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create story</span>
+            <div style={{ width: '38px' }} />
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+            {draftStory.isVideo ? (
+              <video src={draftStory.previewUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <img src={draftStory.previewUrl} alt="Story Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            )}
+          </div>
+          <div style={{ padding: '12px 16px 24px', zIndex: 2, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input type="text" value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '10px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button onClick={() => { if (!uploading) setDraftStory(null); }} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>Discard</button>
+              <button onClick={publishDraftStory} disabled={uploading} style={{ padding: '10px 22px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer', opacity: uploading ? 0.7 : 1 }}>{uploading ? 'Sharing...' : 'Share to Story'}</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingRight: '10px' }}>
         <div onClick={() => fileInputRef.current?.click()} style={{ width: '104px', height: '176px', borderRadius: '12px', border: '1px solid #CED0D4', backgroundColor: '#F0F2F5', flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', position: 'relative' }}>
           <div style={{ height: '116px', backgroundColor: '#E4E6EB', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
