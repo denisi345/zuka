@@ -17,6 +17,16 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
   const [coverUrl, setCoverUrl] = useState(initialData.cover_url || '');
   const [saving, setSaving] = useState(false);
   const [viewMedia, setViewMedia] = useState(null);
+  const [isOnline, setIsOnline] = useState(() => Boolean(isOwn || window.__zukaOnlineIds?.has(String(targetId || profile?.id || ''))));
+  useEffect(() => {
+    const check = () => {
+      const uid = String(profile?.id || targetId || '');
+      setIsOnline(Boolean(isOwn || (uid && window.__zukaOnlineIds?.has(uid))));
+    };
+    check();
+    window.addEventListener('zuka-presence', check);
+    return () => window.removeEventListener('zuka-presence', check);
+  }, [isOwn, profile?.id, targetId]);
   const [friendSent, setFriendSent] = useState(false);
 
   const avatarInputRef = useRef(null);
@@ -127,7 +137,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
             <span>{displayName}</span>
             {profile.is_verified && <ZukaBadge size={20} />}
           </h1>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#65676B', marginBottom: '6px' }}>0 Friends</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#65676B', marginBottom: '6px' }}><span>0 Friends</span>{isOnline && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 700, color: '#31A24C' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#31A24C' }} />Active now</span>}</div>
           {profile.bio && <p style={{ margin: '0 0 12px', fontSize: '15px', color: '#050505' }}>{profile.bio}</p>}
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
