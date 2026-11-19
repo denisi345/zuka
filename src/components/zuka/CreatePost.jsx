@@ -28,19 +28,19 @@ export default function CreatePost({ userProfile, onCreatePost }) {
   const initial = name.charAt(0).toUpperCase();
 
   function handlePickMedia(e, type) {
-    const file = e.target.files?.at(0) || null;
+    const file = (e.target.files && e.target.files) || null;
     if (!file) return;
     setMediaFile(file);
     setMediaType(type);
-    setMediaPreview(URL.createObjectURL(file));
+    setMediaPreview(URL.createObjectURL(file)); setOpen(true);
     setOpen(true);
   }
 
   function handlePickAudio(e) {
-    const file = e.target.files?.at(0) || null;
+    const file = (e.target.files && e.target.files) || null;
     if (!file) return;
     setAudioFile(file);
-    setAudioPreview(URL.createObjectURL(file));
+    setAudioPreview(URL.createObjectURL(file)); setOpen(true);
     setAudioTitle(file.name.replace(/\.[^/.]+$/, ''));
     setOpen(true);
   }
