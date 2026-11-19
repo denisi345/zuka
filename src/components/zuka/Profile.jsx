@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
 
 export default function Profile({ currentUser, targetProfile, onBack, onOpenMessenger, onProfileUpdated }) {
-  const isOwn = !targetProfile || String(targetProfile.id) === String(currentUser?.id);
-  const initialData = isOwn ? (currentUser || {}) : targetProfile;
+  const targetId = typeof targetProfile === 'string' ? targetProfile : targetProfile?.id;
+  const isOwn = !targetId || String(targetId) === String(currentUser?.id);
+  const initialData = isOwn ? (currentUser || {}) : (typeof targetProfile === 'object' && targetProfile ? targetProfile : { id: targetId });
 
   const [profile, setProfile] = useState(initialData);
   const [editing, setEditing] = useState(false);
@@ -168,7 +169,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
           </button>
         </form>
       )}
-      <ProfileTimeline profile={profile} isOwnProfile={isOwnProfile} />
+      <ProfileTimeline profile={profile} isOwnProfile={isOwn} />
     </div>
   );
 }
