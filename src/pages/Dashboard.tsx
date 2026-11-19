@@ -27,27 +27,6 @@ const Dashboard = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatTarget, setChatTarget] = useState(null);
   const [viewedProfile, setViewedProfile] = useState(null);
-  useEffect(() => {
-    if (!localProfile?.id) return;
-    const myId = String(localProfile.id);
-    const presCh = supabase.channel("zuka-online-users", { config: { presence: { key: myId } } });
-    const syncPresence = () => {
-      const st = presCh.presenceState();
-      const ids = new Set<string>([myId]);
-      Object.keys(st).forEach((k) => { if (k) ids.add(String(k)); });
-      (window as any).__zukaOnlineIds = ids;
-      window.dispatchEvent(new Event("zuka-presence"));
-    };
-    presCh.on("presence", { event: "sync" }, syncPresence)
-      .on("presence", { event: "join" }, syncPresence)
-      .on("presence", { event: "leave" }, syncPresence)
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await presCh.track({ user_id: myId, online_at: new Date().toISOString() });
-        }
-      });
-    return () => { supabase.removeChannel(presCh); };
-  }, [localProfile?.id]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
