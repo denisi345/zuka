@@ -28,8 +28,8 @@ const Dashboard = () => {
   const [chatTarget, setChatTarget] = useState(null);
   const [viewedProfile, setViewedProfile] = useState(null);
   useEffect(() => {
-    if (!profile?.id) return;
-    const myId = String(profile.id);
+    if (!localProfile?.id) return;
+    const myId = String(localProfile.id);
     const presCh = supabase.channel("zuka-online-users", { config: { presence: { key: myId } } });
     const syncPresence = () => {
       const st = presCh.presenceState();
@@ -47,7 +47,7 @@ const Dashboard = () => {
         }
       });
     return () => { supabase.removeChannel(presCh); };
-  }, [profile?.id]);
+  }, [localProfile?.id]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
