@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, Bookmark, Share2, X, SlidersHorizontal } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -222,7 +223,7 @@ export default function Marketplace({ userProfile, onMessageSeller }) {
               )}
             </div>
             <div style={{ backgroundColor: '#F0F2F5', padding: '12px', borderRadius: '8px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>Seller: {selectedItem.seller_name || 'ZUKA Member'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}><span>Seller: {selectedItem.seller_name || 'ZUKA Member'}</span>{selectedItem.seller_verified && <ZukaBadge size={13} />}</div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input type="text" value={inquiryText} onChange={(e) => setInquiryText(e.target.value)} style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
                 <button type="button" onClick={handleSendInquiry} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '8px 14px', fontWeight: 600, cursor: 'pointer' }}>Send</button>
