@@ -248,7 +248,7 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
     const author = userProfile?.full_name || userProfile?.username || 'You';
     setReelComments((prev) => ({ ...prev, [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, is_verified: Boolean(userProfile?.is_verified), content: txt }] }));
     setReels((prev) => prev.map((r) => (r.id === commentReelId ? { ...r, comments_count: Number(r.comments_count || 0) + 1 } : r)));
-    setCommentInput('');
+    setCommentInput(''); if (userProfile?.id && commentReelId) { supabase.from('comments').insert({ post_id: commentReelId, user_id: userProfile.id, content: text }).then(() => {}); }
   }
 
   async function handleShare(reel) {
