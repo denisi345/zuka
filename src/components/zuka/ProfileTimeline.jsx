@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useEffect, useState } from 'react';
 import { Briefcase, MapPin, ShieldCheck, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,7 @@ export default function ProfileTimeline({ profile, isOwnProfile }) {
   const [userPosts, setUserPosts] = useState([]);
   const [userReels, setUserReels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [photoIdx, setPhotoIdx] = useState(null);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -153,6 +155,23 @@ export default function ProfileTimeline({ profile, isOwnProfile }) {
         </div>
       )}
 
+      {photoIdx !== null && photosOnly[photoIdx] && (
+        <div onClick={() => setPhotoIdx(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}><span>{profile?.full_name || profile?.username || 'ZUKA Member'}</span>{profile?.is_verified && <ZukaBadge size={14} />}</div>
+              <span style={{ fontSize: '12px', color: '#B0B3B8' }}>· {photoIdx + 1} / {photosOnly.length}</span>
+            </div>
+            <button type="button" onClick={() => setPhotoIdx(null)} style={{ border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF', borderRadius: '50%', width: '34px', height: '34px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {photoIdx > 0 && <button type="button" onClick={() => setPhotoIdx(photoIdx - 1)} style={{ position: 'absolute', left: '6px', border: 'none', backgroundColor: 'rgba(255,255,255,0.22)', color: '#FFFFFF', borderRadius: '50%', width: '38px', height: '38px', fontSize: '22px', fontWeight: 700, cursor: 'pointer' }}>‹</button>}
+            <img src={photosOnly[photoIdx].image_url} alt="" style={{ maxWidth: '100%', maxHeight: '78vh', objectFit: 'contain', borderRadius: '6px' }} />
+            {photoIdx < photosOnly.length - 1 && <button type="button" onClick={() => setPhotoIdx(photoIdx + 1)} style={{ position: 'absolute', right: '6px', border: 'none', backgroundColor: 'rgba(255,255,255,0.22)', color: '#FFFFFF', borderRadius: '50%', width: '38px', height: '38px', fontSize: '22px', fontWeight: 700, cursor: 'pointer' }}>›</button>}
+          </div>
+          <div style={{ textAlign: 'center', color: '#E4E6EB', fontSize: '13px' }}>{photosOnly[photoIdx].content || 'Tap outside photo to close'}</div>
+        </div>
+      )}
       {subTab === 'reels' && (
         <div style={{ backgroundColor: '#FFFFFF', padding: '8px' }}>
           {userReels.length === 0 ? (
