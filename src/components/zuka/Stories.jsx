@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useEffect, useState, useRef } from 'react';
 import { Plus, X, Trash2, MoreVertical, ChevronLeft, ChevronRight, Volume2, VolumeX, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +27,7 @@ export default function Stories({ userProfile }) {
   async function loadStories() {
     let profMap = {};
     try {
-      const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url');
+      const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified');
       if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
     } catch (_) {}
 
@@ -38,7 +39,8 @@ export default function Stories({ userProfile }) {
           return {
             ...s,
             author_name: owner?.full_name || owner?.username || s.author_name || 'ZUKA Member',
-            avatar_url: owner?.avatar_url || s.avatar_url || ''
+            avatar_url: owner?.avatar_url || s.avatar_url || '',
+          is_verified: Boolean(owner?.is_verified || s.is_verified)
           };
         });
         setStories(mapped);
@@ -283,7 +285,7 @@ function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUse
               {story.avatar_url ? <img src={story.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{authorName}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><span>{authorName}</span>{story?.is_verified && <ZukaBadge size={14} />}</div>
               <div style={{ fontSize: '11px', color: '#E4E6EB' }}>{formatStoryTime(story.created_at)}</div>
             </div>
           </div>
