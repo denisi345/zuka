@@ -24,6 +24,9 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
   const [pinned, setPinned] = useState(false);
   const [audioSheetOpen, setAudioSheetOpen] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [likesOpen, setLikesOpen] = useState(false);
+  const [likersList, setLikersList] = useState([]);
+  const [loadingLikers, setLoadingLikers] = useState(false);
   const audioRef = React.useRef(null);
   const audioMatch = String(contentText || "").match(/\[zuka_audio:([^|\]]+)\|([^\]]+)\]/);
   const parsedAudio = audioMatch ? { title: audioMatch.at(1), url: audioMatch.at(2) } : null;
@@ -39,7 +42,23 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
     setTimeout(() => setToastMsg(''), 2400);
   }
 
-  function handleLike() {
+  async function handleOpenLikers() {
+    setLikesOpen(true);
+    setLoadingLikers(true);
+    try {
+      const [{ data: lk }, { data: profs }] = await Promise.all([
+        supabase.from('post_likes').select('user_id').eq('post_id', post.id),
+        supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified')
+      ]);
+      const pMap = {}; if (Array.isArray(profs)) profs.forEach((p) => { pMap[String(p.id)] = p; });
+      const ids = new Set(Array.isArray(lk) ? lk.map((r) => String(r.user_id)) : []);
+      if (liked && currentUserId) ids.add(String(currentUserId));
+      const rows = Array.from(ids).map((uid) => pMap[uid] || { id: uid, full_name: 'ZUKA Member', is_verified: false });
+      setLikersList(rows);
+    } catch (_) { setLikersList([]); }
+    setLoadingLikers(false);
+  }
+  async function handleLike() {
     const nextLiked = !liked;
     setLiked(nextLiked);
     if (nextLiked) localStorage.setItem(storageKey, '1');
@@ -48,6 +67,12 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
     setLikesCount(nextCount);
     if (!isLiveOrDemo) {
       try { supabase.from('posts').update({ likes_count: nextCount }).eq('id', post.id); } catch (_) {}
+      if (currentUserId) {
+        try {
+          if (nextLiked) { await supabase.from('post_likes').upsert({ post_id: post.id, user_id: currentUserId }, { onConflict: 'post_id,user_id' }); }
+          else { await supabase.from('post_likes').delete().eq('post_id', post.id).eq('user_id', currentUserId); }
+        } catch (_) {}
+      }
       if (nextLiked) sendZukaNotification({ receiverId: post.user_id, senderId: currentUserId, type: 'like', message: 'Someone liked your post on ZUKA.' });
     }
   }
@@ -170,7 +195,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
 
       {(likesCount > 0 || comments.length > 0) && (
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', fontSize: '13px', color: '#65676B', borderBottom: '1px solid #E4E6EB' }}>
-          <span>{likesCount > 0 ? `👍 ${likesCount}` : ''}</span>
+          <span onClick={likesCount > 0 ? handleOpenLikers : undefined} style={{ cursor: likesCount > 0 ? 'pointer' : 'default', fontWeight: 600 }}>{likesCount > 0 ? `👍 ${likesCount}` : ''}</span>
           <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
         </div>
       )}
@@ -246,6 +271,22 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
         </div>
       )}
 
+      {likesOpen && (
+        <div onClick={() => setLikesOpen(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', width: '100%', maxWidth: '380px', maxHeight: '70vh', overflowY: 'auto', padding: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '10px', marginBottom: '10px' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px' }}>👍 People who reacted ({likesCount})</span>
+              <button type="button" onClick={() => setLikesOpen(false)} style={{ border: 'none', backgroundColor: '#E4E6EB', borderRadius: '50%', width: '28px', height: '28px', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+            </div>
+            {loadingLikers ? <div style={{ padding: '16px', textAlign: 'center', color: '#65676B', fontSize: '13px' }}>Loading...</div> : likersList.length === 0 ? <div style={{ padding: '16px', textAlign: 'center', color: '#65676B', fontSize: '13px' }}>👍 {likesCount} likes</div> : likersList.map((u) => (
+              <div key={u.id} onClick={() => { setLikesOpen(false); if (onOpenUserProfile) onOpenUserProfile(u.id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 4px', cursor: 'pointer', borderBottom: '1px solid #F0F2F5' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, overflow: 'hidden', flexShrink: 0 }}>{u.avatar_url ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.full_name || u.username || 'Z')[0].toUpperCase()}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, fontSize: '14px' }}><span>{u.full_name || u.username || 'ZUKA Member'}</span>{u.is_verified && <ZukaBadge size={14} />}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {photoOpen && (
         <PhotoViewer
           post={{ ...post, content: contentText }}
