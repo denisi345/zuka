@@ -242,7 +242,7 @@ export function NotificationsView({ userProfile, onOpenTab }) {
                 <Bell size={20} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '14px', fontWeight: n.unread ? 700 : 500, color: '#050505' }}>{n.text}</div>
+                <div style={{ fontSize: '14px', fontWeight: n.unread ? 700 : 500, color: '#050505' }}>{n.actor && <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', verticalAlign: 'middle', marginRight: '4px' }}><span>{n.actor}</span>{n.verified && <ZukaBadge size={13} />}</strong>}<span>{n.text}</span></div>
                 <div style={{ fontSize: '12px', color: '#1877F2', marginTop: '2px' }}>
                   {n.time ? new Date(n.time).toLocaleString() : 'Just now'}
                 </div>
