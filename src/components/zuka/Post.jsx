@@ -1,5 +1,5 @@
 import PostAudioSheet from "./PostAudioSheet";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2, Edit3, Pin, EyeOff, AlertCircle, UserMinus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
@@ -18,15 +18,6 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
   const [toastMsg, setToastMsg] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [followed, setFollowed] = useState(false);
-  const [authorOnline, setAuthorOnline] = useState(() => Boolean(isOwner || (post.user_id && window.__zukaOnlineIds?.has(String(post.user_id)))));
-  useEffect(() => {
-    const check = () => {
-      setAuthorOnline(Boolean(isOwner || (post.user_id && window.__zukaOnlineIds?.has(String(post.user_id)))));
-    };
-    check();
-    window.addEventListener('zuka-presence', check);
-    return () => window.removeEventListener('zuka-presence', check);
-  }, [isOwner, post.user_id]);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(false);
   const [contentText, setContentText] = useState(post.content || '');
@@ -153,14 +144,11 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 12px 6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div
-              onClick={() => post.user_id && onOpenUserProfile && onOpenUserProfile({ id: post.user_id, full_name: authorName, avatar_url: post.avatar_url, is_verified: post.is_verified })}
-              style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', cursor: post.user_id ? 'pointer' : 'default' }}
-            >
-              {post.avatar_url ? <img src={post.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
-            </div>
-            {authorOnline && <span title="Active now" style={{ position: 'absolute', bottom: '0px', right: '0px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#31A24C', border: '2px solid #FFFFFF' }} />}
+          <div
+            onClick={() => post.user_id && onOpenUserProfile && onOpenUserProfile({ id: post.user_id, full_name: authorName, avatar_url: post.avatar_url, is_verified: post.is_verified })}
+            style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', flexShrink: 0, cursor: post.user_id ? 'pointer' : 'default' }}
+          >
+            {post.avatar_url ? <img src={post.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>

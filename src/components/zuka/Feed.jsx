@@ -56,11 +56,11 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
       }
     } catch (_) {}
 
-    setPosts(userPosts);
     if (autoEnabled) {
-      Promise.race([fetchLiveNewsAndFunny(), new Promise((r) => setTimeout(() => r([]), 4000))])
-        .then((liveItems) => { if (Array.isArray(liveItems) && liveItems.length) setPosts([...userPosts, ...liveItems]); })
-        .catch(() => {});
+      const liveItems = await fetchLiveNewsAndFunny();
+      setPosts([...userPosts, ...liveItems]);
+    } else {
+      setPosts(userPosts);
     }
 
     try {
