@@ -11,6 +11,7 @@ export default function ProfileTimeline({ profile, isOwnProfile }) {
   const [userReels, setUserReels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [photoIdx, setPhotoIdx] = useState(null);
+  const [activeReel, setActiveReel] = useState(null);
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -155,6 +156,18 @@ export default function ProfileTimeline({ profile, isOwnProfile }) {
         </div>
       )}
 
+      {activeReel && (
+        <div onClick={() => setActiveReel(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}><span>{profile?.full_name || profile?.username || 'ZUKA Member'}</span>{profile?.is_verified && <ZukaBadge size={14} />}<span style={{ fontSize: '12px', color: '#B0B3B8', marginLeft: '4px' }}>· Reel</span></div>
+            <button type="button" onClick={() => setActiveReel(null)} style={{ border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF', borderRadius: '50%', width: '34px', height: '34px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+          <div onClick={(e) => e.stopPropagation()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <video src={activeReel.video_url} controls autoPlay playsInline style={{ maxWidth: '100%', maxHeight: '78vh', borderRadius: '8px' }} />
+          </div>
+          <div style={{ textAlign: 'center', color: '#E4E6EB', fontSize: '13px' }}>{activeReel.caption || activeReel.content || 'Tap outside video to close'}</div>
+        </div>
+      )}
       {photoIdx !== null && photosOnly[photoIdx] && (
         <div onClick={() => setPhotoIdx(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
