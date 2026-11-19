@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useState } from 'react';
 import { Users, Plus, ArrowLeft, Globe, Lock, Check, Send } from 'lucide-react';
 
@@ -69,7 +70,7 @@ export default function ZukaGroups({ currentUser, onBack }) {
       if (g.id !== activeGroupId) return g;
       return {
         ...g,
-        posts: [{ id: `gp-${Date.now()}`, author: myName, content: postText.trim(), time: 'Just now' }, ...g.posts]
+        posts: [{ id: `gp-${Date.now()}`, author: myName, is_verified: Boolean(currentUser?.is_verified), content: postText.trim(), time: 'Just now' }, ...g.posts]
       };
     });
     setGroups(next);
@@ -117,7 +118,7 @@ export default function ZukaGroups({ currentUser, onBack }) {
         ) : (
           activeGroup.posts.map((p) => (
             <div key={p.id} style={{ backgroundColor: '#FFFFFF', marginTop: '8px', padding: '12px 14px', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB' }}>
-              <div style={{ fontWeight: 700, fontSize: '14px', color: '#050505' }}>{p.author}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '14px', color: '#050505' }}><span>{p.author}</span>{p.is_verified && <ZukaBadge size={13} />}</div>
               <div style={{ fontSize: '11px', color: '#65676B', marginBottom: '6px' }}>{p.time}</div>
               <div style={{ fontSize: '15px', color: '#050505', lineHeight: '1.4' }}>{p.content}</div>
             </div>
