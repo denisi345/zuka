@@ -6,6 +6,14 @@ import Stories from './Stories';
 import Post from './Post';
 import { fetchLiveNewsAndFunny } from './liveAutoFeed';
 
+class FeedGuard extends React.Component {
+  constructor(p) { super(p); this.state = { err: null }; }
+  static getDerivedStateFromError(e) { return { err: String(e?.message || e) }; }
+  render() {
+    if (this.state.err) return <div style={{ padding: 16, margin: 12, background: "#FFF3CD", color: "#856404", borderRadius: 8, fontSize: 13 }}>Feed notice: {this.state.err}</div>;
+    return this.props.children;
+  }
+}
 export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) {
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
@@ -119,7 +127,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
           ))
         )}
       </div>
-      <ZukaAdSlot />
+      <FeedGuard><ZukaAdSlot /></FeedGuard>
     </div>
   );
 }
