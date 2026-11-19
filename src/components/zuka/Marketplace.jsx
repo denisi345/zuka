@@ -25,6 +25,7 @@ export default function Marketplace({ userProfile, onMessageSeller }) {
   const [selectedItem, setSelectedItem] = useState(null);
   const [inquiryText, setInquiryText] = useState('Hi, is this still available?');
   const [sellOpen, setSellOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     title: '', price: '', currency: 'TZS', category: 'Electronics',
@@ -111,6 +112,7 @@ export default function Marketplace({ userProfile, onMessageSeller }) {
     }
     setSubmitting(false);
     setSellOpen(false);
+    setPreviewUrl('');
     setForm({ title: '', price: '', currency: 'TZS', category: 'Electronics', condition: 'New', location: '', imageUrl: '', description: '', file: null });
   }
 
@@ -259,7 +261,7 @@ export default function Marketplace({ userProfile, onMessageSeller }) {
               {(previewUrl || form.imageUrl?.trim()) && (
                 <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", border: "1px solid #CED0D4", backgroundColor: "#F0F2F5" }}>
                   <img src={previewUrl || form.imageUrl} alt="Listing Preview" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", display: "block" }} />
-                  <button type="button" onClick={() => { setImageFile(null); setPreviewUrl(""); setForm({ ...form, image_url: "" }); }} style={{ position: "absolute", top: "8px", right: "8px", width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.7)", color: "#FFFFFF", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={16} /></button>
+                  <button type="button" onClick={() => { setPreviewUrl(''); setForm({ ...form, file: null, imageUrl: '' }); }} style={{ position: "absolute", top: "8px", right: "8px", width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.7)", color: "#FFFFFF", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={16} /></button>
                 </div>
               )}
               <input type="url" placeholder="Image URL (optional)" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
