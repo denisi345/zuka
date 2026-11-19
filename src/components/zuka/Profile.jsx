@@ -16,6 +16,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
   const [avatarUrl, setAvatarUrl] = useState(initialData.avatar_url || '');
   const [coverUrl, setCoverUrl] = useState(initialData.cover_url || '');
   const [saving, setSaving] = useState(false);
+  const [viewMedia, setViewMedia] = useState(null);
   const [friendSent, setFriendSent] = useState(false);
 
   const avatarInputRef = useRef(null);
@@ -87,13 +88,13 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
           </div>
         )}
 
-        <div style={{ position: 'relative', height: '170px', background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1877F2 0%, #42B72A 100%)' }}>
+        <div onClick={() => { if (coverUrl) setViewMedia({ url: coverUrl, label: 'Cover photo' }); }} style={{ position: 'relative', height: '170px', cursor: coverUrl ? 'pointer' : 'default', background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1877F2 0%, #42B72A 100%)' }}>
           {isOwn && (
             <>
               <input ref={coverInputRef} type="file" accept="image/*" onChange={(e) => handlePickMedia(e, 'cover')} style={{ display: 'none' }} />
               <button
                 type="button"
-                onClick={() => coverInputRef.current?.click()}
+                onClick={(e) => { e.stopPropagation(); coverInputRef.current?.click(); }}
                 style={{ position: 'absolute', bottom: '10px', right: '12px', zIndex: 10, backgroundColor: '#FFFFFF', color: '#050505', border: 'none', borderRadius: '8px', padding: '7px 12px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', cursor: 'pointer' }}
               >
                 <Camera size={16} /> Edit cover
@@ -104,7 +105,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
 
         <div style={{ padding: '0 16px 16px', position: 'relative' }}>
           <div style={{ position: 'relative', width: '104px', height: '104px', marginTop: '-52px', zIndex: 12 }}>
-            <div style={{ width: '104px', height: '104px', borderRadius: '50%', border: '4px solid #FFFFFF', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '38px', fontWeight: 800 }}>
+            <div onClick={() => { if (avatarUrl) setViewMedia({ url: avatarUrl, label: 'Profile picture' }); }} style={{ width: '104px', height: '104px', borderRadius: '50%', border: '4px solid #FFFFFF', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '38px', fontWeight: 800, cursor: avatarUrl ? 'pointer' : 'default' }}>
               {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : displayName.charAt(0).toUpperCase()}
             </div>
             {isOwn && (
@@ -170,6 +171,21 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
         </form>
       )}
       <ProfileTimeline profile={profile} isOwnProfile={isOwn} />
+      {viewMedia && (
+        <div onClick={() => setViewMedia(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}><span>{displayName}</span>{profile?.is_verified && <ZukaBadge size={14} />}</div>
+              <span style={{ fontSize: '12px', color: '#B0B3B8' }}>· {viewMedia.label}</span>
+            </div>
+            <button type="button" onClick={() => setViewMedia(null)} style={{ border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF', borderRadius: '50%', width: '34px', height: '34px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <img src={viewMedia.url} alt={viewMedia.label} style={{ maxWidth: '100%', maxHeight: '82vh', objectFit: 'contain', borderRadius: '6px' }} />
+          </div>
+          <div style={{ textAlign: 'center', color: '#B0B3B8', fontSize: '12px' }}>Tap anywhere outside photo to close</div>
+        </div>
+      )}
     </div>
   );
 }
