@@ -56,8 +56,9 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
     setCommentsOpen(next);
     if (next && !isLiveOrDemo) {
       try {
-        const { data } = await supabase.from('comments').select('*').eq('post_id', post.id).order('created_at', { ascending: true });
-        if (Array.isArray(data)) setComments(data);
+        const [{ data }, { data: profs }] = await Promise.all([supabase.from('comments').select('*').eq('post_id', post.id).order('created_at', { ascending: true }), supabase.from('profiles').select('id, full_name, username, is_verified')]);
+        const pMap = {}; if (Array.isArray(profs)) profs.forEach((p) => { pMap[String(p.id)] = p; });
+        if (Array.isArray(data)) setComments(data.map((cm) => { const ow = cm.user_id ? pMap[String(cm.user_id)] : null; return { ...cm, author_name: ow?.full_name || ow?.username || cm.author_name || 'Member', is_verified: Boolean(ow?.is_verified || cm.is_verified) }; }));
       } catch (_) {}
     }
   }
@@ -190,7 +191,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
         <div style={{ padding: '8px 12px 12px', borderTop: '1px solid #E4E6EB', backgroundColor: '#F7F8FA' }}>
           {comments.map((c) => (
             <div key={c.id} style={{ backgroundColor: '#E4E6EB', borderRadius: '12px', padding: '7px 12px', marginBottom: '6px', fontSize: '13px' }}>
-              <strong>{c.author_name || 'Member'}: </strong>{c.content}
+              <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', verticalAlign: 'middle' }}><span>{c.author_name || 'Member'}</span>{c.is_verified && <ZukaBadge size={12} />}<span>: </span></strong>{c.content}
             </div>
           ))}
           <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
