@@ -246,7 +246,7 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
     const txt = commentInput.trim();
     if (!txt || !commentReelId) return;
     const author = userProfile?.full_name || userProfile?.username || 'You';
-    setReelComments((prev) => ({ ...prev, [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, content: txt }] }));
+    setReelComments((prev) => ({ ...prev, [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, is_verified: Boolean(userProfile?.is_verified), content: txt }] }));
     setReels((prev) => prev.map((r) => (r.id === commentReelId ? { ...r, comments_count: Number(r.comments_count || 0) + 1 } : r)));
     setCommentInput('');
   }
@@ -317,7 +317,7 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
               <button type="button" onClick={() => setCommentReelId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#050505' }}><X size={20} /></button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
-              {(reelComments[commentReelId] || []).length === 0 ? <div style={{ textAlign: 'center', color: '#65676B', fontSize: '13px', padding: '20px 0' }}>No comments yet. Be the first!</div> : (reelComments[commentReelId] || []).map((c) => <div key={c.id} style={{ backgroundColor: '#F0F2F5', padding: '8px 12px', borderRadius: '12px', fontSize: '13px', color: '#050505' }}><strong>{c.author}: </strong>{c.content}</div>)}
+              {(reelComments[commentReelId] || []).length === 0 ? <div style={{ textAlign: 'center', color: '#65676B', fontSize: '13px', padding: '20px 0' }}>No comments yet. Be the first!</div> : (reelComments[commentReelId] || []).map((c) => <div key={c.id} style={{ backgroundColor: '#F0F2F5', padding: '8px 12px', borderRadius: '12px', fontSize: '13px', color: '#050505' }}><strong style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', verticalAlign: 'middle' }}><span>{c.author}</span>{c.is_verified && <ZukaBadge size={12} />}<span>: </span></strong>{c.content}</div>)}
             </div>
             <form onSubmit={handleAddComment} style={{ display: 'flex', gap: '8px' }}>
               <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Write a comment..." style={{ flex: 1, padding: '9px 14px', borderRadius: '20px', border: '1px solid #CED0D4', fontSize: '14px' }} />
