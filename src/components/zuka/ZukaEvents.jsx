@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useState } from 'react';
 import { Calendar, Plus, ArrowLeft, MapPin, Star, Check } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export default function ZukaEvents({ currentUser, onBack }) {
     const newEv = {
       id: `ev-${Date.now()}`,
       hostName: myName,
+      hostVerified: Boolean(currentUser?.is_verified),
       title: title.trim(),
       dateTime: dateTime.trim() || 'Upcoming',
       venue: venue.trim() || 'Online / Venue TBA',
@@ -98,7 +100,7 @@ export default function ZukaEvents({ currentUser, onBack }) {
               <div style={{ fontSize: '12px', fontWeight: 800, color: '#F3425F', textTransform: 'uppercase' }}>{ev.dateTime}</div>
               <div style={{ fontWeight: 800, fontSize: '17px', color: '#050505' }}>{ev.title}</div>
               <div style={{ fontSize: '13px', color: '#65676B', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <MapPin size={14} /> <span>{ev.venue} · Hosted by {ev.hostName}</span>
+                <MapPin size={14} /> <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}><span>{ev.venue} · Hosted by {ev.hostName}</span>{ev.hostVerified && <ZukaBadge size={12} />}</span>
               </div>
               {ev.details && <div style={{ fontSize: '14px', color: '#050505', marginTop: '2px' }}>{ev.details}</div>}
               <div style={{ fontSize: '12px', color: '#65676B', marginTop: '2px' }}>
