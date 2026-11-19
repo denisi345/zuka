@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useState } from 'react';
 import { Flag, Plus, ArrowLeft, Check, BarChart2, Phone, Send } from 'lucide-react';
 
@@ -37,6 +38,7 @@ export default function ZukaPages({ currentUser, onBack }) {
     const newPage = {
       id: `pg-${Date.now()}`,
       ownerId: myId,
+      is_verified: Boolean(currentUser?.is_verified),
       name: name.trim(),
       category,
       bio: bio.trim(),
@@ -136,7 +138,7 @@ export default function ZukaPages({ currentUser, onBack }) {
 
         {activePage.posts.map((p) => (
           <div key={p.id} style={{ backgroundColor: '#FFFFFF', marginTop: '8px', padding: '12px 14px', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB' }}>
-            <div style={{ fontWeight: 700, fontSize: '14px', color: '#050505' }}>{activePage.name}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '14px', color: '#050505' }}><span>{activePage.name}</span>{(activePage.is_verified || (activePage.ownerId === myId && currentUser?.is_verified)) && <ZukaBadge size={13} />}</div>
             <div style={{ fontSize: '11px', color: '#65676B', marginBottom: '6px' }}>{p.time}</div>
             <div style={{ fontSize: '15px', color: '#050505', lineHeight: '1.4' }}>{p.content}</div>
           </div>
