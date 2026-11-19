@@ -1,5 +1,5 @@
 import PostAudioSheet from "./PostAudioSheet";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2, Edit3, Pin, EyeOff, AlertCircle, UserMinus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
