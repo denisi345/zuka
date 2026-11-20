@@ -94,7 +94,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
             media_url: row.media_url || '',
             media_type: row.media_type || 'image',
             audio_url: row.audio_url || '',
-            music_title: mMatch ? mMatch : (row.audio_url ? 'Story Music' : ''),
+            music_title: (mMatch && mMatch) ? mMatch : (row.audio_url ? 'Story Music' : ''),
             caption: row.media_type === 'text' ? cleanAuthor : '',
             created_at: row.created_at
           };
@@ -143,16 +143,28 @@ export default function Stories({ userProfile, onOpenProfile }) {
 
   useEffect(() => {
     if (!activeStory || paused || showViewers) return;
-    setProgress(0);
-    const step = (50 / (activeStory.media_type === 'video' ? 12000 : 6000)) * 100;
+    if (activeStory.media_type === 'video' || activeStory.audio_url) return;
+    const step = (50 / 6000) * 100;
     const t = setInterval(() => {
-      setProgress((p) => {
-        if (p + step >= 100) { clearInterval(t); goNextStory(); return 100; }
-        return p + step;
+      setProgress((prev) => {
+        if (prev + step >= 100) {
+          clearInterval(t);
+          if (activeGroup && activeItemIdx + 1 < activeGroup.items.length) {
+            setActiveItemIdx((i) => i + 1);
+          } else if (activeGroupIdx !== null && activeGroupIdx + 1 < groupedStories.length) {
+            setActiveGroupIdx((g) => g + 1);
+            setActiveItemIdx(0);
+          } else {
+            setActiveGroupIdx(null);
+            setActiveItemIdx(0);
+          }
+          return 0;
+        }
+        return prev + step;
       });
     }, 50);
     return () => clearInterval(t);
-  }, [activeGroupIdx, activeItemIdx, paused, showViewers]);
+  }, [activeStory?.id, activeGroupIdx, activeItemIdx, paused, showViewers, groupedStories.length]);
 
   function goNextStory() {
     if (!activeGroup) return;
@@ -404,7 +416,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
           </div>
 
           <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: activeStory.media_type === 'text' ? activeStory.media_url : '#000' }}>
-            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay loop muted={muted} playsInline />}
+            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay muted={muted} playsInline onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onEnded={goNextStory} />}
             {activeStory.media_type === 'text' ? (
               <div style={{ padding: '28px', textAlign: 'center', color: '#FFF', fontSize: '26px', fontWeight: 800, lineHeight: 1.3 }}>{activeStory.caption}</div>
             ) : activeStory.media_type === 'video' ? (
