@@ -115,7 +115,7 @@ export default function Stories({ userProfile }) {
       }
       if (mediaUrl) {
         const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
-        const payload = { media_url: mediaUrl, media_type: isVideo ? 'video' : 'image', author_name: userProfile?.full_name || 'Zuka User', author_avatar: userProfile?.avatar_url || '', caption: capWithMusic, audio_url: audioUrl };
+        const payload = { media_url: mediaUrl, media_type: isVideo ? 'video' : 'image', author_name: userProfile?.full_name || 'Zuka User', author_avatar: userProfile?.avatar_url || '', caption: capWithMusic, audio_url: audioUrl, expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() };
         if (userProfile?.id) payload.user_id = userProfile.id;
         const { data: inserted } = await supabase.from('stories').insert(payload).select().single();
         const newSt = { id: inserted?.id || Date.now(), user_id: userProfile?.id || '', author_name: payload.author_name, author_avatar: payload.author_avatar, media_url: mediaUrl, media_type: payload.media_type, caption: payload.caption, audio_url: audioUrl, created_at: new Date().toISOString() };
@@ -185,7 +185,7 @@ export default function Stories({ userProfile }) {
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
               <span>🎵 {draftAudio ? draftAudio.name.slice(0, 14) : 'Music'}</span>
               <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={(e) => {
-                const af = (e.target.files && e.target.files) || null;
+                const af = (e.target.files && e.target.files.item(0)) || null;
                 if (!af) return;
                 setDraftAudio({ file: af, url: URL.createObjectURL(af), name: af.name || 'Music' });
               }} />
