@@ -20,6 +20,7 @@ export default function Stories({ userProfile }) {
   const [uploading, setUploading] = useState(false);
   const [draftStory, setDraftStory] = useState(null);
   const [draftText, setDraftText] = useState("");
+  const [draftAudio, setDraftAudio] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function Stories({ userProfile }) {
     const isVideo = file.type.startsWith('video/');
     const previewUrl = URL.createObjectURL(file);
     setDraftText('');
+    setDraftAudio(null);
     setDraftStory({ file, previewUrl, isVideo });
     e.target.value = '';
   }
@@ -102,15 +104,26 @@ export default function Stories({ userProfile }) {
       if (!mediaUrl && !isVideo) {
         mediaUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = () => res(''); r.readAsDataURL(file); });
       }
+      let audioUrl = '';
+      if (draftAudio?.file) {
+        const aExt = (draftAudio.file.name.split('.').pop() || 'mp3').toLowerCase();
+        const aPath = `stories/audio_${userProfile?.id || 'guest'}_${Date.now()}.${aExt}`;
+        for (const bucket of ['post-media', 'avatars', 'stories']) {
+          const { error: ae } = await supabase.storage.from(bucket).upload(aPath, draftAudio.file, { contentType: draftAudio.file.type, upsert: true });
+          if (!ae) { const { data: ap } = supabase.storage.from(bucket).getPublicUrl(aPath); if (ap?.publicUrl) { audioUrl = ap.publicUrl; break; } }
+        }
+      }
       if (mediaUrl) {
-        const payload = { media_url: mediaUrl, media_type: isVideo ? 'video' : 'image', author_name: userProfile?.full_name || 'Zuka User', author_avatar: userProfile?.avatar_url || '', caption: draftText.trim() };
+        const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
+        const payload = { media_url: mediaUrl, media_type: isVideo ? 'video' : 'image', author_name: userProfile?.full_name || 'Zuka User', author_avatar: userProfile?.avatar_url || '', caption: capWithMusic, audio_url: audioUrl };
         if (userProfile?.id) payload.user_id = userProfile.id;
         const { data: inserted } = await supabase.from('stories').insert(payload).select().single();
-        const newSt = { id: inserted?.id || Date.now(), user_id: userProfile?.id || '', author_name: payload.author_name, author_avatar: payload.author_avatar, media_url: mediaUrl, media_type: payload.media_type, caption: payload.caption, created_at: new Date().toISOString() };
+        const newSt = { id: inserted?.id || Date.now(), user_id: userProfile?.id || '', author_name: payload.author_name, author_avatar: payload.author_avatar, media_url: mediaUrl, media_type: payload.media_type, caption: payload.caption, audio_url: audioUrl, created_at: new Date().toISOString() };
         setStories((prev) => [newSt, ...prev]);
       }
       setDraftStory(null);
       setDraftText('');
+      setDraftAudio(null);
     } catch (_) {}
     setUploading(false);
   }
@@ -169,9 +182,22 @@ export default function Stories({ userProfile }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', zIndex: 2, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
             <button onClick={() => { if (!uploading) setDraftStory(null); }} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create story</span>
-            <div style={{ width: '38px' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+              <span>🎵 {draftAudio ? draftAudio.name.slice(0, 14) : 'Music'}</span>
+              <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={(e) => {
+                const af = (e.target.files && e.target.files) || null;
+                if (!af) return;
+                setDraftAudio({ file: af, url: URL.createObjectURL(af), name: af.name || 'Music' });
+              }} />
+            </label>
           </div>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+            {draftAudio?.url && (
+              <div style={{ position: 'absolute', top: '14px', left: '50%', transform: 'translateX(-50%)', zIndex: 4, display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.72)', border: '1px solid rgba(255,255,255,0.25)', color: '#FFF', fontSize: '13px', fontWeight: 700 }}>
+                <span>🎵 {draftAudio.name.slice(0, 24)}</span>
+                <audio src={draftAudio.url} autoPlay loop style={{ display: 'none' }} />
+              </div>
+            )}
             {draftStory.isVideo ? (
               <video src={draftStory.previewUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             ) : (
