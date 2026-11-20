@@ -226,6 +226,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
     e.target.value = '';
     if (!file) return;
     if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) { alert('Video exceeds 4MB limit. Please select a video under 4MB.'); return; }
+    if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) { alert('Video exceeds 4MB limit. Please select a video under 4MB.'); return; }
     setDraftText(''); setDraftAudio(null); setTrimRange({ start: 0, end: 15, duration: 0 });
     setDraftStory({ mode: 'media', file, previewUrl: URL.createObjectURL(file), isVideo: file.type.startsWith('video/') });
   }
@@ -308,7 +309,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
         caption: draftText.trim(),
         created_at: ins?.created_at || new Date().toISOString()
       }]);
-      setDraftStory(null); setDraftText(''); setDraftAudio(null);
+      if (draftStory?.previewUrl) { try { URL.revokeObjectURL(draftStory.previewUrl); } catch (_) {} } setDraftStory(null); setDraftText(''); setDraftAudio(null);
     } catch (_) {
       setDraftStory(null);
     } finally {
@@ -438,7 +439,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
           </div>
 
           <div style={{ padding: '12px 16px 24px', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {draftStory.mode === 'media' && draftStory.isVideo && trimRange.duration > 1 && (
+            {draftStory.mode === 'media' && false && (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: '12px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FFF', fontSize: '12px', fontWeight: 700 }}>
                   <span>✂️ Trim Video: {trimRange.start}s – {trimRange.end}s ({trimRange.end - trimRange.start}s)</span>
