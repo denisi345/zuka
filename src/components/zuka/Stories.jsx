@@ -412,7 +412,9 @@ export default function Stories({ userProfile, onOpenProfile }) {
             ) : (
               <img src={activeStory.media_url} alt={activeStory.author_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             )}
+            <button type="button" onClick={(e) => { e.stopPropagation(); goPrevStory(); }} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: 25, width: '34px', height: '34px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.45)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '18px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
             <div onClick={(e) => { e.stopPropagation(); goPrevStory(); }} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '32%', zIndex: 20, cursor: 'pointer' }} />
+            <button type="button" onClick={(e) => { e.stopPropagation(); goNextStory(); }} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: 25, width: '34px', height: '34px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.45)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '18px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
             <div onClick={(e) => { e.stopPropagation(); goNextStory(); }} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '68%', zIndex: 20, cursor: 'pointer' }} />
             {floatingEmoji && <div style={{ position: 'absolute', zIndex: 40, fontSize: '64px', pointerEvents: 'none' }}>{floatingEmoji}</div>}
           </div>
@@ -427,7 +429,15 @@ export default function Stories({ userProfile, onOpenProfile }) {
                 <span>Viewers</span>
               </button>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none', marginBottom: '8px' }}>
+                  {['Good times 🙌', 'Love this ❤️', 'Nice shot 🔥', 'Haha 😂'].map((chip) => (
+                    <button key={chip} type="button" onClick={() => sendStoryReply(chip)} style={{ padding: '6px 12px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFF', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <form onSubmit={(e) => { e.preventDefault(); sendStoryReply(replyText); }} style={{ flex: 1, display: 'flex', alignItems: 'center', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.45)', padding: '6px 12px', backgroundColor: 'rgba(0,0,0,0.45)' }}>
                   <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '14px' }} />
                   {replyText.trim() && <button type="submit" style={{ background: 'none', border: 'none', color: '#1877F2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Send size={18} /></button>}
@@ -437,6 +447,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
                     <button key={emo} type="button" onClick={() => sendStoryReply(emo)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{emo}</button>
                   ))}
                 </div>
+              </div>
               </div>
             )}
           </div>
