@@ -83,18 +83,19 @@ export default function Stories({ userProfile, onOpenProfile }) {
         if (!alive) return;
         setStories((data || []).map((row) => {
           const prof = profMap[String(row.user_id)] || {};
-          const rawCap = String(row.caption || '');
-          const mMatch = rawCap.match(/\[🎵\s*([^\]]+)\]/);
+          const rawAuthor = String(row.author_name || '');
+          const mMatch = rawAuthor.match(/\[🎵\s*([^\]]+)\]/);
+          const cleanAuthor = rawAuthor.replace(/\s*\[🎵\s*[^\]]+\]/g, '').trim();
           return {
             id: row.id,
             user_id: row.user_id || null,
-            author_name: prof.full_name || row.author_name || 'Zuka User',
-            author_avatar: prof.avatar_url || row.author_avatar || `https://ui-avatars.com{encodeURIComponent(prof.full_name || row.author_name || 'Z')}&background=1877F2&color=fff`,
+            author_name: prof.full_name || cleanAuthor || 'Zuka User',
+            author_avatar: prof.avatar_url || `https://ui-avatars.com{encodeURIComponent(prof.full_name || row.author_name || 'Z')}&background=1877F2&color=fff`,
             media_url: row.media_url || '',
             media_type: row.media_type || 'image',
             audio_url: row.audio_url || '',
             music_title: mMatch ? mMatch : (row.audio_url ? 'Story Music' : ''),
-            caption: rawCap.replace(/\s*\[🎵\s*[^\]]+\]/g, '').trim(),
+            caption: row.media_type === 'text' ? cleanAuthor : '',
             created_at: row.created_at
           };
         }));
@@ -215,12 +216,11 @@ export default function Stories({ userProfile, onOpenProfile }) {
       await Promise.all(jobs);
 
       const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
+      const authorWithMusic = draftAudio?.name ? `${myName} [🎵 ${draftAudio.name}]` : (draftStory.mode === 'text' ? draftText.trim() : myName);
       const payload = {
         media_url: mediaUrl,
         media_type: draftStory.mode === 'text' ? 'text' : (draftStory.isVideo ? 'video' : 'image'),
-        author_name: myName,
-        author_avatar: myAvatar,
-        caption: capWithMusic,
+        author_name: authorWithMusic,
         audio_url: audioUrl || null,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       };
