@@ -225,6 +225,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
     const file = (e.target.files && e.target.files.item(0)) || null;
     e.target.value = '';
     if (!file) return;
+    if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) { alert('Video exceeds 4MB limit. Please select a video under 4MB.'); return; }
     setDraftText(''); setDraftAudio(null); setTrimRange({ start: 0, end: 15, duration: 0 });
     setDraftStory({ mode: 'media', file, previewUrl: URL.createObjectURL(file), isVideo: file.type.startsWith('video/') });
   }
@@ -246,7 +247,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
       const jobs = [];
       if (draftStory.mode === 'media' && draftStory.file) {
         let fileToUpload = draftStory.file;
-        if (draftStory.isVideo && trimRange.duration > 0 && (trimRange.start > 0 || trimRange.end < Math.floor(trimRange.duration))) {
+        if (false) {
           fileToUpload = await trimVideoClip(draftStory.file, trimRange.start, trimRange.end);
         }
         if (draftStory.isVideo && fileToUpload.size > 4 * 1024 * 1024) {
@@ -420,7 +421,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
                 onLoadedMetadata={(e) => {
                   const d = Math.floor(e.currentTarget.duration || 0);
                   if (d > 0 && trimRange.duration === 0) {
-                    const maxClip = draftStory.file.size > 4 * 1024 * 1024 ? Math.max(4, Math.floor((3.6 * 1024 * 1024 / draftStory.file.size) * d)) : Math.min(30, d);
+                    const maxClip = d;
                     setTrimRange({ start: 0, end: Math.min(d, maxClip), duration: d });
                   }
                 }}
