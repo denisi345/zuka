@@ -266,7 +266,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
           }
           if (!u && fileToUpload.size <= 4 * 1024 * 1024) u = await fileToDataUrl(fileToUpload);
           if (!u && !draftStory.isVideo) u = await fileToDataUrl(draftStory.file);
-          mediaUrl = u || (draftStory.isVideo ? '' : draftStory.previewUrl);
+          mediaUrl = u || '';
         })());
       }
       if (draftAudio?.file) {
@@ -283,7 +283,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
         })());
       }
       await Promise.all(jobs);
-      if (draftStory.mode === 'media' && !mediaUrl) { alert('Video upload failed or took too long. Please try a shorter video.'); setSharing(false); return; }
+      if (draftStory.mode === 'media' && (!mediaUrl || mediaUrl.startsWith('blob:'))) { alert('Video upload failed or took too long. Please try a shorter video.'); setSharing(false); return; }
 
       const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
       const authorWithMusic = draftAudio?.name ? `${myName} [🎵 ${draftAudio.name}]` : (draftStory.mode === 'text' ? draftText.trim() : myName);
@@ -507,7 +507,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
           </div>
 
           <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: activeStory.media_type === 'text' ? activeStory.media_url : '#000' }}>
-            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay muted={muted} playsInline onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onEnded={goNextStory} />}
+            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay muted={muted} playsInline onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onEnded={goNextStory} onError={goNextStory} />}
             {activeStory.media_type === 'text' ? (
               <div style={{ padding: '28px', textAlign: 'center', color: '#FFF', fontSize: '26px', fontWeight: 800, lineHeight: 1.3 }}>{activeStory.caption}</div>
             ) : activeStory.media_type === 'video' ? (
