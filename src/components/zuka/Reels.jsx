@@ -160,6 +160,9 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
   const [likedIds, setLikedIds] = useState({});
   const [followedIds, setFollowedIds] = useState({});
   const [createOpen, setCreateOpen] = useState(false);
+  const [reelAudioFile, setReelAudioFile] = useState(null);
+  const [reelAudioPreview, setReelAudioPreview] = useState("");
+  const [reelAudioName, setReelAudioName] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [caption, setCaption] = useState('');
@@ -199,7 +202,7 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
   }
 
   function handleSelectVideo(e) {
-    const file = e.target.files?.at(0) || null;
+    const file = (e.target.files && e.target.files) || null;
     setVideoFile(file);
     setPreviewUrl(file ? URL.createObjectURL(file) : '');
   }
@@ -303,7 +306,21 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
             <input type="file" accept="video/*" onChange={handleSelectVideo} style={{ fontSize: '13px', padding: '6px', border: '1px solid #CED0D4', borderRadius: '8px', color: '#050505' }} />
             {(previewUrl || videoUrlInput.trim()) && <video src={previewUrl || videoUrlInput.trim()} controls muted playsInline style={{ width: '100%', maxHeight: '220px', borderRadius: '8px', backgroundColor: '#000000' }} />}
             <input type="url" value={videoUrlInput} onChange={(e) => setVideoUrlInput(e.target.value)} placeholder="Or paste video URL (.mp4)" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px', color: '#050505' }} />
-            <textarea rows={2} value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write a caption for your Reel..." style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px', color: '#050505' }} />
+            <textarea rows={2} value={caption} onChange={(e) => setCaption(e.target.value)} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', padding: '8px 10px', borderRadius: '8px', backgroundColor: '#F0F2F5', marginTop: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1877F2', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+                <span>🎵 {reelAudioName ? reelAudioName.slice(0, 22) : 'Add Music (Audio)'}</span>
+                <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={(e) => {
+                  const af = (e.target.files && e.target.files) || null;
+                  if (!af) return;
+                  setReelAudioFile(af);
+                  setReelAudioName(af.name || 'Original Audio');
+                  setReelAudioPreview(URL.createObjectURL(af));
+                }} />
+              </label>
+              {reelAudioPreview && <audio src={reelAudioPreview} controls style={{ height: '28px', maxWidth: '150px' }} />}
+            </div>
+            <input type="hidden" placeholder="Write a caption for your Reel..." style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px', color: '#050505' }} />
             <button type="submit" disabled={uploading} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>{uploading ? 'Uploading...' : 'Share Reel'}</button>
           </form>
         </div>
