@@ -1,7 +1,14 @@
-import ZukaBadge from './ZukaBadge';
-import React, { useEffect, useState, useRef } from 'react';
-import { Plus, X, Trash2, MoreVertical, ChevronLeft, ChevronRight, Volume2, VolumeX, Send } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, X, Trash2, Volume2, VolumeX, Eye, Send, Music } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+
+const TEXT_BGS = [
+  'linear-gradient(135deg, #1877F2 0%, #00C6FF 100%)',
+  'linear-gradient(135deg, #F58529 0%, #DD2A7B 50%, #8134AF 100%)',
+  'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',
+  'linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%)',
+  'linear-gradient(135deg, #141E30 0%, #243B55 100%)'
+];
 
 function formatStoryTime(ts) {
   if (!ts) return 'Just now';
@@ -9,484 +16,453 @@ function formatStoryTime(ts) {
   if (diff < 60) return 'Just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return '1d';
+  return '24h';
 }
 
-export default function Stories({ userProfile }) {
+async function uploadFast(bucket, path, file, ms = 7000) {
+  const up = (async () => {
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      contentType: file.type || 'application/octet-stream',
+      upsert: true
+    });
+    if (error) return '';
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data?.publicUrl || '';
+  })();
+  return Promise.race([up, new Promise((r) => setTimeout(() => r(''), ms))]);
+}
+
+function fileToDataUrl(file) {
+  return new Promise((res) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result || ''));
+    r.onerror = () => res('');
+    r.readAsDataURL(file);
+  });
+}
+
+export default function Stories({ userProfile, onOpenProfile }) {
   const [stories, setStories] = useState([]);
-  const [activeIndex, setActiveIndex] = useState(null);
+  const [activeGroupIdx, setActiveGroupIdx] = useState(null);
+  const [activeItemIdx, setActiveItemIdx] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [muted, setMuted] = useState(false);
+
   const [draftStory, setDraftStory] = useState(null);
-  const [draftText, setDraftText] = useState("");
+  const [draftText, setDraftText] = useState('');
+  const [draftBgIdx, setDraftBgIdx] = useState(0);
   const [draftAudio, setDraftAudio] = useState(null);
-  const fileInputRef = useRef(null);
+  const [sharing, setSharing] = useState(false);
+
+  const [replyText, setReplyText] = useState('');
+  const [floatingEmoji, setFloatingEmoji] = useState(null);
+  const [viewersList, setViewersList] = useState([]);
+  const [showViewers, setShowViewers] = useState(false);
+
+  const mediaInputRef = useRef(null);
+  const audioInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const audioRef = useRef(null);
+
+  const myName = userProfile?.full_name || 'Zuka User';
+  const myAvatar = userProfile?.avatar_url || `https://ui-avatars.com{encodeURIComponent(myName)}&background=1877F2&color=fff&bold=true`;
 
   useEffect(() => {
-    loadStories();
-  }, []);
+    let alive = true;
+    async function loadStories() {
+      const profMap = {};
+      try {
+        const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url');
+        if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
+      } catch (_) {}
 
-  async function loadStories() {
-    let profMap = {};
-    try {
-      const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified');
-      if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
-    } catch (_) {}
-
-    try {
-      const { data } = await supabase.from('stories').select('*').order('created_at', { ascending: false }).limit(30);
-      if (Array.isArray(data)) {
-        const mapped = data.filter((s) => !s.created_at || Date.now() - new Date(s.created_at).getTime() < 86400000).map((s) => {
-          const owner = s.user_id ? profMap[String(s.user_id)] : null;
+      try {
+        const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data } = await supabase.from('stories').select('*').gte('created_at', cutoff24h).order('created_at', { ascending: true });
+        if (!alive) return;
+        setStories((data || []).map((row) => {
+          const prof = profMap[String(row.user_id)] || {};
+          const rawCap = String(row.caption || '');
+          const mMatch = rawCap.match(/\[🎵\s*([^\]]+)\]/);
           return {
-            ...s,
-            author_name: owner?.full_name || owner?.username || s.author_name || 'ZUKA Member',
-            avatar_url: owner?.avatar_url || s.avatar_url || '',
-          is_verified: Boolean(owner?.is_verified || s.is_verified)
+            id: row.id,
+            user_id: row.user_id || null,
+            author_name: prof.full_name || row.author_name || 'Zuka User',
+            author_avatar: prof.avatar_url || row.author_avatar || `https://ui-avatars.com{encodeURIComponent(prof.full_name || row.author_name || 'Z')}&background=1877F2&color=fff`,
+            media_url: row.media_url || '',
+            media_type: row.media_type || 'image',
+            audio_url: row.audio_url || '',
+            music_title: mMatch ? mMatch : (row.audio_url ? 'Story Music' : ''),
+            caption: rawCap.replace(/\s*\[🎵\s*[^\]]+\]/g, '').trim(),
+            created_at: row.created_at
           };
-        });
-        setStories(mapped);
+        }));
+      } catch (_) {}
+    }
+    loadStories();
+    return () => { alive = false; };
+  }, [userProfile?.id]);
+
+  const groupedStories = React.useMemo(() => {
+    const groups = [];
+    const map = new Map();
+    stories.forEach((st) => {
+      const k = String(st.user_id || st.author_name || st.id);
+      if (!map.has(k)) {
+        const g = { key: k, user_id: st.user_id, author_name: st.author_name, author_avatar: st.author_avatar, items: [] };
+        map.set(k, g);
+        groups.push(g);
       }
-    } catch (_) {}
-  }
+      map.get(k).items.push(st);
+    });
+    return groups;
+  }, [stories]);
+
+  const activeGroup = activeGroupIdx !== null ? groupedStories[activeGroupIdx] || null : null;
+  const activeStory = activeGroup ? activeGroup.items[activeItemIdx] || null : null;
 
   useEffect(() => {
-    if (activeIndex === null || isPaused) return;
-    const current = stories[activeIndex];
-    if (!current) return;
-    const isVideo = /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(current.media_url || "") || String(current.media_url || "").includes("video");
-    if (isVideo) return;
+    if (!activeStory?.id || !userProfile?.id || String(activeStory.user_id) === String(userProfile.id)) return;
+    supabase.from('story_views').upsert({ story_id: activeStory.id, viewer_id: userProfile.id }, { onConflict: 'story_id,viewer_id' }).catch(() => {});
+  }, [activeStory?.id, userProfile?.id]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = muted;
+      if (paused || showViewers) videoRef.current.pause();
+      else videoRef.current.play().catch(() => {});
+    }
+    if (audioRef.current) {
+      audioRef.current.muted = muted;
+      if (paused || showViewers) audioRef.current.pause();
+      else audioRef.current.play().catch(() => {});
+    }
+  }, [paused, muted, showViewers, activeStory?.id]);
+
+  useEffect(() => {
+    if (!activeStory || paused || showViewers) return;
     setProgress(0);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          if (activeIndex + 1 < stories.length) {
-            setActiveIndex(activeIndex + 1);
-            return 0;
-          }
-          setActiveIndex(null);
-          return 0;
-        }
-        return prev + 2;
+    const step = (50 / (activeStory.media_type === 'video' ? 12000 : 6000)) * 100;
+    const t = setInterval(() => {
+      setProgress((p) => {
+        if (p + step >= 100) { clearInterval(t); goNextStory(); return 100; }
+        return p + step;
       });
-    }, 100);
-    return () => clearInterval(interval);
-  }, [activeIndex, isPaused, stories]);
+    }, 50);
+    return () => clearInterval(t);
+  }, [activeGroupIdx, activeItemIdx, paused, showViewers]);
 
-  function handleFileSelect(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const isVideo = file.type.startsWith('video/');
-    const previewUrl = URL.createObjectURL(file);
-    setDraftText('');
-    setDraftAudio(null);
-    setDraftStory({ file, previewUrl, isVideo });
-    e.target.value = '';
+  function goNextStory() {
+    if (!activeGroup) return;
+    if (activeItemIdx + 1 < activeGroup.items.length) { setActiveItemIdx((i) => i + 1); setProgress(0); }
+    else if (activeGroupIdx + 1 < groupedStories.length) { setActiveGroupIdx((g) => g + 1); setActiveItemIdx(0); setProgress(0); }
+    else { setActiveGroupIdx(null); setActiveItemIdx(0); }
   }
 
-  async function publishDraftStory() {
-    if (!draftStory?.file || uploading) return;
-    const { file, isVideo } = draftStory;
-    setUploading(true);
+  function goPrevStory() {
+    if (!activeGroup) return;
+    if (activeItemIdx > 0) { setActiveItemIdx((i) => i - 1); setProgress(0); }
+    else if (activeGroupIdx > 0) {
+      const prev = groupedStories[activeGroupIdx - 1];
+      setActiveGroupIdx((g) => g - 1);
+      setActiveItemIdx(Math.max(0, (prev?.items?.length || 1) - 1));
+      setProgress(0);
+    } else setProgress(0);
+  }
+
+  function handlePickMedia(e) {
+    const file = (e.target.files && e.target.files.item(0)) || null;
+    e.target.value = '';
+    if (!file) return;
+    setDraftText(''); setDraftAudio(null);
+    setDraftStory({ mode: 'media', file, previewUrl: URL.createObjectURL(file), isVideo: file.type.startsWith('video/') });
+  }
+
+  function handlePickAudio(e) {
+    const af = (e.target.files && e.target.files.item(0)) || null;
+    e.target.value = '';
+    if (!af) return;
+    setDraftAudio({ file: af, url: URL.createObjectURL(af), name: af.name.replace(/\.[^/.]+$/, '') || 'Story Music' });
+  }
+
+  async function handleShareStory() {
+    if (!draftStory || sharing) return;
+    if (draftStory.mode === 'text' && !draftText.trim()) return;
+    setSharing(true);
     try {
-      let mediaUrl = '';
-      const ext = (file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg')).toLowerCase();
-      const path = `stories/${userProfile?.id || 'guest'}_${Date.now()}.${ext}`;
-      for (const bucket of ['post-media', 'avatars', 'stories']) {
-        const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
-        if (!error) {
-          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-          if (pub?.publicUrl) { mediaUrl = pub.publicUrl; break; }
-        }
-      }
-      if (!mediaUrl && !isVideo) {
-        mediaUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result || '')); r.onerror = () => res(''); r.readAsDataURL(file); });
-      }
+      let mediaUrl = draftStory.mode === 'text' ? TEXT_BGS[draftBgIdx] : '';
       let audioUrl = '';
+      const jobs = [];
+      if (draftStory.mode === 'media' && draftStory.file) {
+        const ext = (draftStory.file.name.split('.').pop() || (draftStory.isVideo ? 'mp4' : 'jpg')).toLowerCase();
+        const mPath = `stories/media_${userProfile?.id || 'guest'}_${Date.now()}.${ext}`;
+        jobs.push((async () => {
+          let u = await uploadFast('post-media', mPath, draftStory.file, 7000);
+          if (!u && !draftStory.isVideo) u = await fileToDataUrl(draftStory.file);
+          mediaUrl = u || draftStory.previewUrl;
+        })());
+      }
       if (draftAudio?.file) {
         const aExt = (draftAudio.file.name.split('.').pop() || 'mp3').toLowerCase();
         const aPath = `stories/audio_${userProfile?.id || 'guest'}_${Date.now()}.${aExt}`;
-        for (const bucket of ['post-media', 'avatars', 'stories']) {
-          const { error: ae } = await supabase.storage.from(bucket).upload(aPath, draftAudio.file, { contentType: draftAudio.file.type, upsert: true });
-          if (!ae) { const { data: ap } = supabase.storage.from(bucket).getPublicUrl(aPath); if (ap?.publicUrl) { audioUrl = ap.publicUrl; break; } }
-        }
+        jobs.push((async () => {
+          let au = await uploadFast('post-media', aPath, draftAudio.file, 7000);
+          if (!au && draftAudio.file.size < 4 * 1024 * 1024) au = await fileToDataUrl(draftAudio.file);
+          audioUrl = au || draftAudio.url;
+        })());
       }
-      if (mediaUrl) {
-        const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
-        const payload = { media_url: mediaUrl, media_type: isVideo ? 'video' : 'image', author_name: userProfile?.full_name || 'Zuka User', author_avatar: userProfile?.avatar_url || '', caption: capWithMusic, audio_url: audioUrl, expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() };
-        if (userProfile?.id) payload.user_id = userProfile.id;
-        const { data: inserted } = await supabase.from('stories').insert(payload).select().single();
-        const newSt = { id: inserted?.id || Date.now(), user_id: userProfile?.id || '', author_name: payload.author_name, author_avatar: payload.author_avatar, media_url: mediaUrl, media_type: payload.media_type, caption: payload.caption, audio_url: audioUrl, created_at: new Date().toISOString() };
-        setStories((prev) => [newSt, ...prev]);
-      }
-      setDraftStory(null);
-      setDraftText('');
-      setDraftAudio(null);
-    } catch (_) {}
-    setUploading(false);
-  }
+      await Promise.all(jobs);
 
-  async function _unusedOldHandleFileSelect(e) {
-    const file = e.target.files?.at(0) || null;
-    e.target.value = '';
-    if (!file) return;
-    setUploading(true);
-    let mediaUrl = URL.createObjectURL(file);
-    try {
-      const clean = (file.name || 'story').replace(/[^a-zA-Z0-9._-]/g, '');
-      const path = `stories/${Date.now()}_${clean}`;
-      for (const bucket of ['media', 'stories', 'posts', 'public']) {
-        const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
-        if (!error) {
-          const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-          if (pub?.publicUrl) {
-            mediaUrl = pub.publicUrl;
-            break;
-          }
-        }
-      }
-      const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-      const payload = { media_url: mediaUrl, author_name: authorName };
+      const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
+      const payload = {
+        media_url: mediaUrl,
+        media_type: draftStory.mode === 'text' ? 'text' : (draftStory.isVideo ? 'video' : 'image'),
+        author_name: myName,
+        author_avatar: myAvatar,
+        caption: capWithMusic,
+        audio_url: audioUrl || null,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
       if (userProfile?.id) payload.user_id = userProfile.id;
-      const { data: inserted } = await supabase.from('stories').insert(payload).select().single();
-      const created = inserted
-        ? { ...inserted, author_name: authorName, avatar_url: userProfile?.avatar_url || '' }
-        : { id: `st-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, avatar_url: userProfile?.avatar_url || '', media_url: mediaUrl, created_at: new Date().toISOString() };
-      setStories((prev) => [created, ...prev]);
-    } catch (_) {}
-    setUploading(false);
-  }
 
-  async function handleDeleteStory(storyId) {
-    setActiveIndex(null);
-    setStories((prev) => prev.filter((s) => s.id !== storyId));
-    if (storyId && !String(storyId).startsWith('st-')) {
-      try { await supabase.from('stories').delete().eq('id', storyId); } catch (_) {}
+      const { data: ins } = await supabase.from('stories').insert(payload).select('*').single();
+      setStories((prev) => [...prev, {
+        id: ins?.id || `local-${Date.now()}`,
+        user_id: userProfile?.id || null,
+        author_name: myName,
+        author_avatar: myAvatar,
+        media_url: mediaUrl,
+        media_type: payload.media_type,
+        audio_url: audioUrl,
+        music_title: draftAudio?.name || '',
+        caption: draftText.trim(),
+        created_at: ins?.created_at || new Date().toISOString()
+      }]);
+      setDraftStory(null); setDraftText(''); setDraftAudio(null);
+    } catch (_) {
+      setDraftStory(null);
+    } finally {
+      setSharing(false);
     }
   }
-  const groupedCount = {};
-  stories.forEach((s) => {
-    const k = String(s.user_id || s.author_name || s.id);
-    groupedCount[k] = (groupedCount[k] || 0) + 1;
-  });
 
-  const activeStory = activeIndex !== null ? stories[activeIndex] : null;
+  async function handleDeleteStory(id) {
+    setStories((prev) => prev.filter((s) => String(s.id) !== String(id)));
+    setActiveGroupIdx(null);
+    try { await supabase.from('stories').delete().eq('id', id); } catch (_) {}
+  }
+
+  async function openViewersModal() {
+    if (!activeStory?.id) return;
+    setShowViewers(true); setViewersList([]);
+    try {
+      const { data } = await supabase.from('story_views').select('viewer_id').eq('story_id', activeStory.id);
+      const ids = (data || []).map((v) => v.viewer_id).filter(Boolean);
+      if (ids.length > 0) {
+        const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', ids);
+        setViewersList((profs || []).map((p) => ({ id: p.id, name: p.full_name || 'Zuka User', avatar: p.avatar_url || '' })));
+      }
+    } catch (_) {}
+  }
+
+  async function sendStoryReply(txt) {
+    const clean = String(txt || '').trim();
+    if (!clean || !activeStory) return;
+    setFloatingEmoji(clean.length <= 4 ? clean : '💌');
+    setTimeout(() => setFloatingEmoji(null), 1200);
+    setReplyText('');
+    if (userProfile?.id && activeStory.user_id && String(userProfile.id) !== String(activeStory.user_id)) {
+      try { await supabase.from('messages').insert({ sender_id: userProfile.id, receiver_id: activeStory.user_id, content: `Replied to your story: ${clean}` }); } catch (_) {}
+    }
+  }
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '10px 0 10px 10px' }}>
-      <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-      {draftStory && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', zIndex: 2, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
-            <button onClick={() => { if (!uploading) setDraftStory(null); }} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontSize: '20px', cursor: 'pointer' }}>✕</button>
-            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create story</span>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-              <span>🎵 {draftAudio ? draftAudio.name.slice(0, 14) : 'Music'}</span>
-              <input type="file" accept="audio/*" style={{ display: 'none' }} onChange={(e) => {
-                const af = (e.target.files && e.target.files.item(0)) || null;
-                if (!af) return;
-                setDraftAudio({ file: af, url: URL.createObjectURL(af), name: af.name || 'Music' });
-              }} />
-            </label>
+    <>
+      <input ref={mediaInputRef} type="file" accept="image/*,video/*" onChange={handlePickMedia} style={{ display: 'none' }} />
+      <input ref={audioInputRef} type="file" accept="audio/*" onChange={handlePickAudio} style={{ display: 'none' }} />
+
+      <div style={{ backgroundColor: '#FFF', padding: '10px 8px', marginBottom: '8px', borderBottom: '1px solid #E4E6EB', display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        <div style={{ minWidth: '106px', width: '106px', height: '182px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #DADDE1', backgroundColor: '#FFF', display: 'flex', flexDirection: 'column', flexShrink: 0, position: 'relative' }}>
+          <div onClick={() => mediaInputRef.current?.click()} style={{ height: '122px', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}>
+            <img src={myAvatar} alt={myName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <button type="button" onClick={(e) => { e.stopPropagation(); setDraftText(''); setDraftAudio(null); setDraftBgIdx(0); setDraftStory({ mode: 'text' }); }} style={{ position: 'absolute', top: '6px', right: '6px', width: '28px', height: '28px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.62)', color: '#FFF', fontWeight: 800, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Aa</button>
           </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
-            {draftAudio?.url && (
-              <div style={{ position: 'absolute', top: '14px', left: '50%', transform: 'translateX(-50%)', zIndex: 4, display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.72)', border: '1px solid rgba(255,255,255,0.25)', color: '#FFF', fontSize: '13px', fontWeight: 700 }}>
-                <span>🎵 {draftAudio.name.slice(0, 24)}</span>
-                <audio src={draftAudio.url} autoPlay loop style={{ display: 'none' }} />
-              </div>
-            )}
-            {draftStory.isVideo ? (
-              <video src={draftStory.previewUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            ) : (
-              <img src={draftStory.previewUrl} alt="Story Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            )}
-          </div>
-          <div style={{ padding: '12px 16px 24px', zIndex: 2, background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <input type="text" value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '10px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button onClick={() => { if (!uploading) setDraftStory(null); }} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>Discard</button>
-              <button onClick={publishDraftStory} disabled={uploading} style={{ padding: '10px 22px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer', opacity: uploading ? 0.7 : 1 }}>{uploading ? 'Sharing...' : 'Share to Story'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingRight: '10px' }}>
-        <div onClick={() => fileInputRef.current?.click()} style={{ width: '104px', height: '176px', borderRadius: '12px', border: '1px solid #CED0D4', backgroundColor: '#F0F2F5', flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', position: 'relative' }}>
-          <div style={{ height: '116px', backgroundColor: '#E4E6EB', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {userProfile?.avatar_url ? (
-              <img src={userProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : (
-              <span style={{ fontSize: '32px', fontWeight: 800, color: '#1877F2' }}>{(userProfile?.full_name || 'M').charAt(0).toUpperCase()}</span>
-            )}
-          </div>
-          <div style={{ position: 'absolute', top: '98px', left: '50%', transform: 'translateX(-50%)', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1877F2', border: '3px solid #FFFFFF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Plus size={20} strokeWidth={3} />
-          </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '8px', fontSize: '12px', fontWeight: 700, color: '#050505', backgroundColor: '#FFFFFF' }}>
-            {uploading ? 'Uploading...' : 'Create story'}
+          <div onClick={() => mediaInputRef.current?.click()} style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '8px', cursor: 'pointer' }}>
+            <div style={{ position: 'absolute', top: '-17px', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1877F2', border: '3px solid #FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}><Plus size={20} strokeWidth={3} /></div>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#050505', textAlign: 'center', lineHeight: '1.15' }}>Create story</span>
           </div>
         </div>
 
-        {stories.filter((st, i, arr) => arr.findIndex((x) => String(x.user_id || x.author_name || x.id) === String(st.user_id || st.author_name || st.id)) === i).map((st) => { const idx = stories.indexOf(st);
-          const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(st.media_url || '');
-          const name = st.author_name || 'ZUKA Member';
-          const count = groupedCount[String(st.user_id || st.author_name || st.id)] || 1;
+        {groupedStories.map((grp, gIdx) => {
+          const latest = grp.items[grp.items.length - 1];
+          const isText = latest.media_type === 'text';
           return (
-            <div key={st.id} onClick={() => { setProgress(0); setActiveIndex(idx); }} style={{ width: '104px', height: '176px', borderRadius: '12px', backgroundColor: '#18191A', flexShrink: 0, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
-              {isVideo ? (
-                <video src={st.media_url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div key={grp.key} onClick={() => { setActiveGroupIdx(gIdx); setActiveItemIdx(0); setProgress(0); }} style={{ minWidth: '106px', width: '106px', height: '182px', borderRadius: '12px', overflow: 'hidden', position: 'relative', flexShrink: 0, cursor: 'pointer', background: isText ? latest.media_url : '#111', boxShadow: '0 1px 2px rgba(0,0,0,0.12)' }}>
+              {isText ? (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', textAlign: 'center', color: '#FFF', fontWeight: 800, fontSize: '13px', lineHeight: 1.25 }}>{latest.caption}</div>
+              ) : latest.media_type === 'video' ? (
+                <video src={latest.media_url} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <img src={st.media_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={latest.media_url} alt={grp.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent 55%)' }} />
-              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '34px', height: '34px', borderRadius: '50%', border: '3px solid #1877F2', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px' }}>
-                {st.avatar_url ? <img src={st.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name.charAt(0).toUpperCase()}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent 40%, rgba(0,0,0,0.68))' }} />
+              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '36px', height: '36px', borderRadius: '50%', border: '3px solid #1877F2', overflow: 'hidden', backgroundColor: '#FFF' }}>
+                <img src={grp.author_avatar} alt={grp.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
-              {count > 1 && (
-                <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#1877F2', color: '#FFFFFF', fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '6px' }}>{count}</span>
-              )}
-              <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', color: '#FFFFFF', fontSize: '12px', fontWeight: 700, textShadow: '0 1px 3px rgba(0,0,0,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {name}
-              </div>
+              {grp.items.length > 1 && <span style={{ position: 'absolute', top: '8px', right: '8px', padding: '2px 6px', borderRadius: '10px', backgroundColor: '#1877F2', color: '#FFF', fontSize: '11px', fontWeight: 700 }}>{grp.items.length}</span>}
+              <span style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', color: '#FFF', fontSize: '12px', fontWeight: 700, lineHeight: '1.2', textShadow: '0 1px 2px rgba(0,0,0,0.8)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{grp.author_name}</span>
             </div>
           );
         })}
       </div>
 
-      {activeStory && (
-        <FacebookStoryViewer
-          story={activeStory}
-          stories={stories}
-          activeIndex={activeIndex}
-          progress={progress}
-          currentUser={userProfile}
-          onClose={() => { setIsPaused(false); setActiveIndex(null); }}
-          onPrev={() => { setProgress(0); setActiveIndex((i) => Math.max(0, i - 1)); }}
-          onNext={() => {
-            setProgress(0);
-            setActiveIndex((i) => (i + 1 < stories.length ? i + 1 : null));
-          }}
-          onDeleteStory={handleDeleteStory}
-          onPauseChange={setIsPaused}
-          onVideoProgress={setProgress}
-        />
-      )}
-    </div>
-  );
-}
-function FacebookStoryViewer({ story, stories, activeIndex, progress, currentUser, onClose, onPrev, onNext, onDeleteStory, onPauseChange, onVideoProgress }) {
-  const [replyText, setReplyText] = useState("");
-  const [vidProgress, setVidProgress] = useState(0);
-  const isVid = /\.(mp4|webm|mov|m4v|3gp)(\?|$)/i.test(story.media_url || "") || String(story.media_url || "").includes("video");
-  const [muted, setMuted] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [floatingEmoji, setFloatingEmoji] = useState('');
-  const [sentNotice, setSentNotice] = useState('');
-  const videoRef = useRef(null);
-  const activeBarRef = useRef(null);
-  useEffect(() => {
-    if (!isVid) return;
-    let rafId;
-    const syncBar = () => {
-      const v = videoRef.current;
-      const bar = activeBarRef.current;
-      if (v && bar && v.duration && Number.isFinite(v.duration)) {
-        const ratio = Math.min(1, Math.max(0, v.currentTime / v.duration));
-        bar.style.transform = `scaleX(${ratio})`;
-      }
-      rafId = requestAnimationFrame(syncBar);
-    };
-    rafId = requestAnimationFrame(syncBar);
-    return () => cancelAnimationFrame(rafId);
-  }, [story?.id, isVid]);
-  const isOwner = currentUser?.id && String(story.user_id) === String(currentUser.id);
-  const authorName = story.author_name || 'ZUKA Member';
-
-  async function sendStoryReply(textToSend) {
-    const clean = String(textToSend || '').trim();
-    if (!clean) return;
-    setSentNotice('Sent to Messenger!');
-    setTimeout(() => setSentNotice(''), 2000);
-    const targetId = story.user_id || currentUser?.id;
-    const formatted = `Replied to your story: ${clean}`;
-    if (currentUser?.id && targetId) {
-      try {
-        await supabase.from('messages').insert({
-          sender_id: currentUser.id,
-          receiver_id: targetId,
-          content: formatted
-        });
-      } catch (_) {}
-    }
-    try {
-      const raw = localStorage.getItem('zuka_story_replies') || '[]';
-      const arr = JSON.parse(raw);
-      arr.unshift({
-        id: `sr-${Date.now()}`,
-        peer_id: targetId,
-        peer_name: authorName,
-        peer_avatar: story.avatar_url || '',
-        content: formatted,
-        created_at: new Date().toISOString()
-      });
-      localStorage.setItem('zuka_story_replies', JSON.stringify(arr.slice(0, 30)));
-      window.dispatchEvent(new CustomEvent('zuka:story-reply'));
-    } catch (_) {}
-  }
-
-  function handleSendForm(e) {
-    e.preventDefault();
-    if (!replyText.trim()) return;
-    sendStoryReply(replyText);
-    setReplyText('');
-    if (onPauseChange) onPauseChange(false);
-  }
-
-  function handleReaction(emoji) {
-    setFloatingEmoji(emoji);
-    setTimeout(() => setFloatingEmoji(''), 1100);
-    sendStoryReply(emoji);
-  }
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 85, backgroundColor: '#000000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-      <div style={{ padding: '10px 10px 0', zIndex: 10 }}>
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-          {stories.map((s, idx) => (
-            <div key={s.id} style={{ flex: 1, height: '2.5px', backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: '2px', overflow: 'hidden' }}>
-              <div
-                ref={idx === activeIndex ? activeBarRef : null}
-                style={{
-                  height: "100%",
-                  backgroundColor: "#FFFFFF",
-                  width: idx < activeIndex ? "100%" : idx === activeIndex ? (isVid ? "100%" : `${progress}%`) : "0%",
-                  transform: idx === activeIndex && isVid ? "scaleX(0)" : "none",
-                  transformOrigin: "left center",
-                  willChange: "transform"
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#FFFFFF' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1877F2', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flexShrink: 0 }}>
-              {story.avatar_url ? <img src={story.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><span>{authorName}</span>{story?.is_verified && <ZukaBadge size={14} />}</div>
-              <div style={{ fontSize: '11px', color: '#E4E6EB' }}>{formatStoryTime(story.created_at)}</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button type="button" onClick={() => { const next = !menuOpen; setMenuOpen(next); if (onPauseChange) onPauseChange(next); }} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', display: 'flex', padding: '4px' }}>
-              <MoreVertical size={22} />
-            </button>
-            <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: '#FFFFFF', cursor: 'pointer', display: 'flex', padding: '4px' }}>
-              <X size={24} />
+      {draftStory && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', zIndex: 5 }}>
+            <button type="button" onClick={() => !sharing && setDraftStory(null)} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={22} /></button>
+            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create story</span>
+            <button type="button" onClick={() => audioInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '20px', border: 'none', backgroundColor: draftAudio ? '#1877F2' : 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer', maxWidth: '145px' }}>
+              <Music size={15} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draftAudio ? draftAudio.name : 'Music'}</span>
             </button>
           </div>
-        </div>
-      </div>
 
-      {menuOpen && (
-        <div onClick={() => { setMenuOpen(false); if (onPauseChange) onPauseChange(false); }} style={{ position: 'fixed', inset: 0, zIndex: 30, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '58px 14px 0' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: '#242526', color: '#FFFFFF', borderRadius: '10px', width: '190px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
-            {isVid && (
-              <button type="button" onClick={() => { const next = !muted; setMuted(next); if (videoRef.current) videoRef.current.muted = next; setMenuOpen(false); if (onPauseChange) onPauseChange(false); }} style={{ width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: '#FFFFFF', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                {muted ? <Volume2 size={18} /> : <VolumeX size={18} />} {muted ? 'Unmute video' : 'Mute video'}
-              </button>
+          <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: draftStory.mode === 'text' ? TEXT_BGS[draftBgIdx] : '#000' }}>
+            {draftAudio?.url && (
+              <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 6, display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.28)', color: '#FFF', fontSize: '13px', fontWeight: 700, maxWidth: '85%' }}>
+                <Music size={15} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draftAudio.name}</span>
+                <button type="button" onClick={() => setDraftAudio(null)} style={{ background: 'none', border: 'none', color: '#FFF', fontWeight: 800, cursor: 'pointer', padding: 0 }}>✕</button>
+                <audio src={draftAudio.url} autoPlay loop playsInline style={{ display: 'none' }} />
+              </div>
             )}
-            {isOwner && (
-              <button type="button" onClick={() => onDeleteStory(story.id)} style={{ width: '100%', padding: '12px 14px', background: 'none', border: 'none', color: '#F3425F', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                <Trash2 size={18} /> Delete story
-              </button>
+            {draftStory.mode === 'text' ? (
+              <div style={{ width: '100%', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
+                <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Start typing your story..." rows={4} style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '26px', fontWeight: 800, textAlign: 'center', resize: 'none' }} />
+                <div style={{ display: 'flex', gap: '10px' }}>{TEXT_BGS.map((bg, idx) => (<button key={idx} type="button" onClick={() => setDraftBgIdx(idx)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: bg, border: draftBgIdx === idx ? '3px solid #FFF' : '1px solid rgba(255,255,255,0.4)', cursor: 'pointer' }} />))}</div>
+              </div>
+            ) : draftStory.isVideo ? (
+              <video src={draftStory.previewUrl} autoPlay loop muted={Boolean(draftAudio)} playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <img src={draftStory.previewUrl} alt="Story preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             )}
+          </div>
+
+          <div style={{ padding: '12px 16px 24px', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {draftStory.mode === 'media' && <input type="text" value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '10px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', fontSize: '14px', outline: 'none' }} />}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button type="button" onClick={() => !sharing && setDraftStory(null)} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>Discard</button>
+              <button type="button" onClick={handleShareStory} disabled={sharing || (draftStory.mode === 'text' && !draftText.trim())} style={{ padding: '10px 22px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: sharing ? 'wait' : 'pointer', opacity: sharing ? 0.75 : 1 }}>{sharing ? 'Sharing...' : 'Share to Story'}</button>
+            </div>
           </div>
         </div>
       )}
 
-      <div
-        onContextMenu={(e) => e.preventDefault()}
-        onTouchStart={() => { if (onPauseChange) onPauseChange(true); if (videoRef.current) videoRef.current.pause(); }}
-        onTouchEnd={() => { if (!replyText.trim() && !menuOpen) { if (onPauseChange) onPauseChange(false); if (videoRef.current) videoRef.current.play().catch(() => {}); } }}
-        onMouseDown={() => { if (onPauseChange) onPauseChange(true); if (videoRef.current) videoRef.current.pause(); }}
-        onMouseUp={() => { if (!replyText.trim() && !menuOpen) { if (onPauseChange) onPauseChange(false); if (videoRef.current) videoRef.current.play().catch(() => {}); } }}
-        style={{ position: "relative", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
-      >
-        {isVid ? (
-          <video
-            ref={(el) => {
-              videoRef.current = el;
-              if (el) {
-                el.muted = muted;
-                el.play().catch(() => {
-                  el.muted = true;
-                  setMuted(true);
-                  el.play().catch(() => {});
-                });
-              }
-            }}
-            src={story.media_url}
-            autoPlay
-            playsInline
-            onTimeUpdate={(e) => {
-              const v = e.currentTarget;
-              if (v.duration && onVideoProgress) { const pct = Math.min(100, (v.currentTime / v.duration) * 100); setVidProgress(pct); if (onVideoProgress) onVideoProgress(pct); }
-            }}
-            onEnded={() => { if (activeBarRef.current) activeBarRef.current.style.transform = "scaleX(1)"; setTimeout(() => onNext(), 90); }}
-            draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", WebkitTouchCallout: "none" }}
-          />
-        ) : (
-          <img src={story.media_url} alt="" draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: "none", userSelect: "none", WebkitTouchCallout: "none" }} />
-        )}
+      {activeStory && activeGroup && (
+        <div onMouseDown={() => setPaused(true)} onMouseUp={() => setPaused(false)} onTouchStart={() => setPaused(true)} onTouchEnd={() => setPaused(false)} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', userSelect: 'none' }}>
+          <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', zIndex: 30, display: 'flex', gap: '4px' }}>
+            {activeGroup.items.map((it, idx) => (
+              <div key={it.id} style={{ flex: 1, height: '3px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.35)', overflow: 'hidden' }}>
+                <div style={{ height: '100%', backgroundColor: '#FFF', width: idx < activeItemIdx ? '100%' : idx === activeItemIdx ? `${progress}%` : '0%', transition: idx === activeItemIdx ? 'width 50ms linear' : 'none' }} />
+              </div>
+            ))}
+          </div>
 
-        {activeIndex > 0 && (
-          <button type="button" onClick={onPrev} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.4)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <ChevronLeft size={20} />
-          </button>
-        )}
-        <button type="button" onClick={onNext} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.4)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <ChevronRight size={20} />
-        </button>
+          <div style={{ position: 'relative', zIndex: 30, padding: '22px 12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)' }}>
+            <div onClick={(e) => { e.stopPropagation(); setActiveGroupIdx(null); if (onOpenProfile && activeStory.user_id) onOpenProfile(activeStory.user_id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }}>
+              <img src={activeStory.author_avatar} alt={activeStory.author_name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FFF' }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#FFF', fontWeight: 700, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeStory.author_name}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px' }}>{formatStoryTime(activeStory.created_at)}</span>
+                </div>
+                {(activeStory.music_title || activeStory.audio_url) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#E4E6EB', fontSize: '12px', fontWeight: 600 }}>
+                    <Music size={12} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeStory.music_title || 'Story Music'}</span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-        {floatingEmoji && (
-          <div style={{ position: 'absolute', fontSize: '68px', pointerEvents: 'none' }}>{floatingEmoji}</div>
-        )}
-        {sentNotice && (
-          <div style={{ position: 'absolute', bottom: '18px', backgroundColor: '#1877F2', color: '#FFFFFF', padding: '6px 14px', borderRadius: '18px', fontSize: '12px', fontWeight: 700 }}>{sentNotice}</div>
-        )}
-      </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
+              {(activeStory.audio_url || activeStory.media_type === 'video') && (
+                <button type="button" onClick={() => setMuted((m) => !m)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                </button>
+              )}
+              {userProfile?.id && String(activeStory.user_id) === String(userProfile.id) && (
+                <button type="button" onClick={() => handleDeleteStory(activeStory.id)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <Trash2 size={17} />
+                </button>
+              )}
+              <button type="button" onClick={() => setActiveGroupIdx(null)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+          </div>
 
-      <div style={{ padding: '8px 10px 14px', display: 'flex', alignItems: 'center', gap: '8px', zIndex: 10 }}>
-        <form onSubmit={handleSendForm} style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid rgba(255,255,255,0.55)', borderRadius: '22px', padding: '4px 10px', backgroundColor: 'rgba(0,0,0,0.35)' }}>
-          <input
-            type="text"
-            value={replyText}
-            onFocus={() => { if (onPauseChange) onPauseChange(true); }}
-            onBlur={() => { if (!replyText.trim() && onPauseChange) onPauseChange(false); }}
-            onChange={(e) => { setReplyText(e.target.value); if (onPauseChange) onPauseChange(true); }}
-            placeholder="Send message..."
-            style={{ flex: 1, background: 'none', border: 'none', color: '#FFFFFF', fontSize: '14px', outline: 'none', padding: '4px 0' }}
-          />
-          {replyText.trim() && (
-            <button type="submit" style={{ background: 'none', border: 'none', color: '#1877F2', cursor: 'pointer', display: 'flex', padding: '2px' }}>
-              <Send size={18} />
-            </button>
+          <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: activeStory.media_type === 'text' ? activeStory.media_url : '#000' }}>
+            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay loop muted={muted} playsInline />}
+            {activeStory.media_type === 'text' ? (
+              <div style={{ padding: '28px', textAlign: 'center', color: '#FFF', fontSize: '26px', fontWeight: 800, lineHeight: 1.3 }}>{activeStory.caption}</div>
+            ) : activeStory.media_type === 'video' ? (
+              <video ref={videoRef} src={activeStory.media_url} autoPlay playsInline muted={muted} onEnded={goNextStory} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            ) : (
+              <img src={activeStory.media_url} alt={activeStory.author_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            )}
+            <div onClick={(e) => { e.stopPropagation(); goPrevStory(); }} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '32%', zIndex: 20, cursor: 'pointer' }} />
+            <div onClick={(e) => { e.stopPropagation(); goNextStory(); }} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '68%', zIndex: 20, cursor: 'pointer' }} />
+            {floatingEmoji && <div style={{ position: 'absolute', zIndex: 40, fontSize: '64px', pointerEvents: 'none' }}>{floatingEmoji}</div>}
+          </div>
+
+          <div style={{ position: 'relative', zIndex: 30, padding: '12px 14px 22px', background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} onClick={(e) => e.stopPropagation()}>
+            {activeStory.media_type !== 'text' && activeStory.caption && (
+              <p style={{ color: '#FFF', fontSize: '14px', textAlign: 'center', marginBottom: '12px', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{activeStory.caption}</p>
+            )}
+            {userProfile?.id && String(activeStory.user_id) === String(userProfile.id) ? (
+              <button type="button" onClick={openViewersModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
+                <Eye size={16} />
+                <span>Viewers</span>
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <form onSubmit={(e) => { e.preventDefault(); sendStoryReply(replyText); }} style={{ flex: 1, display: 'flex', alignItems: 'center', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.45)', padding: '6px 12px', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+                  <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '14px' }} />
+                  {replyText.trim() && <button type="submit" style={{ background: 'none', border: 'none', color: '#1877F2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Send size={18} /></button>}
+                </form>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {['❤️', '😂', '😮', '😢', '🔥'].map((emo) => (
+                    <button key={emo} type="button" onClick={() => sendStoryReply(emo)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{emo}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {showViewers && (
+            <div onClick={() => setShowViewers(false)} style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end' }}>
+              <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxHeight: '55vh', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid #E4E6EB', paddingBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '16px', color: '#050505' }}>Story viewers ({viewersList.length})</span>
+                  <button type="button" onClick={() => setShowViewers(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+                </div>
+                {viewersList.length === 0 ? (
+                  <p style={{ color: '#65676B', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>No viewers yet.</p>
+                ) : (
+                  viewersList.map((v) => (
+                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
+                      <img src={v.avatar || `https://ui-avatars.com{encodeURIComponent(v.name)}`} alt={v.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <span style={{ fontWeight: 600, fontSize: '14px', color: '#050505' }}>{v.name}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           )}
-        </form>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          {['❤️', '👍', '😂', '😮', '😢'].map((em) => (
-            <button key={em} type="button" onClick={() => handleReaction(em)} style={{ background: 'none', border: 'none', fontSize: '23px', padding: 0, cursor: 'pointer', lineHeight: 1 }}>
-              {em}
-            </button>
-          ))}
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
