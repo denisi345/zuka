@@ -17,6 +17,10 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
   const [coverUrl, setCoverUrl] = useState(initialData.cover_url || '');
   const [saving, setSaving] = useState(false);
   const [viewMedia, setViewMedia] = useState(null);
+  const storyInputRef = useRef(null);
+  const [draftStory, setDraftStory] = useState(null);
+  const [draftStoryText, setDraftStoryText] = useState("");
+  const [sharingStory, setSharingStory] = useState(false);
   const [isOnline, setIsOnline] = useState(() => Boolean(isOwn || window.__zukaOnlineIds?.has(String(targetId || profile?.id || ''))));
   useEffect(() => {
     const check = () => {
@@ -146,7 +150,7 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
                 <button type="button" onClick={() => setEditing(!editing)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                   <Edit3 size={16} /> {editing ? 'Cancel Edit' : 'Edit Profile'}
                 </button>
-                <button type="button" onClick={() => { window.dispatchEvent(new CustomEvent("zuka:open-story")); }} style={{ flex: 1, backgroundColor: "#1877F2", color: "#FFFFFF", border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer" }}>+ Add to story</button>
+                <button type="button" onClick={() => storyInputRef.current?.click()} style={{ flex: 1, backgroundColor: "#1877F2", color: "#FFFFFF", border: "none", borderRadius: "8px", padding: "10px", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer" }}>+ Add to story</button>
               </>
             ) : (
               <>
@@ -181,6 +185,28 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
         </form>
       )}
       <ProfileTimeline profile={profile} isOwnProfile={isOwn} />
+      
+      <input ref={storyInputRef} type="file" accept="image/*,video/*" onChange={handlePickStoryFile} style={{ display: 'none' }} />
+      {draftStory && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
+            <button type="button" onClick={() => !sharingStory && setDraftStory(null)} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create story</span>
+            <div style={{ width: '38px' }} />
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {draftStory.isVideo ? <video src={draftStory.previewUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <img src={draftStory.previewUrl} alt="Story Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}
+          </div>
+          <div style={{ padding: '12px 16px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input type="text" value={draftStoryText} onChange={(e) => setDraftStoryText(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '10px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFF', fontSize: '14px' }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button type="button" onClick={() => !sharingStory && setDraftStory(null)} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700 }}>Discard</button>
+              <button type="button" onClick={publishProfileStory} disabled={sharingStory} style={{ padding: '10px 22px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>{sharingStory ? 'Sharing...' : 'Share to Story'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {viewMedia && (
         <div onClick={() => setViewMedia(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
