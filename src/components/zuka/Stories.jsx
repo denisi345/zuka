@@ -211,9 +211,9 @@ export default function Stories({ userProfile, onOpenProfile }) {
         const ext = (draftStory.file.name.split('.').pop() || (draftStory.isVideo ? 'mp4' : 'jpg')).toLowerCase();
         const mPath = `stories/media_${userProfile?.id || 'guest'}_${Date.now()}.${ext}`;
         jobs.push((async () => {
-          let u = await uploadFast('post-media', mPath, draftStory.file, 7000);
+          let u = await uploadFast('post-media', mPath, draftStory.file, draftStory.isVideo ? 60000 : 12000);
           if (!u && !draftStory.isVideo) u = await fileToDataUrl(draftStory.file);
-          mediaUrl = u || draftStory.previewUrl;
+          mediaUrl = u || (draftStory.isVideo ? '' : draftStory.previewUrl);
         })());
       }
       if (draftAudio?.file) {
@@ -226,6 +226,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
         })());
       }
       await Promise.all(jobs);
+      if (draftStory.mode === 'media' && !mediaUrl) { alert('Video upload failed or took too long. Please try a shorter video.'); setSharing(false); return; }
 
       const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
       const authorWithMusic = draftAudio?.name ? `${myName} [🎵 ${draftAudio.name}]` : (draftStory.mode === 'text' ? draftText.trim() : myName);
