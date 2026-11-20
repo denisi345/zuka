@@ -41,6 +41,42 @@ function fileToDataUrl(file) {
   });
 }
 
+
+async function trimVideoClip(file, startSec, endSec) {
+  return new Promise((resolve) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const vid = document.createElement('video');
+      vid.src = url;
+      vid.muted = false;
+      vid.playsInline = true;
+      vid.onloadedmetadata = () => {
+        const s0 = Math.max(0, Math.min(startSec, vid.duration - 0.5));
+        const s1 = Math.max(s0 + 0.5, Math.min(endSec, vid.duration));
+        vid.currentTime = s0;
+        vid.onseeked = () => {
+          const st = vid.captureStream ? vid.captureStream() : (vid.mozCaptureStream ? vid.mozCaptureStream() : null);
+          if (!st) { URL.revokeObjectURL(url); resolve(file); return; }
+          const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' : 'video/webm';
+          const rec = new MediaRecorder(st, { mimeType: mime, videoBitsPerSecond: 1200000 });
+          const chunks = [];
+          rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+          rec.onstop = () => {
+            URL.revokeObjectURL(url);
+            resolve(new File([new Blob(chunks, { type: 'video/webm' })], 'trimmed_' + Date.now() + '.webm', { type: 'video/webm' }));
+          };
+          rec.start();
+          vid.play().catch(() => {});
+          const iv = setInterval(() => {
+            if (vid.currentTime >= s1 || vid.ended) { clearInterval(iv); vid.pause(); if (rec.state !== 'inactive') rec.stop(); }
+          }, 100);
+        };
+      };
+      vid.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    } catch (_) { resolve(file); }
+  });
+}
+
 export default function Stories({ userProfile, onOpenProfile }) {
   const [stories, setStories] = useState([]);
   const [activeGroupIdx, setActiveGroupIdx] = useState(null);
@@ -53,6 +89,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
   const [draftText, setDraftText] = useState('');
   const [draftBgIdx, setDraftBgIdx] = useState(0);
   const [draftAudio, setDraftAudio] = useState(null);
+  const [trimRange, setTrimRange] = useState({ start: 0, end: 15, duration: 0 });
   const [sharing, setSharing] = useState(false);
 
   const [replyText, setReplyText] = useState('');
@@ -188,7 +225,7 @@ export default function Stories({ userProfile, onOpenProfile }) {
     const file = (e.target.files && e.target.files.item(0)) || null;
     e.target.value = '';
     if (!file) return;
-    setDraftText(''); setDraftAudio(null);
+    setDraftText(''); setDraftAudio(null); setTrimRange({ start: 0, end: 15, duration: 0 });
     setDraftStory({ mode: 'media', file, previewUrl: URL.createObjectURL(file), isVideo: file.type.startsWith('video/') });
   }
 
@@ -208,10 +245,24 @@ export default function Stories({ userProfile, onOpenProfile }) {
       let audioUrl = '';
       const jobs = [];
       if (draftStory.mode === 'media' && draftStory.file) {
+        let fileToUpload = draftStory.file;
+        if (draftStory.isVideo && trimRange.duration > 0 && (trimRange.start > 0 || trimRange.end < Math.floor(trimRange.duration))) {
+          fileToUpload = await trimVideoClip(draftStory.file, trimRange.start, trimRange.end);
+        }
+        if (draftStory.isVideo && fileToUpload.size > 4 * 1024 * 1024) {
+          alert('Video exceeds 4MB limit. Please shorten the trim range.');
+          setSharing(false);
+          return;
+        }
         const ext = (draftStory.file.name.split('.').pop() || (draftStory.isVideo ? 'mp4' : 'jpg')).toLowerCase();
         const mPath = `stories/media_${userProfile?.id || 'guest'}_${Date.now()}.${ext}`;
         jobs.push((async () => {
-          let u = await uploadFast('post-media', mPath, draftStory.file, draftStory.isVideo ? 60000 : 12000);
+          let u = '';
+          for (const b of (draftStory.isVideo ? ['reels', 'post-media', 'avatars', 'stories'] : ['post-media', 'avatars', 'stories'])) {
+            u = await uploadFast(b, mPath, fileToUpload, 35000);
+            if (u) break;
+          }
+          if (!u && fileToUpload.size <= 4 * 1024 * 1024) u = await fileToDataUrl(fileToUpload);
           if (!u && !draftStory.isVideo) u = await fileToDataUrl(draftStory.file);
           mediaUrl = u || (draftStory.isVideo ? '' : draftStory.previewUrl);
         })());
@@ -220,7 +271,11 @@ export default function Stories({ userProfile, onOpenProfile }) {
         const aExt = (draftAudio.file.name.split('.').pop() || 'mp3').toLowerCase();
         const aPath = `stories/audio_${userProfile?.id || 'guest'}_${Date.now()}.${aExt}`;
         jobs.push((async () => {
-          let au = await uploadFast('post-media', aPath, draftAudio.file, 7000);
+          let au = '';
+          for (const b of ['post-media', 'reels', 'avatars', 'stories']) {
+            au = await uploadFast(b, aPath, draftAudio.file, 15000);
+            if (au) break;
+          }
           if (!au && draftAudio.file.size < 4 * 1024 * 1024) au = await fileToDataUrl(draftAudio.file);
           audioUrl = au || draftAudio.url;
         })());
@@ -356,13 +411,46 @@ export default function Stories({ userProfile, onOpenProfile }) {
                 <div style={{ display: 'flex', gap: '10px' }}>{TEXT_BGS.map((bg, idx) => (<button key={idx} type="button" onClick={() => setDraftBgIdx(idx)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: bg, border: draftBgIdx === idx ? '3px solid #FFF' : '1px solid rgba(255,255,255,0.4)', cursor: 'pointer' }} />))}</div>
               </div>
             ) : draftStory.isVideo ? (
-              <video src={draftStory.previewUrl} autoPlay loop muted={Boolean(draftAudio)} playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <video
+                src={draftStory.previewUrl}
+                autoPlay
+                loop
+                muted={Boolean(draftAudio)}
+                playsInline
+                onLoadedMetadata={(e) => {
+                  const d = Math.floor(e.currentTarget.duration || 0);
+                  if (d > 0 && trimRange.duration === 0) {
+                    const maxClip = draftStory.file.size > 4 * 1024 * 1024 ? Math.max(4, Math.floor((3.6 * 1024 * 1024 / draftStory.file.size) * d)) : Math.min(30, d);
+                    setTrimRange({ start: 0, end: Math.min(d, maxClip), duration: d });
+                  }
+                }}
+                onTimeUpdate={(e) => {
+                  if (trimRange.duration > 0 && e.currentTarget.currentTime >= trimRange.end) {
+                    e.currentTarget.currentTime = trimRange.start;
+                  }
+                }}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             ) : (
               <img src={draftStory.previewUrl} alt="Story preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             )}
           </div>
 
           <div style={{ padding: '12px 16px 24px', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {draftStory.mode === 'media' && draftStory.isVideo && trimRange.duration > 1 && (
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: '12px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FFF', fontSize: '12px', fontWeight: 700 }}>
+                  <span>✂️ Trim Video: {trimRange.start}s – {trimRange.end}s ({trimRange.end - trimRange.start}s)</span>
+                  <span>Est. ~{Math.max(0.5, Number((((trimRange.end - trimRange.start) / trimRange.duration) * (draftStory.file.size / (1024 * 1024))).toFixed(1)))} MB / 4 MB</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ color: '#CCC', fontSize: '11px' }}>Start</span>
+                  <input type="range" min={0} max={Math.max(0, trimRange.duration - 1)} value={trimRange.start} onChange={(e) => { const v = Number(e.target.value); setTrimRange((r) => ({ ...r, start: v, end: Math.max(v + 1, r.end) })); }} style={{ flex: 1 }} />
+                  <span style={{ color: '#CCC', fontSize: '11px' }}>End</span>
+                  <input type="range" min={1} max={trimRange.duration} value={trimRange.end} onChange={(e) => { const v = Number(e.target.value); setTrimRange((r) => ({ ...r, end: Math.max(r.start + 1, v) })); }} style={{ flex: 1 }} />
+                </div>
+              </div>
+            )}
             {draftStory.mode === 'media' && <input type="text" value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '10px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', fontSize: '14px', outline: 'none' }} />}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <button type="button" onClick={() => !sharing && setDraftStory(null)} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>Discard</button>
