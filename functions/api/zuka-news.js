@@ -1,68 +1,79 @@
-export async function onRequestGet(context) {
+export async function onRequest(context) {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "no-store"
+  };
+
   const items = [];
-  try {
-    const rssRes = await fetch("https://google.com");
-    const xml = await rssRes.text();
-    const matches = [...xml.matchAll(/<item>[\s\S]*?<title><!\[CDATA\[(.*?)\]\]><\/title>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g)].slice(0, 4);
-    if (matches.length === 0) {
-      const plainMatches = [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g)].slice(0, 4);
-      plainMatches.forEach((m, i) => {
-        items.push({
-          id: `live-news-${Date.now()}-${i}`,
-          author_name: "ZUKA News AI",
-          is_verified: true,
-          content: `📰 Breaking News: ${m.replace(/&amp;/g, "&").replace(/&quot;/g, '"')}`,
-          created_at: new Date(m || Date.now()).toISOString(),
-          likes_count: 14 + i * 7
-        });
-      });
-    } else {
-      matches.forEach((m, i) => {
-        items.push({
-          id: `live-news-${Date.now()}-${i}`,
-          author_name: "ZUKA News AI",
-          is_verified: true,
-          content: `📰 Breaking News: ${m}`,
-          created_at: new Date(m || Date.now()).toISOString(),
-          likes_count: 18 + i * 9
-        });
-      });
-    }
-  } catch (_) {}
+  const nowIso = new Date().toISOString();
 
-  try {
-    const apiKey = context.env.GEMINI_API_KEY;
-    if (apiKey) {
-      const gemRes = await fetch(`https://googleapis.com{apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "Generate 2 short, fresh, hilarious, clean viral jokes/memes in English for a social media feed today. Separate them with ||| and do not number them." }] }]
-        })
-      });
-      const gemData = await gemRes.json();
-      const raw = gemData?.candidates?.at(0)?.content?.parts?.at(0)?.text || "";
-      raw.split("|||").map((s) => s.trim()).filter(Boolean).slice(0, 2).forEach((joke, i) => {
-        items.push({
-          id: `funny-ai-${Date.now()}-${i}`,
-          author_name: "ZUKA Comedy AI",
-          is_verified: true,
-          content: `😂 ${joke}`,
-          created_at: new Date(Date.now() - (i + 1) * 180000).toISOString(),
-          likes_count: 27 + i * 11
-        });
-      });
-    }
-  } catch (_) {}
+  // 1. Vuta habari mpya za moja kwa moja kutoka Google News RSS (Bure 100%, bila API Key)
+  const rssSources = [
+    { url: "https://google.com", badge: "🇹🇿 Habari Mpya" },
+    { url: "https://google.com", badge: "⚽ Michezo" },
+    { url: "https://google.com", badge: "🌍 Dunia" }
+  ];
 
-  if (items.length === 0) {
-    items.push(
-      { id: `live-news-${Date.now()}-1`, author_name: "ZUKA News AI", is_verified: true, content: "📰 Tech Update: Artificial Intelligence and mobile cloud apps are transforming digital communities across Africa and the world today.", created_at: new Date().toISOString(), likes_count: 34 },
-      { id: `funny-ai-${Date.now()}-1`, author_name: "ZUKA Comedy AI", is_verified: true, content: "😂 Me: I will sleep early tonight.\nAlso me at 2:45 AM: Wonder how penguins have knees?", created_at: new Date(Date.now() - 300000).toISOString(), likes_count: 52 }
-    );
+  for (const src of rssSources) {
+    try {
+      const res = await fetch(src.url, { headers: { "User-Agent": "Mozilla/5.0" } });
+      if (!res.ok) continue;
+      const xml = await res.text();
+      const matches = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 3);
+      matches.forEach((m, idx) => {
+        const block = m[1] || "";
+        const rawTitle = (block.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/)?.[1] || block.match(/<title>([\s\S]*?)<\/title>/)?.[1] || "").trim();
+        const title = rawTitle.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+        const pubDate = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim() || nowIso;
+        if (title) {
+          items.push({
+            id: `live-news-${src.badge}-${idx}-${Date.now()}`,
+            user_id: null,
+            author_name: "ZUKA News AI",
+            author_avatar: "https://ui-avatars.com",
+            is_verified: true,
+            content: `${src.badge} • ${title}`,
+            image_url: "",
+            created_at: new Date(pubDate).toISOString() || nowIso
+          });
+        }
+      });
+    } catch (_) {}
   }
 
-  return new Response(JSON.stringify({ items }), {
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
-  });
+  // 2. Kama GEMINI_API_KEY ipo kwenye Cloudflare Pages, ongeza uchambuzi wa AI na vichekesho
+  const geminiKey = context?.env?.GEMINI_API_KEY || "";
+  if (geminiKey) {
+    try {
+      const gemRes = await fetch(
+        `https://googleapis.com{encodeURIComponent(geminiKey)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "Andika vichekesho 2 vifupi vya Kiswahili vya kuvutia na salama kwa jamii, vitenganishe kwa |||" }] }]
+          })
+        }
+      );
+      if (gemRes.ok) {
+        const gemData = await gemRes.json();
+        const raw = gemData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        raw.split("|||").map((s) => s.trim()).filter(Boolean).slice(0, 2).forEach((joke, i) => {
+          items.push({
+            id: `live-news-ai-${i}-${Date.now()}`,
+            user_id: null,
+            author_name: "ZUKA News AI",
+            author_avatar: "https://ui-avatars.com",
+            is_verified: true,
+            content: `😂 ${joke}`,
+            image_url: "",
+            created_at: nowIso
+          });
+        });
+      }
+    } catch (_) {}
+  }
+
+  return new Response(JSON.stringify({ ok: true, items }), { status: 200, headers });
 }
