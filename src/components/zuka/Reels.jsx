@@ -240,7 +240,13 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
     const nextLikes = Math.max(0, Number(reel.likes_count || 0) + (wasLiked ? -1 : 1));
     setReels((prev) => prev.map((r) => (r.id === reel.id ? { ...r, likes_count: nextLikes } : r)));
     if (reel.id && !String(reel.id).startsWith('reel-')) {
-      try { supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reel.id); } catch (_) {}
+      try {
+      supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reel.id);
+      if (userProfile?.id) {
+        if (!wasLiked) supabase.from('reel_likes').insert({ reel_id: reel.id, user_id: userProfile.id });
+        else supabase.from('reel_likes').delete().eq('reel_id', reel.id).eq('user_id', userProfile.id);
+      }
+    } catch (_) {}
     }
   }
 
@@ -251,7 +257,7 @@ export default function Reels({ userProfile, onOpenUserProfile }) {
     const author = userProfile?.full_name || userProfile?.username || 'You';
     setReelComments((prev) => ({ ...prev, [commentReelId]: [...(prev[commentReelId] || []), { id: `rc-${Date.now()}`, author, is_verified: Boolean(userProfile?.is_verified), content: txt }] }));
     setReels((prev) => prev.map((r) => (r.id === commentReelId ? { ...r, comments_count: Number(r.comments_count || 0) + 1 } : r)));
-    setCommentInput(''); if (userProfile?.id && commentReelId) { supabase.from('comments').insert({ post_id: commentReelId, user_id: userProfile.id, content: text }).then(() => {}); }
+    setCommentInput(''); if (userProfile?.id && commentReelId) { supabase.from('reel_comments').insert({ reel_id: commentReelId, user_id: userProfile.id, content: text, author_name: userProfile.full_name || 'Zuka User', author_avatar: userProfile.avatar_url || '' }); }
   }
 
   async function handleShare(reel) {
