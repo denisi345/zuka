@@ -51,8 +51,8 @@ export default function CreatePost({ userProfile, onCreatePost }) {
     let url = URL.createObjectURL(file);
     const clean = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '');
     const path = `${folder}/${Date.now()}_${clean}`;
-    for (const bucket of ['media', 'posts', 'public']) {
-      const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+    for (const bucket of ['post-media', 'stories', 'avatars', 'media', 'posts']) {
+      const upP = supabase.storage.from(bucket).upload(path, file, { upsert: true }); const { error } = await Promise.race([upP, new Promise((r) => setTimeout(() => r({ error: new Error('timeout') }), 15000))]);
       if (!error) {
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
         if (pub?.publicUrl) { url = pub.publicUrl; break; }
