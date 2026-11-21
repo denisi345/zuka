@@ -101,6 +101,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
   const storyVideoRef = useRef(null);
   const storyAudioRef = useRef(null);
 
+  useEffect(() => { const h = () => { setCreateMode("media"); setCreateOpen(true); }; window.addEventListener("zuka:open-create-story", h); return () => window.removeEventListener("zuka:open-create-story", h); }, []);
   const myName = userProfile?.full_name || userProfile?.username || 'Zuka Member';
   const myAvatar = userProfile?.avatar_url || `https://ui-avatars.com{encodeURIComponent(myName)}&background=1877F2&color=fff&bold=true`;
 
