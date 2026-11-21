@@ -135,7 +135,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
       setViewersOpen(false);
       setStoryMenuOpen(false);
       setActiveGroupIdx(null);
-      setCreateOpen(false);
+      resetStoryDraft(); setCreateOpen(false);
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -327,6 +327,8 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
       aud.play().catch(() => {});
     }
   }, [activeStory?.id, paused, muted, viewersOpen, storyMenuOpen]);
+
+  function resetStoryDraft() { if (draftPreview) { try { URL.revokeObjectURL(draftPreview); } catch (_) {} } setDraftFile(null); setDraftPreview(''); setDraftIsVideo(false); setDraftText(''); setDraftCaption(''); setDraftAudioFile(null); }
 
   function handlePickMedia(e) {
     const f = (e.target.files && e.target.files.item(0)) || null;
@@ -685,7 +687,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
       {createOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 11000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', height: '100dvh', overflowY: 'auto' }}>
           <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }}>
-            <button type="button" onClick={() => { if (!sharing) setCreateOpen(false); }} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
+            <button type="button" onClick={() => { if (!sharing) { resetStoryDraft(); setCreateOpen(false); } }} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
             <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create Story</span>
             <button type="button" onClick={handleShareStory} disabled={sharing} style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>
               {sharing ? 'Sharing...' : 'Share'}
@@ -714,12 +716,12 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
                   ))}
                 </div>
               </div>
-            ) : draftPreview ? (
+            ) : draftPreview ? (<div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%', maxHeight: '100%' }}><button type="button" onClick={resetStoryDraft} title="Remove media" style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, width: '34px', height: '34px', borderRadius: '50%', border: '1.5px solid #FFF', backgroundColor: 'rgba(0,0,0,0.72)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} /></button>{
               draftIsVideo ? (
                 <video src={draftPreview} autoPlay loop playsInline style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px' }} />
               ) : (
                 <img src={draftPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} />
-              )
+              )}</div>
             ) : (
               <button type="button" onClick={() => mediaInputRef.current?.click()} style={{ padding: '18px 26px', borderRadius: '14px', border: '1.5px dashed rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
                 + Select Photo or Video (Max 4MB)
