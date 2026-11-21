@@ -572,6 +572,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
             onMouseUp={() => setPaused(false)}
             onTouchStart={() => setPaused(true)}
             onTouchEnd={() => setPaused(false)}
+              onContextMenu={(e) => e.preventDefault()}
             style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
           >
             {activeStory.media_type === 'text' ? (
@@ -594,7 +595,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
                 src={activeStory.media_url}
                 alt={activeGroup.author_name}
                 onError={goNextStory}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none', WebkitTouchCallout: 'none', userSelect: 'none' }} draggable={false}
               />
             )}
 
@@ -609,7 +610,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
           </div>
 
           <div style={{ position: 'relative', zIndex: 30, padding: '10px 12px 18px', background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.5) 75%, transparent)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {activeStory.caption && (
+            {activeStory.caption && !['zuka user','zuka member'].includes(activeStory.caption.trim().toLowerCase()) && (
               <p style={{ color: '#FFF', fontSize: '14.5px', lineHeight: 1.35, margin: 0 }}>{activeStory.caption}</p>
             )}
 
