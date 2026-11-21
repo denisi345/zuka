@@ -17,6 +17,38 @@ class FeedGuard extends React.Component {
 export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) {
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
+  const [activeProfileView, setActiveProfileView] = useState(null);
+  const [profileFollowing, setProfileFollowing] = useState(false);
+  useEffect(() => {
+    if (!activeProfileView) return;
+    window.history.pushState({ zukaFeedProfile: true }, "");
+    const onPop = () => setActiveProfileView(null);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [activeProfileView]);
+  async function openUserProfileSafe(target, fallbackName, fallbackAvatar) {
+    const uid = typeof target === "string" ? target : (target?.id || target?.user_id || null);
+    const baseName = fallbackName || (typeof target === "object" ? (target?.full_name || target?.author_name) : "") || "Zuka Member";
+    const baseAvatar = fallbackAvatar || (typeof target === "object" ? (target?.avatar_url || target?.author_avatar) : "") || `https://ui-avatars.com${encodeURIComponent(baseName)}&background=1877F2&color=fff&bold=true`;
+    setActiveProfileView({ id: uid, full_name: baseName, avatar_url: baseAvatar, cover_url: "", bio: "", is_verified: false, followersCount: 0 });
+    if (!uid) return;
+    try {
+      const { data: prof } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+      const { data: fRows } = await supabase.from("follows").select("follower_id").eq("following_id", uid);
+      setProfileFollowing(Boolean(userProfile?.id && Array.isArray(fRows) && fRows.some((r) => String(r.follower_id) === String(userProfile.id))));
+      setActiveProfileView((prev) => prev ? ({ ...prev, full_name: prof?.full_name || prof?.username || prev.full_name, avatar_url: prof?.avatar_url || prev.avatar_url, cover_url: prof?.cover_url || "", bio: prof?.bio || "", is_verified: Boolean(prof?.is_verified), followersCount: Array.isArray(fRows) ? fRows.length : 0 }) : null);
+    } catch (_) {}
+  }
+  async function toggleProfileFollow() {
+    if (!userProfile?.id || !activeProfileView?.id || String(userProfile.id) === String(activeProfileView.id)) return;
+    const next = !profileFollowing;
+    setProfileFollowing(next);
+    setActiveProfileView((prev) => prev ? ({ ...prev, followersCount: Math.max(0, (prev.followersCount || 0) + (next ? 1 : -1)) }) : null);
+    try {
+      if (next) await supabase.from("follows").insert({ follower_id: userProfile.id, following_id: activeProfileView.id });
+      else await supabase.from("follows").delete().eq("follower_id", userProfile.id).eq("following_id", activeProfileView.id);
+    } catch (_) {}
+  }
 
   useEffect(() => { loadFeedData(); const h = () => loadFeedData(); window.addEventListener("zuka:refresh-feed", h); return () => window.removeEventListener("zuka:refresh-feed", h); }, []);
 
@@ -111,7 +143,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
 
   return (
     <div style={{ width: '100%', paddingBottom: '48px' }}>
-      <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} onOpenProfile={onOpenProfile} />
+      <CreatePost userProfile={userProfile} onCreatePost={handleCreatePost} onOpenProfile={() => openUserProfileSafe(userProfile)} />
       <Stories userProfile={userProfile} stories={stories} onUploadStory={handleUploadStory} onDeleteStory={(id) => setStories((prev) => prev.filter((x) => x.id !== id))} />
       <div>
         {posts.length === 0 ? (
@@ -120,14 +152,44 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
           </div>
         ) : (
           posts.map((post) => (
-            <Post key={post.id} post={post} currentUserId={userProfile?.id} onOpenUserProfile={onOpenUserProfile}
-              onOpenUserProfile={onOpenUserProfile}
+            <Post key={post.id} post={post} currentUserId={userProfile?.id} onOpenUserProfile={openUserProfileSafe}
+              onOpenUserProfile={openUserProfileSafe}
               onDeletePost={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
             />
           ))
         )}
       </div>
       <FeedGuard><ZukaAdSlot /></FeedGuard>
+      {activeProfileView && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 11000, backgroundColor: "#F0F2F5", overflowY: "auto" }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 20, backgroundColor: "#FFF", padding: "10px 14px", borderBottom: "1px solid #E4E6EB", display: "flex", alignItems: "center", gap: "12px" }}>
+            <button type="button" onClick={() => setActiveProfileView(null)} style={{ width: "36px", height: "36px", borderRadius: "50%", border: "none", backgroundColor: "#F0F2F5", fontSize: "18px", fontWeight: 700, cursor: "pointer" }}>←</button>
+            <span style={{ fontWeight: 700, fontSize: "16px", color: "#050505" }}>{activeProfileView.full_name}</span>
+          </div>
+          <div style={{ backgroundColor: "#FFF", paddingBottom: "16px", marginBottom: "8px" }}>
+            <div style={{ height: "145px", backgroundColor: "#D8DADF", backgroundImage: activeProfileView.cover_url ? `url(${activeProfileView.cover_url})` : "none", backgroundSize: "cover", backgroundPosition: "center" }} />
+            <div style={{ padding: "0 16px", marginTop: "-44px" }}>
+              <img src={activeProfileView.avatar_url} alt={activeProfileView.full_name} style={{ width: "88px", height: "88px", borderRadius: "50%", objectFit: "cover", border: "4px solid #FFF", backgroundColor: "#FFF" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#050505", margin: 0 }}>{activeProfileView.full_name}</h2>
+                {activeProfileView.is_verified && <span style={{ width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "#1877F2", color: "#FFF", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700 }}>✓</span>}
+              </div>
+              <div style={{ fontSize: "13.5px", color: "#65676B", marginTop: "4px" }}>{activeProfileView.followersCount} Followers</div>
+              {activeProfileView.bio && <p style={{ fontSize: "14px", color: "#050505", marginTop: "8px" }}>{activeProfileView.bio}</p>}
+              {userProfile?.id && activeProfileView.id && String(userProfile.id) !== String(activeProfileView.id) && (
+                <button type="button" onClick={toggleProfileFollow} style={{ marginTop: "12px", width: "100%", padding: "9px", borderRadius: "8px", border: "none", backgroundColor: profileFollowing ? "#E4E6EB" : "#1877F2", color: profileFollowing ? "#050505" : "#FFF", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>
+                  {profileFollowing ? "Following" : "Follow"}
+                </button>
+              )}
+            </div>
+          </div>
+          <div style={{ padding: "8px 0 32px" }}>
+            {posts.filter((pt) => activeProfileView.id ? String(pt.user_id) === String(activeProfileView.id) : pt.author_name === activeProfileView.full_name).map((pt) => (
+              <Post key={pt.id} post={pt} currentUserId={userProfile?.id} onOpenUserProfile={openUserProfileSafe} onDeletePost={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
