@@ -281,7 +281,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
             {loadingLikers ? <div style={{ padding: '16px', textAlign: 'center', color: '#65676B', fontSize: '13px' }}>Loading...</div> : likersList.length === 0 ? <div style={{ padding: '16px', textAlign: 'center', color: '#65676B', fontSize: '13px' }}>👍 {likesCount} likes</div> : likersList.map((u) => (
               <div key={u.id} onClick={() => { setLikesOpen(false); if (onOpenUserProfile) onOpenUserProfile(u.id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 4px', cursor: 'pointer', borderBottom: '1px solid #F0F2F5' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, overflow: 'hidden', flexShrink: 0 }}>{u.avatar_url ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.full_name || u.username || 'Z')[0].toUpperCase()}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, fontSize: '14px' }}><span>{u.full_name || u.username || 'ZUKA Member'}</span>{u.is_verified && <ZukaBadge size={14} />}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, fontSize: '14px' }}><span>{u.full_name || u.username || 'ZUKA Member'}</span><ZukaBadge userId={u.id} size={14} /></div>
               </div>
             ))}
           </div>

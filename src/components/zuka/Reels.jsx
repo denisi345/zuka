@@ -582,7 +582,7 @@ export default function Reels({ userProfile }) {
                     <img src={lk.avatar} alt={lk.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
                     <span style={{ fontWeight: 700, fontSize: '14px', color: '#050505', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       {lk.name}
-                      {lk.verified && <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
+                      <ZukaBadge userId={lk.user_id} size={14} />
                     </span>
                   </div>
                 ))
