@@ -34,8 +34,28 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
   const [friendSent, setFriendSent] = useState(false);
 
   const avatarInputRef = useRef(null);
-  useEffect(() => { if (!initialData?.id) return; supabase.from("profiles").select("*").eq("id", initialData.id).maybeSingle().then(({ data }) => { if (data) { setProfile(data); setFullName(data.full_name || data.username || ""); setBio(data.bio || ""); setAvatarUrl(data.avatar_url || ""); setCoverUrl(data.cover_url || ""); } }); }, [initialData?.id]);
   const coverInputRef = useRef(null);
+  useEffect(() => {
+    const fetchId = isOwn ? currentUser?.id : targetId;
+    if (!fetchId) return;
+    supabase.from("profiles").select("*").eq("id", fetchId).maybeSingle().then(({ data }) => {
+      if (data) {
+        setProfile(data);
+        setFullName(data.full_name || data.username || "");
+        setBio(data.bio || "");
+        setAvatarUrl(data.avatar_url || "");
+        setCoverUrl(data.cover_url || "");
+      }
+    });
+  }, [isOwn, currentUser?.id, targetId]);
+
+  useEffect(() => {
+    if (!onBack) return;
+    window.history.pushState({ zukaProfile: true }, "");
+    const onPop = () => onBack();
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [onBack]);
 
   async function uploadImageFile(file, folder) {
     if (!file) return '';
