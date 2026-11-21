@@ -82,8 +82,8 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
     const updated = { ...profile, [field]: url };
     setProfile(updated);
     if (onProfileUpdated) onProfileUpdated(updated);
-    if (profile.id) {
-      try { await supabase.from('profiles').update({ [field]: url }).eq('id', profile.id); } catch (_) {}
+    if (profile?.id) {
+      try { await supabase.from('profiles').update({ [field]: url }).eq('id', profile?.id); } catch (_) {}
     }
     setSaving(false);
   }
@@ -91,12 +91,12 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
-    const updated = { ...profile, full_name: fullName.trim() || profile.full_name, bio: bio.trim(), avatar_url: avatarUrl, cover_url: coverUrl };
+    const updated = { ...profile, full_name: fullName.trim() || profile?.full_name, bio: bio.trim(), avatar_url: avatarUrl, cover_url: coverUrl };
     setProfile(updated);
     if (onProfileUpdated) onProfileUpdated(updated);
-    if (profile.id) {
+    if (profile?.id) {
       try {
-        await supabase.from('profiles').update({ full_name: updated.full_name, bio: updated.bio, avatar_url: updated.avatar_url, cover_url: updated.cover_url }).eq('id', profile.id);
+        await supabase.from('profiles').update({ full_name: updated.full_name, bio: updated.bio, avatar_url: updated.avatar_url, cover_url: updated.cover_url }).eq('id', profile?.id);
       } catch (_) {}
     }
     setSaving(false);
@@ -105,11 +105,11 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
 
   async function handleAddFriend() {
     setFriendSent(true);
-    if (currentUser?.id && profile.id) {
-      try { await supabase.from('friend_requests').insert({ sender_id: currentUser.id, receiver_id: profile.id, status: 'pending' }); } catch (_) {}
+    if (currentUser?.id && profile?.id) {
+      try { await supabase.from('friend_requests').insert({ sender_id: currentUser.id, receiver_id: profile?.id, status: 'pending' }); } catch (_) {}
     }
   }
-  const displayName = profile.full_name || profile.username || 'ZUKA Member';
+  const displayName = profile?.full_name || profile?.username || 'ZUKA Member';
 
   return (
     <div style={{ backgroundColor: '#F0F2F5', minHeight: 'calc(100vh - 98px)', paddingBottom: '48px' }}>
@@ -159,10 +159,10 @@ export default function Profile({ currentUser, targetProfile, onBack, onOpenMess
 
           <h1 style={{ margin: '10px 0 2px', fontSize: '22px', fontWeight: 800, color: '#050505', display: 'flex', alignItems: 'center' }}>
             <span>{displayName}</span>
-            {profile.is_verified && <ZukaBadge size={20} />}
+            {profile?.is_verified && <ZukaBadge size={20} />}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: '#65676B', marginBottom: '6px' }}><span>0 Friends</span>{isOnline && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 700, color: '#31A24C' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#31A24C' }} />Active now</span>}</div>
-          {profile.bio && <p style={{ margin: '0 0 12px', fontSize: '15px', color: '#050505' }}>{profile.bio}</p>}
+          {profile?.bio && <p style={{ margin: '0 0 12px', fontSize: '15px', color: '#050505' }}>{profile?.bio}</p>}
 
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
             {isOwn ? (
