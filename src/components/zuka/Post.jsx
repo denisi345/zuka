@@ -27,7 +27,9 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
   const [likesOpen, setLikesOpen] = useState(false);
   const [likersList, setLikersList] = useState([]);
   const [loadingLikers, setLoadingLikers] = useState(false);
-    const [videoFullOpen, setVideoFullOpen] = useState(false);
+      const [authorOnline, setAuthorOnline] = useState(false);
+  React.useEffect(() => { if (!post?.user_id) return; if (currentUserId && String(post.user_id) === String(currentUserId)) { setAuthorOnline(true); return; } let live = true; supabase.from("profiles").select("last_seen,show_active_status").eq("id", post.user_id).maybeSingle().then(({ data }) => { if (!live || !data) return; const diff = data.last_seen ? (Date.now() - new Date(data.last_seen).getTime()) : 999999; setAuthorOnline(data.show_active_status !== false && diff < 120000); }).catch(() => {}); return () => { live = false; }; }, [post?.user_id, currentUserId]);
+  const [videoFullOpen, setVideoFullOpen] = useState(false);
   const [videoMuted, setVideoMuted] = useState(true);
   const [videoPortrait, setVideoPortrait] = useState(true);
   const [videoTimeStr, setVideoTimeStr] = useState("");
@@ -156,9 +158,9 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
           <div
             onClick={() => post.user_id && onOpenUserProfile && onOpenUserProfile({ id: post.user_id, full_name: authorName, avatar_url: post.avatar_url, is_verified: post.is_verified })}
-            style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', flexShrink: 0, cursor: post.user_id ? 'pointer' : 'default' }}
+            style={{ position: 'relative', width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFFFFF', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '16px', flexShrink: 0, cursor: post.user_id ? 'pointer' : 'default' }}
           >
-            {post.avatar_url ? <img src={post.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
+            {authorOnline && <span style={{ position: "absolute", right: "-1px", bottom: "-1px", width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#31A24C", border: "2px solid #FFFFFF", zIndex: 2 }} />}{post.avatar_url ? <img src={post.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : authorName.charAt(0).toUpperCase()}
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>

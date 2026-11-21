@@ -35,6 +35,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
   const [msgBoxOpen, setMsgBoxOpen] = useState(false);
   const [msgVal, setMsgVal] = useState("");
   const [activeProfileReel, setActiveProfileReel] = useState(null);
+    useEffect(() => { if (!userProfile?.id) return; const ping = () => { if (userProfile?.show_active_status !== false) { supabase.from("profiles").update({ last_seen: new Date().toISOString() }).eq("id", userProfile.id).then(() => {}).catch(() => {}); } }; ping(); const iv = setInterval(ping, 30000); return () => clearInterval(iv); }, [userProfile?.id, userProfile?.show_active_status]);
   const [activeProfilePhoto, setActiveProfilePhoto] = useState(null);
   const [photoLiked, setPhotoLiked] = useState(false);
   const [photoLikesCount, setPhotoLikesCount] = useState(0);
