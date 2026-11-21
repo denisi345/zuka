@@ -149,15 +149,20 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
       setLoading(true);
       const profMap = {};
       try {
-        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [{ data: profs }, { data }] = await Promise.all([supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified'), supabase.from('stories').select('*').gte('created_at', cutoff).order('created_at', { ascending: true }).limit(80)]);
+        const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified');
         if (Array.isArray(profs)) {
           profs.forEach((p) => { profMap[String(p.id).trim()] = p; });
         }
       } catch (_) {}
 
       try {
-        
+        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data } = await supabase
+          .from('stories')
+          .select('*')
+          .gte('created_at', cutoff)
+          .order('created_at', { ascending: true })
+          .limit(80);
 
         if (!alive) return;
         const validRows = (data || []).filter((row) => {
