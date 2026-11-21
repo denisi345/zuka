@@ -43,7 +43,7 @@ async function compressStoryImage(file) {
   });
 }
 
-async function uploadStoryFile(path, file, ms = 40000) {
+async function uploadStoryFile(path, file, ms = 12000) {
   for (const bucket of ['stories', 'post-media', 'avatars', 'reels']) {
     const res = await Promise.race([
       (async () => {
@@ -373,7 +373,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
         const readyFile = draftIsVideo ? draftFile : await compressStoryImage(draftFile);
         const ext = (readyFile.name.split('.').pop() || (draftIsVideo ? 'mp4' : 'jpg')).toLowerCase();
         const path = `story_${userProfile?.id || 'user'}_${Date.now()}.${ext}`;
-        mediaUrl = await uploadStoryFile(path, readyFile, 45000);
+        mediaUrl = await uploadStoryFile(path, readyFile, 14000);
         if (!mediaUrl || mediaUrl.startsWith('blob:')) {
           showToast('Upload failed. Check connection and try again.');
           setSharing(false);
@@ -706,7 +706,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
             </button>
           </div>
 
-          <div style={{ flex: 1, minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+          <div style={{ flex: 1, minHeight: 0, maxHeight: '58dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', overflow: 'hidden' }}>
             {createMode === 'text' ? (
               <div style={{ width: '100%', height: '100%', borderRadius: '16px', background: TEXT_BG_OPTIONS[draftBgIdx], display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                 <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Start typing..." rows={4} style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '22px', fontWeight: 800, textAlign: 'center', resize: 'none' }} />
@@ -716,11 +716,11 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
                   ))}
                 </div>
               </div>
-            ) : draftPreview ? (<div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%', maxHeight: '100%' }}><button type="button" onClick={resetStoryDraft} title="Remove media" style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, width: '34px', height: '34px', borderRadius: '50%', border: '1.5px solid #FFF', backgroundColor: 'rgba(0,0,0,0.72)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} /></button>{
+            ) : draftPreview ? (<div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%', maxHeight: '54dvh' }}><button type="button" onClick={resetStoryDraft} title="Remove media" style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, width: '34px', height: '34px', borderRadius: '50%', border: '1.5px solid #FFF', backgroundColor: 'rgba(0,0,0,0.72)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} /></button>{
               draftIsVideo ? (
-                <video src={draftPreview} autoPlay loop playsInline style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px' }} />
+                <video src={draftPreview} autoPlay loop playsInline style={{ maxWidth: '100%', maxHeight: '54dvh', borderRadius: '12px' }} />
               ) : (
-                <img src={draftPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} />
+                <img src={draftPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '54dvh', objectFit: 'contain', borderRadius: '12px' }} />
               )}</div>
             ) : (
               <button type="button" onClick={() => mediaInputRef.current?.click()} style={{ padding: '18px 26px', borderRadius: '14px', border: '1.5px dashed rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
