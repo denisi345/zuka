@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ZukaBadge from './ZukaBadge';
 
 export default function Profile({ currentUser, targetProfile, onBack, onOpenMessenger, onProfileUpdated }) {
-  const targetId = typeof targetProfile === 'string' ? targetProfile : targetProfile?.id;
+  const targetId = typeof targetProfile === "string" ? targetProfile : (targetProfile?.id || null);
   const isOwn = !targetId || String(targetId) === String(currentUser?.id);
   const initialData = isOwn ? (currentUser || {}) : (typeof targetProfile === 'object' && targetProfile ? targetProfile : { id: targetId });
 
