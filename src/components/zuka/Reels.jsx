@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  ThumbsUp, MessageCircle, Share2, Volume2, VolumeX, MoreHorizontal,
-  Plus, Search, X, Send, Bookmark, Music, Check, Play, Trash2, EyeOff, FastForward
+  ThumbsUp, MessageCircle, Forward, Volume2, VolumeX, MoreHorizontal,
+  Video, Search, X, Send, Bookmark, Music, Check, Play, Trash2, EyeOff,
+  FastForward, Link2, Share, Sparkles, Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,7 +26,7 @@ async function uploadFast(bucket, path, file, ms = 35000) {
   return Promise.race([up, new Promise((r) => setTimeout(() => r(''), ms))]);
 }
 
-export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
+export default function Reels({ userProfile }) {
   const [reels, setReels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -40,13 +41,19 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
   const [savedIds, setSavedIds] = useState([]);
   const [expandedCaptions, setExpandedCaptions] = useState({});
   const [heartPopId, setHeartPopId] = useState(null);
+  const [toastMsg, setToastMsg] = useState('');
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [commentReelId, setCommentReelId] = useState(null);
+  const [likesReelId, setLikesReelId] = useState(null);
+  const [shareReel, setShareReel] = useState(null);
+  const [menuReelId, setMenuReelId] = useState(null);
+  const [viewingProfile, setViewingProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+
   const [commentInput, setCommentInput] = useState('');
   const [sendingComment, setSendingComment] = useState(false);
-  const [menuReelId, setMenuReelId] = useState(null);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [draftVideo, setDraftVideo] = useState(null);
@@ -62,20 +69,50 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
   const myName = userProfile?.full_name || 'Zuka User';
   const myAvatar = userProfile?.avatar_url || `https://ui-avatars.com{encodeURIComponent(myName)}&background=1877F2&color=fff&bold=true`;
 
+  function showToast(msg) {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 2600);
+  }
+
+  // Android / Browser Back Button Support for all Reels overlays
+  const anyModalOpen = Boolean(commentReelId || likesReelId || shareReel || menuReelId || viewingProfile || createOpen || searchOpen);
   useEffect(() => {
-    const killAllVideos = () => {
+    if (!anyModalOpen) return;
+    window.history.pushState({ zukaReelModal: true }, '');
+    const onPop = () => {
+      setCommentReelId(null);
+      setLikesReelId(null);
+      setShareReel(null);
+      setMenuReelId(null);
+      setViewingProfile(null);
+      setSearchOpen(false);
+      setCreateOpen((prev) => {
+        if (prev && draftVideo?.previewUrl) {
+          try { URL.revokeObjectURL(draftVideo.previewUrl); } catch (_) {}
+          setDraftVideo(null);
+        }
+        return false;
+      });
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [anyModalOpen]);
+
+  // Stop all video audio immediately when leaving Reels or hiding browser
+  useEffect(() => {
+    const killAll = () => {
       Object.values(videoRefs.current).forEach((v) => {
         if (v) { try { v.pause(); v.muted = true; } catch (_) {} }
       });
     };
-    const onVis = () => { if (document.hidden) killAllVideos(); };
+    const onVis = () => { if (document.hidden) killAll(); };
     document.addEventListener('visibilitychange', onVis);
-    window.addEventListener('pagehide', killAllVideos);
-    window.addEventListener('blur', killAllVideos);
+    window.addEventListener('pagehide', killAll);
+    window.addEventListener('blur', killAll);
     return () => {
       document.removeEventListener('visibilitychange', onVis);
-      window.removeEventListener('pagehide', killAllVideos);
-      window.removeEventListener('blur', killAllVideos);
+      window.removeEventListener('pagehide', killAll);
+      window.removeEventListener('blur', killAll);
       Object.values(videoRefs.current).forEach((v) => {
         if (v) { try { v.pause(); v.muted = true; v.removeAttribute('src'); v.load(); } catch (_) {} }
       });
@@ -88,14 +125,14 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
       setLoading(true);
       const profMap = {};
       try {
-        const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url, is_verified');
+        const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url, cover_url, bio, is_verified');
         if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
       } catch (_) {}
 
       let allLikes = [];
       let allComments = [];
       try {
-        const { data: lData } = await supabase.from('reel_likes').select('reel_id, user_id');
+        const { data: lData } = await supabase.from('reel_likes').select('reel_id, user_id, created_at');
         if (Array.isArray(lData)) allLikes = lData;
       } catch (_) {}
 
@@ -118,7 +155,15 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
           const prof = profMap[String(r.user_id)] || {};
           const rawCap = String(r.caption || '');
           const mMatch = rawCap.match(/\[🎵\s*([^\]]+)\]/);
-          const rLikes = allLikes.filter((l) => String(l.reel_id) === String(r.id));
+          const rLikes = allLikes.filter((l) => String(l.reel_id) === String(r.id)).map((l) => {
+            const lp = profMap[String(l.user_id)] || {};
+            return {
+              user_id: l.user_id,
+              name: lp.full_name || 'Zuka User',
+              avatar: lp.avatar_url || `https://ui-avatars.com{encodeURIComponent(lp.full_name || 'Z')}&background=1877F2&color=fff`,
+              verified: Boolean(lp.is_verified)
+            };
+          });
           const rComms = allComments.filter((c) => String(c.reel_id) === String(r.id)).map((c) => {
             const cp = profMap[String(c.user_id)] || {};
             return {
@@ -139,9 +184,10 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
             verified: Boolean(prof.is_verified),
             video_url: r.video_url || '',
             caption: rawCap.replace(/\s*\[🎵\s*[^\]]+\]/g, '').trim(),
-            music: (mMatch && mMatch) ? mMatch : 'Original audio',
+            music: (mMatch && mMatch[1]) ? mMatch[1] : 'Original audio',
             likes: Math.max(Number(r.likes_count || 0), rLikes.length),
             liked: Boolean(userProfile?.id && rLikes.some((l) => String(l.user_id) === String(userProfile.id))),
+            likesList: rLikes,
             commentsList: rComms,
             created_at: r.created_at
           };
@@ -165,10 +211,10 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
       if (!vid) return;
       vid.muted = muted;
       vid.playbackRate = speed;
-      if (idx === activeIdx && !paused && !createOpen) vid.play().catch(() => {});
+      if (idx === activeIdx && !paused && !createOpen && !viewingProfile) vid.play().catch(() => {});
       else vid.pause();
     });
-  }, [activeIdx, muted, paused, speed, createOpen, visibleReels]);
+  }, [activeIdx, muted, paused, speed, createOpen, viewingProfile, visibleReels]);
 
   function handleScroll() {
     const el = containerRef.current;
@@ -196,7 +242,14 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
     if (!target || (forceLike && target.liked)) return;
     const nextLiked = forceLike ? true : !target.liked;
     const nextLikes = Math.max(0, target.likes + (nextLiked ? 1 : -1));
-    setReels((prev) => prev.map((r) => (String(r.id) === String(reelId) ? { ...r, liked: nextLiked, likes: nextLikes } : r)));
+    const myLikeObj = { user_id: userProfile?.id || 'me', name: myName, avatar: myAvatar, verified: Boolean(userProfile?.is_verified) };
+
+    setReels((prev) => prev.map((r) => {
+      if (String(r.id) !== String(reelId)) return r;
+      const filtered = (r.likesList || []).filter((l) => String(l.user_id) !== String(userProfile?.id));
+      return { ...r, liked: nextLiked, likes: nextLikes, likesList: nextLiked ? [myLikeObj, ...filtered] : filtered };
+    }));
+
     try {
       await supabase.from('reels').update({ likes_count: nextLikes }).eq('id', reelId);
       if (userProfile?.id) {
@@ -234,22 +287,87 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
     } catch (_) {}
   }
 
-  function handleShareReel(reel) {
-    if (onCreatePost) onCreatePost({ content: reel.caption ? `${reel.caption} (via @${reel.author_name} Reels)` : `Check out this Reel by ${reel.author_name}`, media_url: reel.video_url, media_type: 'video' });
-    else if (navigator.clipboard) { navigator.clipboard.writeText(window.location.href).catch(() => {}); alert('Reel link copied to clipboard.'); }
+  async function openCreatorProfile(targetUserId, fallbackName = 'Zuka User', fallbackAvatar = '') {
+    if (!targetUserId) return;
+    setCommentReelId(null);
+    setLikesReelId(null);
+    setShareReel(null);
+    setMenuReelId(null);
+    setProfileLoading(true);
+    setViewingProfile({
+      id: targetUserId,
+      full_name: fallbackName,
+      avatar_url: fallbackAvatar || `https://ui-avatars.com{encodeURIComponent(fallbackName)}&background=1877F2&color=fff`,
+      cover_url: '',
+      bio: '',
+      is_verified: false,
+      followersCount: 0,
+      userReels: reels.filter((r) => String(r.user_id) === String(targetUserId))
+    });
+    try {
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', targetUserId).maybeSingle();
+      const { data: fRows } = await supabase.from('follows').select('follower_id').eq('following_id', targetUserId);
+      setViewingProfile((prev) => prev ? ({
+        ...prev,
+        full_name: prof?.full_name || prev.full_name,
+        avatar_url: prof?.avatar_url || prev.avatar_url,
+        cover_url: prof?.cover_url || '',
+        bio: prof?.bio || '',
+        is_verified: Boolean(prof?.is_verified),
+        followersCount: Array.isArray(fRows) ? fRows.length : 0
+      }) : null);
+    } catch (_) {}
+    setProfileLoading(false);
+  }
+
+  async function handleShareToFeed(reel) {
+    if (!reel) return;
+    setShareReel(null);
+    try {
+      await supabase.from('posts').insert({
+        user_id: userProfile?.id || null,
+        author_name: myName,
+        content: reel.caption ? `${reel.caption} (Shared Reel from ${reel.author_name})` : `Shared Reel from ${reel.author_name}`,
+        media_url: reel.video_url,
+        media_type: 'video',
+        likes_count: 0,
+        comments_count: 0
+      });
+      showToast('Shared to your Feed');
+    } catch (_) {
+      showToast('Could not share to Feed');
+    }
+  }
+
+  async function handleShareToStory(reel) {
+    if (!reel) return;
+    setShareReel(null);
+    try {
+      await supabase.from('stories').insert({
+        user_id: userProfile?.id || null,
+        author_name: myName,
+        media_url: reel.video_url,
+        media_type: 'video',
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      });
+      showToast('Shared to your Story (24h)');
+    } catch (_) {
+      showToast('Could not share to Story');
+    }
   }
 
   async function handleDeleteReel(reelId) {
     setReels((prev) => prev.filter((r) => String(r.id) !== String(reelId)));
     setMenuReelId(null);
     try { await supabase.from('reels').delete().eq('id', reelId); } catch (_) {}
+    showToast('Reel deleted');
   }
 
   function handlePickReelFile(e) {
     const f = (e.target.files && e.target.files.item(0)) || null;
     e.target.value = '';
     if (!f) return;
-    if (f.size > 4 * 1024 * 1024) { alert('Video exceeds 4MB limit. Please select a video under 4MB.'); return; }
+    if (f.size > 4 * 1024 * 1024) { showToast('Video exceeds 4MB limit'); return; }
     setDraftVideo({ file: f, previewUrl: URL.createObjectURL(f) });
   }
 
@@ -264,7 +382,7 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
         videoUrl = await uploadFast(b, path, draftVideo.file, 45000);
         if (videoUrl) break;
       }
-      if (!videoUrl) { alert('Upload failed. Please check your connection and try again.'); setUploading(false); return; }
+      if (!videoUrl) { showToast('Upload failed. Try again.'); setUploading(false); return; }
       const fullCap = draftMusic.trim() ? `${draftCaption.trim()} [🎵 ${draftMusic.trim()}]`.trim() : draftCaption.trim();
       const payload = { video_url: videoUrl, caption: fullCap, author_name: myName, likes_count: 0, comments_count: 0 };
       if (userProfile?.id) payload.user_id = userProfile.id;
@@ -272,23 +390,31 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
       setReels((prev) => [{
         id: ins?.id || `r-${Date.now()}`, user_id: userProfile?.id || null, author_name: myName, author_avatar: myAvatar,
         verified: Boolean(userProfile?.is_verified), video_url: videoUrl, caption: draftCaption.trim(),
-        music: draftMusic.trim() || 'Original audio', likes: 0, liked: false, commentsList: [], created_at: ins?.created_at || new Date().toISOString()
+        music: draftMusic.trim() || 'Original audio', likes: 0, liked: false, likesList: [], commentsList: [], created_at: ins?.created_at || new Date().toISOString()
       }, ...prev]);
       if (draftVideo.previewUrl) URL.revokeObjectURL(draftVideo.previewUrl);
       setDraftVideo(null); setDraftCaption(''); setDraftMusic(''); setCreateOpen(false); setActiveIdx(0);
       if (containerRef.current) containerRef.current.scrollTo({ top: 0 });
+      showToast('Reel shared');
     } catch (_) {}
     setUploading(false);
   }
 
   const activeCommentReel = reels.find((r) => String(r.id) === String(commentReelId)) || null;
+  const activeLikesReel = reels.find((r) => String(r.id) === String(likesReelId)) || null;
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 54px)', backgroundColor: '#000', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: 'calc(100dvh - 54px)', backgroundColor: '#000', overflow: 'hidden' }}>
       <input ref={fileInputRef} type="file" accept="video/*" onChange={handlePickReelFile} style={{ display: 'none' }} />
 
+      {toastMsg && (
+        <div style={{ position: 'fixed', top: '68px', left: '50%', transform: 'translateX(-50%)', zIndex: 12000, backgroundColor: 'rgba(24,25,26,0.92)', color: '#FFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, boxShadow: '0 4px 12px rgba(0,0,0,0.35)' }}>
+          {toastMsg}
+        </div>
+      )}
+
       {!clearMode && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)' }}>
           {searchOpen ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: '20px', padding: '6px 12px' }}>
               <Search size={18} color="#FFF" />
@@ -297,11 +423,16 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
             </div>
           ) : (
             <>
-              <span style={{ color: '#FFF', fontSize: '21px', fontWeight: 800, letterSpacing: '-0.3px' }}>Reels</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ color: '#FFF', fontSize: '21px', fontWeight: 800, letterSpacing: '-0.3px', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>Reels</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button type="button" onClick={() => setSearchOpen(true)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Search size={19} /></button>
-                <button type="button" onClick={() => setCreateOpen(true)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Plus size={21} /></button>
-                <button type="button" onClick={() => onOpenProfile && userProfile?.id && onOpenProfile(userProfile.id)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1.5px solid #FFF', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setCreateOpen(true)} style={{ padding: '0 12px', height: '36px', borderRadius: '18px', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                  <Video size={18} /> Create
+                </button>
+                <button type="button" onClick={() => setMuted((m) => !m)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
+                </button>
+                <button type="button" onClick={() => userProfile?.id && openCreatorProfile(userProfile.id, myName, myAvatar)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: '1.5px solid #FFF', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
                   <img src={myAvatar} alt={myName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </button>
               </div>
@@ -345,7 +476,7 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
                 />
 
                 {paused && idx === activeIdx && (
-                  <div onClick={() => setPaused(false)} style={{ position: 'absolute', zIndex: 20, width: '62px', height: '62px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', cursor: 'pointer' }}>
+                  <div onClick={() => setPaused(false)} style={{ position: 'absolute', zIndex: 20, width: '62px', height: '62px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', cursor: 'pointer' }}>
                     <Play size={30} fill="#FFF" />
                   </div>
                 )}
@@ -353,55 +484,53 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
                 {heartPopId === reel.id && <div style={{ position: 'absolute', zIndex: 25, fontSize: '74px', pointerEvents: 'none' }}>❤️</div>}
 
                 {!clearMode && (
-                  <div style={{ position: 'absolute', right: '10px', bottom: '86px', zIndex: 25, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                    <button type="button" onClick={() => toggleLike(reel.id)} style={{ background: 'none', border: 'none', color: reel.liked ? '#1877F2' : '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-                      <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: reel.liked ? 'rgba(24,119,242,0.22)' : 'rgba(0,0,0,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ThumbsUp size={24} fill={reel.liked ? '#1877F2' : 'none'} />
-                      </div>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#FFF' }}>{formatCount(reel.likes)}</span>
+                  <div style={{ position: 'absolute', right: '12px', bottom: '24px', zIndex: 25, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                      <button type="button" onClick={() => toggleLike(reel.id)} style={{ background: 'none', border: 'none', color: reel.liked ? '#1877F2' : '#FFF', padding: '4px', cursor: 'pointer', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.75))' }}>
+                        <ThumbsUp size={27} fill={reel.liked ? '#1877F2' : '#FFF'} color={reel.liked ? '#1877F2' : '#FFF'} />
+                      </button>
+                      <button type="button" onClick={() => setLikesReelId(reel.id)} style={{ background: 'none', border: 'none', color: '#FFF', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', textShadow: '0 1px 3px rgba(0,0,0,0.85)' }}>
+                        {formatCount(reel.likes)}
+                      </button>
+                    </div>
+
+                    <button type="button" onClick={() => setCommentReelId(reel.id)} style={{ background: 'none', border: 'none', color: '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.75))' }}>
+                      <MessageCircle size={27} fill="#FFF" color="#FFF" />
+                      <span style={{ fontSize: '12.5px', fontWeight: 700 }}>{formatCount(reel.commentsList.length)}</span>
                     </button>
 
-                    <button type="button" onClick={() => setCommentReelId(reel.id)} style={{ background: 'none', border: 'none', color: '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-                      <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageCircle size={24} /></div>
-                      <span style={{ fontSize: '12px', fontWeight: 700 }}>{formatCount(reel.commentsList.length)}</span>
-                    </button>
-
-                    <button type="button" onClick={() => handleShareReel(reel)} style={{ background: 'none', border: 'none', color: '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-                      <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Share2 size={23} /></div>
+                    <button type="button" onClick={() => setShareReel(reel)} style={{ background: 'none', border: 'none', color: '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.75))' }}>
+                      <Forward size={28} fill="#FFF" color="#FFF" />
                       <span style={{ fontSize: '12px', fontWeight: 700 }}>Share</span>
                     </button>
 
-                    <button type="button" onClick={() => setSavedIds((p) => (isSaved ? p.filter((x) => x !== String(reel.id)) : [...p, String(reel.id)]))} style={{ background: 'none', border: 'none', color: isSaved ? '#F7B928' : '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', cursor: 'pointer' }}>
-                      <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: 'rgba(0,0,0,0.42)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Bookmark size={22} fill={isSaved ? '#F7B928' : 'none'} /></div>
+                    <button type="button" onClick={() => { setSavedIds((p) => (isSaved ? p.filter((x) => x !== String(reel.id)) : [...p, String(reel.id)])); showToast(isSaved ? 'Removed from Saved' : 'Saved Reel'); }} style={{ background: 'none', border: 'none', color: isSaved ? '#F7B928' : '#FFF', cursor: 'pointer', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.75))' }}>
+                      <Bookmark size={25} fill={isSaved ? '#F7B928' : 'none'} />
                     </button>
 
-                    <button type="button" onClick={() => setMuted((m) => !m)} style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                    </button>
-
-                    <button type="button" onClick={() => setMenuReelId(reel.id)} style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      <MoreHorizontal size={21} />
+                    <button type="button" onClick={() => setMenuReelId(reel.id)} style={{ background: 'none', border: 'none', color: '#FFF', cursor: 'pointer', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.75))' }}>
+                      <MoreHorizontal size={25} />
                     </button>
                   </div>
                 )}
 
                 {!clearMode && (
                   <div style={{ position: 'absolute', left: '12px', right: '72px', bottom: '18px', zIndex: 25, display: 'flex', flexDirection: 'column', gap: '8px', background: 'linear-gradient(to top, rgba(0,0,0,0.72), transparent)', paddingTop: '18px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <img src={reel.author_avatar} alt={reel.author_name} onClick={() => onOpenProfile && reel.user_id && onOpenProfile(reel.user_id)} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #FFF', cursor: 'pointer' }} />
-                      <span onClick={() => onOpenProfile && reel.user_id && onOpenProfile(reel.user_id)} style={{ color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <img src={reel.author_avatar} alt={reel.author_name} onClick={() => reel.user_id && openCreatorProfile(reel.user_id, reel.author_name, reel.author_avatar)} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #FFF', cursor: 'pointer' }} />
+                      <span onClick={() => reel.user_id && openCreatorProfile(reel.user_id, reel.author_name, reel.author_avatar)} style={{ color: '#FFF', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', textShadow: '0 1px 3px rgba(0,0,0,0.75)' }}>
                         {reel.author_name}
                         {reel.verified && <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF' }}><Check size={10} strokeWidth={3} /></span>}
                       </span>
                       {userProfile?.id && reel.user_id && String(reel.user_id) !== String(userProfile.id) && (
-                        <button type="button" onClick={() => toggleFollow(reel.user_id)} style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.75)', backgroundColor: isFollowing ? 'rgba(255,255,255,0.22)' : 'transparent', color: '#FFF', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
-                          {isFollowing ? 'Following' : 'Follow'}
+                        <button type="button" onClick={() => toggleFollow(reel.user_id)} style={{ background: 'none', border: 'none', color: isFollowing ? '#E4E6EB' : '#4599FF', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer', textShadow: '0 1px 3px rgba(0,0,0,0.85)', padding: 0 }}>
+                          · {isFollowing ? 'Following' : 'Follow'}
                         </button>
                       )}
                     </div>
 
                     {reel.caption && (
-                      <div onClick={() => setExpandedCaptions((p) => ({ ...p, [reel.id]: !isExpanded }))} style={{ color: '#FFF', fontSize: '13.5px', lineHeight: 1.35, cursor: 'pointer' }}>
+                      <div onClick={() => setExpandedCaptions((p) => ({ ...p, [reel.id]: !isExpanded }))} style={{ color: '#FFF', fontSize: '13.5px', lineHeight: 1.35, cursor: 'pointer', textShadow: '0 1px 2px rgba(0,0,0,0.75)' }}>
                         {isExpanded || reel.caption.length <= 75 ? reel.caption : `${reel.caption.slice(0, 75)}... more`}
                       </div>
                     )}
@@ -434,9 +563,37 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
         )}
       </div>
 
+      {activeLikesReel && (
+        <div onClick={() => setLikesReelId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxHeight: '65dvh', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #E4E6EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: '#050505', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ThumbsUp size={17} fill="#1877F2" color="#1877F2" /> Likes ({activeLikesReel.likes})
+              </span>
+              <button type="button" onClick={() => setLikesReelId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#65676B' }}><X size={20} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(activeLikesReel.likesList || []).length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#65676B', fontSize: '14px', padding: '24px 0' }}>No likes yet.</p>
+              ) : (
+                activeLikesReel.likesList.map((lk, i) => (
+                  <div key={`${lk.user_id}-${i}`} onClick={() => lk.user_id && openCreatorProfile(lk.user_id, lk.name, lk.avatar)} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                    <img src={lk.avatar} alt={lk.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
+                    <span style={{ fontWeight: 700, fontSize: '14px', color: '#050505', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {lk.name}
+                      {lk.verified && <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeCommentReel && (
         <div onClick={() => setCommentReelId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end' }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', height: '65vh', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', flexDirection: 'column' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', height: '65dvh', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '12px 16px', borderBottom: '1px solid #E4E6EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#050505' }}>Comments ({activeCommentReel.commentsList.length})</span>
               <button type="button" onClick={() => setCommentReelId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#65676B' }}><X size={20} /></button>
@@ -447,9 +604,9 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
               ) : (
                 activeCommentReel.commentsList.map((c) => (
                   <div key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                    <img src={c.avatar} alt={c.user} style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
+                    <img src={c.avatar} alt={c.user} onClick={() => c.user_id && openCreatorProfile(c.user_id, c.user, c.avatar)} style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} />
                     <div style={{ backgroundColor: '#F0F2F5', borderRadius: '14px', padding: '8px 12px', maxWidth: '84%' }}>
-                      <div style={{ fontWeight: 700, fontSize: '13px', color: '#050505', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div onClick={() => c.user_id && openCreatorProfile(c.user_id, c.user, c.avatar)} style={{ fontWeight: 700, fontSize: '13px', color: '#050505', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                         {c.user}
                         {c.verified && <span style={{ width: '13px', height: '13px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
                       </div>
@@ -461,9 +618,29 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
             </div>
             <form onSubmit={handleAddComment} style={{ padding: '10px 12px', borderTop: '1px solid #E4E6EB', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFF' }}>
               <img src={myAvatar} alt={myName} style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
-              <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Add a comment..." style={{ flex: 1, padding: '9px 14px', borderRadius: '20px', border: 'none', backgroundColor: '#F0F2F5', fontSize: '14px', outline: 'none' }} />
+              <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Add a comment..." style={{ flex: 1, padding: '9px 14px', borderRadius: '20px', border: 'none', backgroundColor: '#F0F2F5', fontSize: '14px', outline: 'none', color: '#050505' }} />
               <button type="submit" disabled={!commentInput.trim() || sendingComment} style={{ background: 'none', border: 'none', color: commentInput.trim() ? '#1877F2' : '#BCC0C4', cursor: 'pointer', padding: '4px' }}><Send size={20} /></button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {shareReel && (
+        <div onClick={() => setShareReel(null)} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '8px' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: '#050505' }}>Share Reel</span>
+              <button type="button" onClick={() => setShareReel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            <button type="button" onClick={() => handleShareToFeed(shareReel)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 4px', background: 'none', border: 'none', fontSize: '15px', fontWeight: 600, color: '#050505', cursor: 'pointer', textAlign: 'left' }}>
+              <Share size={20} color="#1877F2" /> Share Now to Public Feed
+            </button>
+            <button type="button" onClick={() => handleShareToStory(shareReel)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 4px', background: 'none', border: 'none', fontSize: '15px', fontWeight: 600, color: '#050505', cursor: 'pointer', textAlign: 'left' }}>
+              <Sparkles size={20} color="#1877F2" /> Share to Your Story
+            </button>
+            <button type="button" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(shareReel.video_url || window.location.href).catch(() => {}); setShareReel(null); showToast('Link copied to clipboard'); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 4px', background: 'none', border: 'none', fontSize: '15px', fontWeight: 600, color: '#050505', cursor: 'pointer', textAlign: 'left' }}>
+              <Link2 size={20} color="#65676B" /> Copy Link
+            </button>
           </div>
         </div>
       )}
@@ -472,19 +649,19 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
         <div onClick={() => setMenuReelId(null)} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end' }}>
           <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '8px' }}>
-              <span style={{ fontWeight: 700, fontSize: '15px' }}>Reel Options</span>
+              <span style={{ fontWeight: 700, fontSize: '15px', color: '#050505' }}>Reel Options</span>
               <button type="button" onClick={() => setMenuReelId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}><FastForward size={18} /> Playback Speed</span>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: '#050505', display: 'flex', alignItems: 'center', gap: '8px' }}><FastForward size={18} /> Playback Speed</span>
               <div style={{ display: 'flex', gap: '6px' }}>
                 {[0.5, 1, 1.5, 2].map((sp) => (
                   <button key={sp} type="button" onClick={() => { setSpeed(sp); setMenuReelId(null); }} style={{ padding: '5px 10px', borderRadius: '8px', border: 'none', backgroundColor: speed === sp ? '#1877F2' : '#F0F2F5', color: speed === sp ? '#FFF' : '#050505', fontWeight: 700, fontSize: '12px', cursor: 'pointer' }}>{sp}x</button>
                 ))}
               </div>
             </div>
-            <button type="button" onClick={() => { setClearMode(true); setMenuReelId(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', background: 'none', border: 'none', fontSize: '14px', fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}><EyeOff size={18} /> Clear Mode (Hide UI overlays)</button>
-            <button type="button" onClick={() => { setAutoScroll((a) => !a); setMenuReelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', background: 'none', border: 'none', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+            <button type="button" onClick={() => { setClearMode(true); setMenuReelId(null); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', background: 'none', border: 'none', fontSize: '14px', fontWeight: 600, color: '#050505', cursor: 'pointer', textAlign: 'left' }}><EyeOff size={18} /> Clear Mode (Hide UI overlays)</button>
+            <button type="button" onClick={() => { setAutoScroll((a) => !a); setMenuReelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', background: 'none', border: 'none', fontSize: '14px', fontWeight: 600, color: '#050505', cursor: 'pointer' }}>
               <span>Auto-scroll to next Reel</span>
               <span style={{ color: autoScroll ? '#1877F2' : '#65676B', fontWeight: 700 }}>{autoScroll ? 'ON' : 'OFF'}</span>
             </button>
@@ -495,26 +672,62 @@ export default function Reels({ userProfile, onOpenProfile, onCreatePost }) {
         </div>
       )}
 
-      {createOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <button type="button" onClick={() => { if (!uploading) { if (draftVideo?.previewUrl) URL.revokeObjectURL(draftVideo.previewUrl); setDraftVideo(null); setCreateOpen(false); } }} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
-            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>New Reel</span>
-            <div style={{ width: '36px' }} />
+      {viewingProfile && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 11000, backgroundColor: '#FFF', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+          <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#FFF', padding: '10px 14px', borderBottom: '1px solid #E4E6EB', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button type="button" onClick={() => setViewingProfile(null)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
+            <span style={{ fontWeight: 700, fontSize: '16px', color: '#050505' }}>{viewingProfile.full_name}</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', margin: '12px 0' }}>
-            {draftVideo?.previewUrl ? (
-              <video src={draftVideo.previewUrl} autoPlay loop playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            ) : (
-              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ padding: '16px 24px', borderRadius: '14px', border: '1.5px dashed rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>+ Select Video (Max 4MB)</button>
+          <div style={{ height: '140px', backgroundColor: '#D8DADF', backgroundImage: viewingProfile.cover_url ? `url(${viewingProfile.cover_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          <div style={{ padding: '0 16px 16px', marginTop: '-44px' }}>
+            <img src={viewingProfile.avatar_url} alt={viewingProfile.full_name} style={{ width: '88px', height: '88px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #FFF', backgroundColor: '#FFF' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#050505', margin: 0 }}>{viewingProfile.full_name}</h2>
+              {viewingProfile.is_verified && <span style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={11} strokeWidth={3} /></span>}
+            </div>
+            <div style={{ fontSize: '13.5px', color: '#65676B', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Users size={15} /> {profileLoading ? 'Loading...' : `${viewingProfile.followersCount} Followers · ${(viewingProfile.userReels || []).length} Reels`}
+            </div>
+            {viewingProfile.bio && <p style={{ fontSize: '14px', color: '#050505', marginTop: '8px' }}>{viewingProfile.bio}</p>}
+            {userProfile?.id && String(viewingProfile.id) !== String(userProfile.id) && (
+              <button type="button" onClick={() => toggleFollow(viewingProfile.id)} style={{ marginTop: '12px', width: '100%', padding: '9px', borderRadius: '8px', border: 'none', backgroundColor: followingIds.includes(String(viewingProfile.id)) ? '#E4E6EB' : '#1877F2', color: followingIds.includes(String(viewingProfile.id)) ? '#050505' : '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>
+                {followingIds.includes(String(viewingProfile.id)) ? 'Following' : 'Follow'}
+              </button>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '12px' }}>
-            <input type="text" value={draftCaption} onChange={(e) => setDraftCaption(e.target.value)} placeholder="Describe your Reel..." style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
-            <input type="text" value={draftMusic} onChange={(e) => setDraftMusic(e.target.value)} placeholder="Audio / Song name (optional)..." style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
-            <button type="button" onClick={handlePublishReel} disabled={!draftVideo || uploading} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '15px', cursor: uploading ? 'wait' : 'pointer', opacity: !draftVideo || uploading ? 0.6 : 1 }}>
-              {uploading ? 'Sharing Reel...' : 'Share Reel'}
+          <div style={{ padding: '12px 16px', borderTop: '1px solid #E4E6EB' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#050505', marginBottom: '10px' }}>Reels</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+              {(viewingProfile.userReels || []).map((ur) => (
+                <div key={ur.id} onClick={() => { const foundIdx = visibleReels.findIndex((x) => String(x.id) === String(ur.id)); setViewingProfile(null); if (foundIdx >= 0 && containerRef.current) { setActiveIdx(foundIdx); containerRef.current.scrollTo({ top: foundIdx * containerRef.current.clientHeight }); } }} style={{ aspectRatio: '9/16', backgroundColor: '#000', borderRadius: '6px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
+                  <video src={ur.video_url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', bottom: '6px', left: '6px', color: '#FFF', fontSize: '11px', fontWeight: 700, textShadow: '0 1px 2px #000' }}>▶ {formatCount(ur.likes)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {createOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', height: '100dvh', overflowY: 'auto' }}>
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.12)', flexShrink: 0 }}>
+            <button type="button" onClick={() => { if (!uploading) { if (draftVideo?.previewUrl) URL.revokeObjectURL(draftVideo.previewUrl); setDraftVideo(null); setCreateOpen(false); } }} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
+            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>New Reel</span>
+            <button type="button" onClick={handlePublishReel} disabled={!draftVideo || uploading} style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: uploading ? 'wait' : 'pointer', opacity: !draftVideo || uploading ? 0.5 : 1 }}>
+              {uploading ? 'Sharing...' : 'Share'}
             </button>
+          </div>
+          <div style={{ flex: 1, minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '12px' }}>
+            {draftVideo?.previewUrl ? (
+              <video src={draftVideo.previewUrl} autoPlay loop playsInline style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '10px' }} />
+            ) : (
+              <button type="button" onClick={() => fileInputRef.current?.click()} style={{ padding: '18px 26px', borderRadius: '14px', border: '1.5px dashed rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>+ Select Video (Max 4MB)</button>
+            )}
+          </div>
+          <div style={{ padding: '12px 16px 20px', display: 'flex', flexDirection: 'column', gap: '10px', flexShrink: 0, backgroundColor: '#111' }}>
+            <input type="text" value={draftCaption} onChange={(e) => setDraftCaption(e.target.value)} placeholder="Describe your Reel..." style={{ padding: '11px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
+            <input type="text" value={draftMusic} onChange={(e) => setDraftMusic(e.target.value)} placeholder="Audio / Song name (optional)..." style={{ padding: '11px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
           </div>
         </div>
       )}
