@@ -47,41 +47,11 @@ export default function CreatePost({ userProfile, onCreatePost }) {
     setOpen(true);
   }
 
-  async function uploadToStorage(file, folder) {
-    let url = URL.createObjectURL(file);
-    const clean = (file.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '');
-    const path = `${folder}/${Date.now()}_${clean}`;
-    for (const bucket of ['post-media', 'stories', 'avatars', 'media', 'posts']) {
-      const upP = supabase.storage.from(bucket).upload(path, file, { upsert: true }); const { error } = await Promise.race([upP, new Promise((r) => setTimeout(() => r({ error: new Error('timeout') }), 15000))]);
-      if (!error) {
-        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-        if (pub?.publicUrl) { url = pub.publicUrl; break; }
-      }
-    }
-    return url;
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!text.trim() && !mediaFile && !audioFile) return;
-    setPosting(true);
-    let uploadedMediaUrl = '';
-    let uploadedAudioUrl = '';
-    try {
-      if (mediaFile) { const readyFile = mediaType === "image" ? await compressImageFile(mediaFile) : mediaFile; uploadedMediaUrl = await uploadToStorage(readyFile, "posts"); }
-      if (audioFile) uploadedAudioUrl = await uploadToStorage(audioFile, 'audio');
-    } catch (_) {}
-
-    const finalText = uploadedAudioUrl
-      ? `${text.trim()}\n[zuka_audio:${audioTitle || 'Audio Track'}|${uploadedAudioUrl}]`.trim()
-      : text.trim();
-
-    if (onCreatePost) await onCreatePost(finalText, uploadedMediaUrl, mediaType);
-    setText(''); setMediaFile(null); setMediaPreview(''); setAudioFile(null); setAudioPreview(''); setAudioTitle('');
-    setPosting(false); setOpen(false);
-  }
+  const [bgUploading, setBgUploading] = useState(false);
+  async function uploadToStorage(file, folder) { const clean = (file.name || "file").replace(/[^a-zA-Z0-9._-]/g, ""); const path = `${folder}/${Date.now()}_${clean}`; for (const bucket of ["post-media", "stories"]) { const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true, cacheControl: "3600" }); if (!error) { const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path); if (pub?.publicUrl) return pub.publicUrl; } } return URL.createObjectURL(file); }
+  async function handleSubmit(e) { e.preventDefault(); if (!text.trim() && !mediaFile && !audioFile) return; const tSnap = text.trim(); const mSnap = mediaFile; const mTypeSnap = mediaType; const aSnap = audioFile; const aTitleSnap = audioTitle; setText(""); setMediaFile(null); setMediaPreview(""); setAudioFile(null); setAudioTitle(""); setPosting(false); setOpen(false); if (mSnap || aSnap) setBgUploading(true); try { const [uMedia, uAudio] = await Promise.all([mSnap ? (async () => uploadToStorage(mTypeSnap === "image" ? await compressImageFile(mSnap) : mSnap, mTypeSnap === "video" ? "videos" : "images"))() : Promise.resolve(""), aSnap ? uploadToStorage(aSnap, "audio") : Promise.resolve("")]); const finalText = uAudio ? `${tSnap}\n[zuka_audio:${aTitleSnap || "Audio Track"}|${uAudio}]` : tSnap; if (onCreatePost) await onCreatePost(finalText, uMedia, mTypeSnap); } catch (_) {} finally { setBgUploading(false); } }
   return (
-    <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '12px' }}>
+    <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '12px' }}>{bgUploading && (<div style={{ backgroundColor: "#E7F3FF", color: "#1877F2", padding: "8px 12px", borderRadius: "8px", marginBottom: "8px", fontSize: "13px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}><span>⏳</span><span>Uploading media in background...</span></div>)}
       <input ref={photoInputRef} type="file" accept="image/*" onChange={(e) => handlePickMedia(e, 'image')} style={{ display: 'none' }} />
       <input ref={videoInputRef} type="file" accept="video/*" onChange={(e) => handlePickMedia(e, 'video')} style={{ display: 'none' }} />
       <input ref={audioInputRef} type="file" accept="audio/*" onChange={handlePickAudio} style={{ display: 'none' }} />
