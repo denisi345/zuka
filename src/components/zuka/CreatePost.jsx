@@ -27,8 +27,10 @@ export default function CreatePost({ userProfile, onCreatePost }) {
   const name = userProfile?.full_name || userProfile?.username || 'Member';
   const initial = name.charAt(0).toUpperCase();
 
+  useEffect(() => { if (!open) return; window.history.pushState({ zukaCreatePost: true }, ''); const onPop = () => setOpen(false); window.addEventListener('popstate', onPop); return () => window.removeEventListener('popstate', onPop); }, [open]);
+
   function handlePickMedia(e, type) {
-    const file = (e.target.files && e.target.files) || null;
+    const file = (e.target.files && e.target.files.item(0)) || null; e.target.value = '';
     if (!file) return;
     setMediaFile(file);
     setMediaType(type);
@@ -37,7 +39,7 @@ export default function CreatePost({ userProfile, onCreatePost }) {
   }
 
   function handlePickAudio(e) {
-    const file = (e.target.files && e.target.files) || null;
+    const file = (e.target.files && e.target.files.item(0)) || null; e.target.value = '';
     if (!file) return;
     setAudioFile(file);
     setAudioPreview(URL.createObjectURL(file)); setOpen(true);
