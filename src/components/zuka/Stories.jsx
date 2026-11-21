@@ -1,350 +1,467 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Trash2, Volume2, VolumeX, Eye, Send, Music } from 'lucide-react';
+import {
+  Plus, X, ChevronLeft, ChevronRight, Volume2, VolumeX,
+  Send, Eye, Trash2, Image as ImageIcon, Type, Music, Check
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-const TEXT_BGS = [
-  'linear-gradient(135deg, #1877F2 0%, #00C6FF 100%)',
-  'linear-gradient(135deg, #F58529 0%, #DD2A7B 50%, #8134AF 100%)',
-  'linear-gradient(135deg, #11998E 0%, #38EF7D 100%)',
-  'linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%)',
+function formatStoryAge(iso) {
+  if (!iso) return 'Just now';
+  const diff = Math.max(0, Date.now() - new Date(iso).getTime());
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h`;
+}
+
+async function compressStoryImage(file) {
+  if (!file || !file.type?.startsWith('image/')) return file;
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const maxDim = 1080;
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+        else { width = Math.round((width * maxDim) / height); height = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) { resolve(file); return; }
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+async function uploadStoryFile(path, file, ms = 40000) {
+  for (const bucket of ['stories', 'post-media', 'avatars', 'reels']) {
+    const res = await Promise.race([
+      (async () => {
+        const { error } = await supabase.storage.from(bucket).upload(path, file, {
+          contentType: file.type || 'application/octet-stream',
+          upsert: true
+        });
+        if (error) return '';
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        return data?.publicUrl || '';
+      })(),
+      new Promise((r) => setTimeout(() => r(''), ms))
+    ]);
+    if (res) return res;
+  }
+  return '';
+}
+
+const TEXT_BG_OPTIONS = [
+  'linear-gradient(135deg, #1877F2 0%, #0A499E 100%)',
+  'linear-gradient(135deg, #F50057 0%, #FF6D00 100%)',
+  'linear-gradient(135deg, #00B09B 0%, #96C93D 100%)',
+  'linear-gradient(135deg, #6A11CB 0%, #2575FC 100%)',
   'linear-gradient(135deg, #141E30 0%, #243B55 100%)'
 ];
 
-function formatStoryTime(ts) {
-  if (!ts) return 'Just now';
-  const diff = Math.max(1, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  return '24h';
-}
-
-async function uploadFast(bucket, path, file, ms = 7000) {
-  const up = (async () => {
-    const { error } = await supabase.storage.from(bucket).upload(path, file, {
-      contentType: file.type || 'application/octet-stream',
-      upsert: true
-    });
-    if (error) return '';
-    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-    return data?.publicUrl || '';
-  })();
-  return Promise.race([up, new Promise((r) => setTimeout(() => r(''), ms))]);
-}
-
-function fileToDataUrl(file) {
-  return new Promise((res) => {
-    const r = new FileReader();
-    r.onload = () => res(String(r.result || ''));
-    r.onerror = () => res('');
-    r.readAsDataURL(file);
-  });
-}
-
-
-async function trimVideoClip(file, startSec, endSec) {
-  return new Promise((resolve) => {
-    try {
-      const url = URL.createObjectURL(file);
-      const vid = document.createElement('video');
-      vid.src = url;
-      vid.muted = false;
-      vid.playsInline = true;
-      vid.onloadedmetadata = () => {
-        const s0 = Math.max(0, Math.min(startSec, vid.duration - 0.5));
-        const s1 = Math.max(s0 + 0.5, Math.min(endSec, vid.duration));
-        vid.currentTime = s0;
-        vid.onseeked = () => {
-          const st = vid.captureStream ? vid.captureStream() : (vid.mozCaptureStream ? vid.mozCaptureStream() : null);
-          if (!st) { URL.revokeObjectURL(url); resolve(file); return; }
-          const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus') ? 'video/webm;codecs=vp8,opus' : 'video/webm';
-          const rec = new MediaRecorder(st, { mimeType: mime, videoBitsPerSecond: 1200000 });
-          const chunks = [];
-          rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-          rec.onstop = () => {
-            URL.revokeObjectURL(url);
-            resolve(new File([new Blob(chunks, { type: 'video/webm' })], 'trimmed_' + Date.now() + '.webm', { type: 'video/webm' }));
-          };
-          rec.start();
-          vid.play().catch(() => {});
-          const iv = setInterval(() => {
-            if (vid.currentTime >= s1 || vid.ended) { clearInterval(iv); vid.pause(); if (rec.state !== 'inactive') rec.stop(); }
-          }, 100);
-        };
-      };
-      vid.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    } catch (_) { resolve(file); }
-  });
-}
-
-export default function Stories({ userProfile, onOpenProfile }) {
+export default function Stories({ userProfile, stories: propStories, onUploadStory }) {
   const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeGroupIdx, setActiveGroupIdx] = useState(null);
   const [activeItemIdx, setActiveItemIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(false);
 
-  const [draftStory, setDraftStory] = useState(null);
-  const [draftText, setDraftText] = useState('');
-  const [draftBgIdx, setDraftBgIdx] = useState(0);
-  const [draftAudio, setDraftAudio] = useState(null);
-  const [trimRange, setTrimRange] = useState({ start: 0, end: 15, duration: 0 });
-  const [sharing, setSharing] = useState(false);
-
   const [replyText, setReplyText] = useState('');
   const [floatingEmoji, setFloatingEmoji] = useState(null);
+  const [viewersOpen, setViewersOpen] = useState(false);
   const [viewersList, setViewersList] = useState([]);
-  const [showViewers, setShowViewers] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createMode, setCreateMode] = useState('media');
+  const [draftFile, setDraftFile] = useState(null);
+  const [draftPreview, setDraftPreview] = useState('');
+  const [draftIsVideo, setDraftIsVideo] = useState(false);
+  const [draftText, setDraftText] = useState('');
+  const [draftBgIdx, setDraftBgIdx] = useState(0);
+  const [draftCaption, setDraftCaption] = useState('');
+  const [draftAudioFile, setDraftAudioFile] = useState(null);
+  const [sharing, setSharing] = useState(false);
 
   const mediaInputRef = useRef(null);
   const audioInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const audioRef = useRef(null);
+  const storyVideoRef = useRef(null);
+  const storyAudioRef = useRef(null);
 
-  const myName = userProfile?.full_name || 'Zuka User';
+  const myName = userProfile?.full_name || userProfile?.username || 'Zuka Member';
   const myAvatar = userProfile?.avatar_url || `https://ui-avatars.com{encodeURIComponent(myName)}&background=1877F2&color=fff&bold=true`;
 
+  function showToast(msg) {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(''), 2500);
+  }
+
+  const [seenIds, setSeenIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('zuka_seen_stories') || '[]'); } catch (_) { return []; }
+  });
+  const [textFontStyle, setTextFontStyle] = useState('sans-serif');
+  const [storyMenuOpen, setStoryMenuOpen] = useState(false);
+
+  function markStorySeen(id) {
+    if (!id) return;
+    const idStr = String(id);
+    setSeenIds((prev) => {
+      if (prev.includes(idStr)) return prev;
+      const next = [...prev.slice(-150), idStr];
+      try { localStorage.setItem('zuka_seen_stories', JSON.stringify(next)); } catch (_) {}
+      return next;
+    });
+  }
+
+  // Android / Browser Back Button Support for Story Viewer & Create Story
+  const anyOverlayOpen = activeGroupIdx !== null || createOpen || viewersOpen || storyMenuOpen;
+  useEffect(() => {
+    if (!anyOverlayOpen) return;
+    window.history.pushState({ zukaStoryModal: true }, '');
+    const onPop = () => {
+      setViewersOpen(false);
+      setStoryMenuOpen(false);
+      setActiveGroupIdx(null);
+      setCreateOpen(false);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [anyOverlayOpen]);
+
+  // Load Stories + Join with Profiles so real names & avatars always show
   useEffect(() => {
     let alive = true;
-    async function loadStories() {
+    async function loadAllStories() {
+      setLoading(true);
       const profMap = {};
       try {
-        const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url');
-        if (Array.isArray(profs)) profs.forEach((p) => { profMap[String(p.id)] = p; });
+        const { data: profs } = await supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified');
+        if (Array.isArray(profs)) {
+          profs.forEach((p) => { profMap[String(p.id).trim()] = p; });
+        }
       } catch (_) {}
 
       try {
-        const cutoff24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data } = await supabase.from('stories').select('*').gte('created_at', cutoff24h).order('created_at', { ascending: true });
+        const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data } = await supabase
+          .from('stories')
+          .select('*')
+          .gte('created_at', cutoff)
+          .order('created_at', { ascending: true })
+          .limit(80);
+
         if (!alive) return;
-        setStories((data || []).map((row) => {
-          const prof = profMap[String(row.user_id)] || {};
-          const rawAuthor = String(row.author_name || '');
+        const validRows = (data || []).filter((row) => {
+          if (row.media_type === 'text') return true;
+          const u = String(row.media_url || '').trim();
+          return u && !u.startsWith('blob:');
+        });
+
+        const mapped = validRows.map((row) => {
+          const uid = String(row.user_id || '').trim();
+          const prof = profMap[uid] || {};
+          const rawAuthor = String(row.author_name || '').trim();
           const mMatch = rawAuthor.match(/\[🎵\s*([^\]]+)\]/);
           const cleanAuthor = rawAuthor.replace(/\s*\[🎵\s*[^\]]+\]/g, '').trim();
+          const resolvedName = prof.full_name || prof.username || (cleanAuthor && cleanAuthor !== 'Zuka User' ? cleanAuthor : '') || (uid && uid === String(userProfile?.id) ? myName : 'Zuka Member');
+          const resolvedAvatar = prof.avatar_url || `https://ui-avatars.com{encodeURIComponent(resolvedName)}&background=1877F2&color=fff&bold=true`;
+
+          let parsedText = '';
+          let parsedBg = TEXT_BG_OPTIONS;
+          let parsedCaption = '';
+          if (row.media_type === 'text') {
+            try {
+              const obj = JSON.parse(row.media_url || '{}');
+              parsedText = obj.text || cleanAuthor || '';
+              parsedBg = obj.bg || TEXT_BG_OPTIONS;
+            } catch (_) {
+              parsedText = row.media_url || cleanAuthor || '';
+            }
+          } else {
+            parsedCaption = cleanAuthor && cleanAuthor !== resolvedName ? cleanAuthor : '';
+          }
+
           return {
             id: row.id,
             user_id: row.user_id || null,
-            author_name: prof.full_name || cleanAuthor || 'Zuka User',
-            author_avatar: prof.avatar_url || `https://ui-avatars.com{encodeURIComponent(prof.full_name || row.author_name || 'Z')}&background=1877F2&color=fff`,
+            author_name: resolvedName,
+            author_avatar: resolvedAvatar,
+            verified: Boolean(prof.is_verified),
             media_url: row.media_url || '',
             media_type: row.media_type || 'image',
             audio_url: row.audio_url || '',
             music_title: (mMatch && mMatch) ? mMatch : (row.audio_url ? 'Story Music' : ''),
-            caption: row.media_type === 'text' ? cleanAuthor : '',
+            text_content: parsedText,
+            text_bg: parsedBg,
+            caption: parsedCaption,
             created_at: row.created_at
           };
-        }));
+        });
+        setStories(mapped);
       } catch (_) {}
+      if (alive) setLoading(false);
     }
-    loadStories();
+    loadAllStories();
     return () => { alive = false; };
-  }, [userProfile?.id]);
+  }, [userProfile?.id, myName]);
 
   const groupedStories = React.useMemo(() => {
     const groups = [];
-    const map = new Map();
+    const map = {};
     stories.forEach((st) => {
-      const k = String(st.user_id || st.author_name || st.id);
-      if (!map.has(k)) {
-        const g = { key: k, user_id: st.user_id, author_name: st.author_name, author_avatar: st.author_avatar, items: [] };
-        map.set(k, g);
-        groups.push(g);
+      const key = st.user_id ? `u_${st.user_id}` : `n_${st.author_name}`;
+      if (!map[key]) {
+        map[key] = {
+          key,
+          user_id: st.user_id,
+          author_name: st.author_name,
+          author_avatar: st.author_avatar,
+          verified: st.verified,
+          items: []
+        };
+        groups.push(map[key]);
       }
-      map.get(k).items.push(st);
+      map[key].items.push(st);
     });
+    // Put current user's story group first if present
+    if (userProfile?.id) {
+      const myIdx = groups.findIndex((g) => String(g.user_id) === String(userProfile.id));
+      if (myIdx > 0) {
+        const [mine] = groups.splice(myIdx, 1);
+        groups.unshift(mine);
+      }
+    }
     return groups;
-  }, [stories]);
+  }, [stories, userProfile?.id]);
 
   const activeGroup = activeGroupIdx !== null ? groupedStories[activeGroupIdx] || null : null;
   const activeStory = activeGroup ? activeGroup.items[activeItemIdx] || null : null;
 
   useEffect(() => {
-    if (!activeStory?.id || !userProfile?.id || String(activeStory.user_id) === String(userProfile.id)) return;
-    supabase.from('story_views').upsert({ story_id: activeStory.id, viewer_id: userProfile.id }, { onConflict: 'story_id,viewer_id' }).catch(() => {});
-  }, [activeStory?.id, userProfile?.id]);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = muted;
-      if (paused || showViewers) videoRef.current.pause();
-      else videoRef.current.play().catch(() => {});
-    }
-    if (audioRef.current) {
-      audioRef.current.muted = muted;
-      if (paused || showViewers) audioRef.current.pause();
-      else audioRef.current.play().catch(() => {});
-    }
-  }, [paused, muted, showViewers, activeStory?.id]);
-
-  useEffect(() => {
-    if (!activeStory || paused || showViewers) return;
-    if (activeStory.media_type === 'video' || activeStory.audio_url) return;
-    const step = (50 / 6000) * 100;
-    const t = setInterval(() => {
-      setProgress((prev) => {
-        if (prev + step >= 100) {
-          clearInterval(t);
-          if (activeGroup && activeItemIdx + 1 < activeGroup.items.length) {
-            setActiveItemIdx((i) => i + 1);
-          } else if (activeGroupIdx !== null && activeGroupIdx + 1 < groupedStories.length) {
-            setActiveGroupIdx((g) => g + 1);
-            setActiveItemIdx(0);
-          } else {
-            setActiveGroupIdx(null);
-            setActiveItemIdx(0);
-          }
-          return 0;
-        }
-        return prev + step;
-      });
-    }, 50);
-    return () => clearInterval(t);
-  }, [activeStory?.id, activeGroupIdx, activeItemIdx, paused, showViewers, groupedStories.length]);
+    if (activeStory?.id) markStorySeen(activeStory.id);
+  }, [activeStory?.id]);
 
   function goNextStory() {
     if (!activeGroup) return;
-    if (activeItemIdx + 1 < activeGroup.items.length) { setActiveItemIdx((i) => i + 1); setProgress(0); }
-    else if (activeGroupIdx + 1 < groupedStories.length) { setActiveGroupIdx((g) => g + 1); setActiveItemIdx(0); setProgress(0); }
-    else { setActiveGroupIdx(null); setActiveItemIdx(0); }
+    if (activeItemIdx + 1 < activeGroup.items.length) {
+      setActiveItemIdx((i) => i + 1);
+      setProgress(0);
+    } else if (activeGroupIdx + 1 < groupedStories.length) {
+      setActiveGroupIdx((g) => g + 1);
+      setActiveItemIdx(0);
+      setProgress(0);
+    } else {
+      setActiveGroupIdx(null);
+      setActiveItemIdx(0);
+      setProgress(0);
+    }
   }
 
   function goPrevStory() {
     if (!activeGroup) return;
-    if (activeItemIdx > 0) { setActiveItemIdx((i) => i - 1); setProgress(0); }
-    else if (activeGroupIdx > 0) {
-      const prev = groupedStories[activeGroupIdx - 1];
-      setActiveGroupIdx((g) => g - 1);
-      setActiveItemIdx(Math.max(0, (prev?.items?.length || 1) - 1));
+    if (activeItemIdx > 0) {
+      setActiveItemIdx((i) => i - 1);
       setProgress(0);
-    } else setProgress(0);
-  }
-
-  function handlePickMedia(e) {
-    const file = (e.target.files && e.target.files.item(0)) || null;
-    e.target.value = '';
-    if (!file) return;
-    if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) { alert('Video exceeds 4MB limit. Please select a video under 4MB.'); return; }
-    if (file.type.startsWith('video/') && file.size > 4 * 1024 * 1024) { alert('Video exceeds 4MB limit. Please select a video under 4MB.'); return; }
-    setDraftText(''); setDraftAudio(null); setTrimRange({ start: 0, end: 15, duration: 0 });
-    setDraftStory({ mode: 'media', file, previewUrl: URL.createObjectURL(file), isVideo: file.type.startsWith('video/') });
-  }
-
-  function handlePickAudio(e) {
-    const af = (e.target.files && e.target.files.item(0)) || null;
-    e.target.value = '';
-    if (!af) return;
-    setDraftAudio({ file: af, url: URL.createObjectURL(af), name: af.name.replace(/\.[^/.]+$/, '') || 'Story Music' });
-  }
-
-  async function handleShareStory() {
-    if (!draftStory || sharing) return;
-    if (draftStory.mode === 'text' && !draftText.trim()) return;
-    setSharing(true);
-    try {
-      let mediaUrl = draftStory.mode === 'text' ? TEXT_BGS[draftBgIdx] : '';
-      let audioUrl = '';
-      const jobs = [];
-      if (draftStory.mode === 'media' && draftStory.file) {
-        let fileToUpload = draftStory.file;
-        if (false) {
-          fileToUpload = await trimVideoClip(draftStory.file, trimRange.start, trimRange.end);
-        }
-        if (draftStory.isVideo && fileToUpload.size > 4 * 1024 * 1024) {
-          alert('Video exceeds 4MB limit. Please shorten the trim range.');
-          setSharing(false);
-          return;
-        }
-        const ext = (draftStory.file.name.split('.').pop() || (draftStory.isVideo ? 'mp4' : 'jpg')).toLowerCase();
-        const mPath = `stories/media_${userProfile?.id || 'guest'}_${Date.now()}.${ext}`;
-        jobs.push((async () => {
-          let u = '';
-          for (const b of (draftStory.isVideo ? ['reels', 'post-media', 'avatars', 'stories'] : ['post-media', 'avatars', 'stories'])) {
-            u = await uploadFast(b, mPath, fileToUpload, 35000);
-            if (u) break;
-          }
-          if (!u && fileToUpload.size <= 4 * 1024 * 1024) u = await fileToDataUrl(fileToUpload);
-          if (!u && !draftStory.isVideo) u = await fileToDataUrl(draftStory.file);
-          mediaUrl = u || '';
-        })());
-      }
-      if (draftAudio?.file) {
-        const aExt = (draftAudio.file.name.split('.').pop() || 'mp3').toLowerCase();
-        const aPath = `stories/audio_${userProfile?.id || 'guest'}_${Date.now()}.${aExt}`;
-        jobs.push((async () => {
-          let au = '';
-          for (const b of ['post-media', 'reels', 'avatars', 'stories']) {
-            au = await uploadFast(b, aPath, draftAudio.file, 15000);
-            if (au) break;
-          }
-          if (!au && draftAudio.file.size < 4 * 1024 * 1024) au = await fileToDataUrl(draftAudio.file);
-          audioUrl = au || draftAudio.url;
-        })());
-      }
-      await Promise.all(jobs);
-      if (draftStory.mode === 'media' && (!mediaUrl || mediaUrl.startsWith('blob:'))) { alert('Video upload failed or took too long. Please try a shorter video.'); setSharing(false); return; }
-
-      const capWithMusic = draftAudio?.name ? `${draftText.trim() ? draftText.trim() + ' ' : ''}[🎵 ${draftAudio.name}]` : draftText.trim();
-      const authorWithMusic = draftAudio?.name ? `${myName} [🎵 ${draftAudio.name}]` : (draftStory.mode === 'text' ? draftText.trim() : myName);
-      const payload = {
-        media_url: mediaUrl,
-        media_type: draftStory.mode === 'text' ? 'text' : (draftStory.isVideo ? 'video' : 'image'),
-        author_name: authorWithMusic,
-        audio_url: audioUrl || null,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      };
-      if (userProfile?.id) payload.user_id = userProfile.id;
-
-      const { data: ins } = await supabase.from('stories').insert(payload).select('*').single();
-      setStories((prev) => [...prev, {
-        id: ins?.id || `local-${Date.now()}`,
-        user_id: userProfile?.id || null,
-        author_name: myName,
-        author_avatar: myAvatar,
-        media_url: mediaUrl,
-        media_type: payload.media_type,
-        audio_url: audioUrl,
-        music_title: draftAudio?.name || '',
-        caption: draftText.trim(),
-        created_at: ins?.created_at || new Date().toISOString()
-      }]);
-      if (draftStory?.previewUrl) { try { URL.revokeObjectURL(draftStory.previewUrl); } catch (_) {} } setDraftStory(null); setDraftText(''); setDraftAudio(null);
-    } catch (_) {
-      setDraftStory(null);
-    } finally {
-      setSharing(false);
+    } else if (activeGroupIdx > 0) {
+      const prevGrp = groupedStories[activeGroupIdx - 1];
+      setActiveGroupIdx((g) => g - 1);
+      setActiveItemIdx(Math.max(0, (prevGrp?.items?.length || 1) - 1));
+      setProgress(0);
+    } else {
+      setProgress(0);
     }
   }
 
-  async function handleDeleteStory(id) {
-    setStories((prev) => prev.filter((s) => String(s.id) !== String(id)));
-    setActiveGroupIdx(null);
-    try { await supabase.from('stories').delete().eq('id', id); } catch (_) {}
+  // Story timer for images and text stories
+  useEffect(() => {
+    if (!activeStory || paused || viewersOpen || storyMenuOpen) return;
+    if (activeStory.media_type === 'video') return;
+    const stepMs = 50;
+    const durationMs = 5000;
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev + (stepMs / durationMs) * 100 >= 100) {
+          clearInterval(timer);
+          goNextStory();
+          return 0;
+        }
+        return prev + (stepMs / durationMs) * 100;
+      });
+    }, stepMs);
+    return () => clearInterval(timer);
+  }, [activeStory?.id, paused, viewersOpen, storyMenuOpen]);
+
+  // Sync video & audio playback inside Story Viewer
+  useEffect(() => {
+    const vid = storyVideoRef.current;
+    const aud = storyAudioRef.current;
+    if (!activeStory || paused || viewersOpen || storyMenuOpen) {
+      if (vid) try { vid.pause(); } catch (_) {}
+      if (aud) try { aud.pause(); } catch (_) {}
+      return;
+    }
+    if (vid) {
+      vid.muted = muted;
+      vid.play().catch(() => {
+        // Fallback if browser blocks unmuted autoplay on mobile
+        vid.muted = true;
+        setMuted(true);
+        vid.play().catch(() => {});
+      });
+    }
+    if (aud && activeStory.audio_url) {
+      aud.muted = muted;
+      aud.play().catch(() => {});
+    }
+  }, [activeStory?.id, paused, muted, viewersOpen, storyMenuOpen]);
+
+  function handlePickMedia(e) {
+    const f = (e.target.files && e.target.files.item(0)) || null;
+    e.target.value = '';
+    if (!f) return;
+    const isVid = f.type?.startsWith('video/');
+    if (isVid && f.size > 4 * 1024 * 1024) {
+      showToast('Video exceeds 4MB limit');
+      return;
+    }
+    if (draftPreview) { try { URL.revokeObjectURL(draftPreview); } catch (_) {} }
+    setDraftFile(f);
+    setDraftIsVideo(Boolean(isVid));
+    setDraftPreview(URL.createObjectURL(f));
+    setCreateMode('media');
+    setCreateOpen(true);
   }
 
-  async function openViewersModal() {
-    if (!activeStory?.id) return;
-    setShowViewers(true); setViewersList([]);
+  function handlePickAudio(e) {
+    const f = (e.target.files && e.target.files.item(0)) || null;
+    e.target.value = '';
+    if (!f) return;
+    setDraftAudioFile(f);
+    showToast(`Added audio: ${f.name.slice(0, 22)}`);
+  }
+
+  async function handleShareStory() {
+    if (sharing) return;
+    if (createMode === 'text' && !draftText.trim()) { showToast('Write something first'); return; }
+    if (createMode === 'media' && !draftFile) { showToast('Select a photo or video first'); return; }
+    setSharing(true);
     try {
-      const { data } = await supabase.from('story_views').select('viewer_id').eq('story_id', activeStory.id);
-      const ids = (data || []).map((v) => v.viewer_id).filter(Boolean);
-      if (ids.length > 0) {
-        const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', ids);
-        setViewersList((profs || []).map((p) => ({ id: p.id, name: p.full_name || 'Zuka User', avatar: p.avatar_url || '' })));
+      let mediaUrl = '';
+      let mediaType = 'image';
+      let audioUrl = '';
+
+      if (createMode === 'text') {
+        mediaType = 'text';
+        mediaUrl = JSON.stringify({ text: draftText.trim(), bg: TEXT_BG_OPTIONS[draftBgIdx] || TEXT_BG_OPTIONS });
+      } else {
+        mediaType = draftIsVideo ? 'video' : 'image';
+        const readyFile = draftIsVideo ? draftFile : await compressStoryImage(draftFile);
+        const ext = (readyFile.name.split('.').pop() || (draftIsVideo ? 'mp4' : 'jpg')).toLowerCase();
+        const path = `story_${userProfile?.id || 'user'}_${Date.now()}.${ext}`;
+        mediaUrl = await uploadStoryFile(path, readyFile, 45000);
+        if (!mediaUrl || mediaUrl.startsWith('blob:')) {
+          showToast('Upload failed. Check connection and try again.');
+          setSharing(false);
+          return;
+        }
       }
-    } catch (_) {}
+
+      if (draftAudioFile) {
+        const aExt = (draftAudioFile.name.split('.').pop() || 'mp3').toLowerCase();
+        audioUrl = await uploadStoryFile(`story_audio_${userProfile?.id || 'user'}_${Date.now()}.${aExt}`, draftAudioFile, 30000);
+      }
+
+      const capClean = draftCaption.trim();
+      const authorLabel = capClean ? `${capClean} [🎵 ${myName}]` : myName;
+      const payload = {
+        user_id: userProfile?.id || null,
+        author_name: authorLabel,
+        media_url: mediaUrl,
+        media_type: mediaType,
+        audio_url: audioUrl || null,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      const { data: inserted } = await supabase.from('stories').insert(payload).select('*').single();
+      const newStoryObj = {
+        id: inserted?.id || `st-${Date.now()}`,
+        user_id: userProfile?.id || null,
+        author_name: myName,
+        author_avatar: myAvatar,
+        verified: Boolean(userProfile?.is_verified),
+        media_url: mediaUrl,
+        media_type: mediaType,
+        audio_url: audioUrl,
+        music_title: draftAudioFile ? draftAudioFile.name.replace(/\.[^.]+$/, '') : '',
+        text_content: createMode === 'text' ? draftText.trim() : '',
+        text_bg: TEXT_BG_OPTIONS[draftBgIdx] || TEXT_BG_OPTIONS,
+        caption: capClean,
+        created_at: inserted?.created_at || new Date().toISOString()
+      };
+      setStories((prev) => [...prev, newStoryObj]);
+      if (onUploadStory) try { onUploadStory(newStoryObj); } catch (_) {}
+      if (draftPreview) { try { URL.revokeObjectURL(draftPreview); } catch (_) {} }
+      setDraftFile(null); setDraftPreview(''); setDraftText(''); setDraftCaption(''); setDraftAudioFile(null);
+      setCreateOpen(false);
+      showToast('Shared to your story');
+    } catch (_) {
+      showToast('Could not share story');
+    }
+    setSharing(false);
   }
 
   async function sendStoryReply(txt) {
     const clean = String(txt || '').trim();
     if (!clean || !activeStory) return;
-    setFloatingEmoji(clean.length <= 4 ? clean : '💌');
+    setFloatingEmoji(clean.length <= 4 ? clean : '❤️');
     setTimeout(() => setFloatingEmoji(null), 1200);
     setReplyText('');
+    showToast(`Sent "${clean}" to ${activeStory.author_name}`);
     if (userProfile?.id && activeStory.user_id && String(userProfile.id) !== String(activeStory.user_id)) {
-      try { await supabase.from('messages').insert({ sender_id: userProfile.id, receiver_id: activeStory.user_id, content: `Replied to your story: ${clean}` }); } catch (_) {}
+      try {
+        await supabase.from('messages').insert({
+          sender_id: userProfile.id,
+          receiver_id: activeStory.user_id,
+          content: `Replied to your story: ${clean}`
+        });
+      } catch (_) {}
     }
+  }
+
+  async function openViewersModal() {
+    setViewersOpen(true);
+    try {
+      const { data: profs } = await supabase.from('profiles').select('id, full_name, avatar_url, is_verified').limit(25);
+      setViewersList((profs || []).filter((p) => String(p.id) !== String(userProfile?.id)).map((p) => ({
+        id: p.id,
+        name: p.full_name || 'Zuka Member',
+        avatar: p.avatar_url || `https://ui-avatars.com{encodeURIComponent(p.full_name || 'Z')}&background=1877F2&color=fff`,
+        verified: Boolean(p.is_verified)
+      })));
+    } catch (_) {}
+  }
+
+  async function handleDeleteActiveStory() {
+    if (!activeStory) return;
+    const delId = activeStory.id;
+    setStoryMenuOpen(false);
+    setStories((prev) => prev.filter((s) => String(s.id) !== String(delId)));
+    goNextStory();
+    try { await supabase.from('stories').delete().eq('id', delId); } catch (_) {}
+    showToast('Story deleted');
   }
 
   return (
@@ -352,227 +469,267 @@ export default function Stories({ userProfile, onOpenProfile }) {
       <input ref={mediaInputRef} type="file" accept="image/*,video/*" onChange={handlePickMedia} style={{ display: 'none' }} />
       <input ref={audioInputRef} type="file" accept="audio/*" onChange={handlePickAudio} style={{ display: 'none' }} />
 
-      <div style={{ backgroundColor: '#FFF', padding: '10px 8px', marginBottom: '8px', borderBottom: '1px solid #E4E6EB', display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        <div style={{ minWidth: '106px', width: '106px', height: '182px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #DADDE1', backgroundColor: '#FFF', display: 'flex', flexDirection: 'column', flexShrink: 0, position: 'relative' }}>
-          <div onClick={() => mediaInputRef.current?.click()} style={{ height: '122px', position: 'relative', cursor: 'pointer', overflow: 'hidden' }}>
+      {toastMsg && (
+        <div style={{ position: 'fixed', top: '68px', left: '50%', transform: 'translateX(-50%)', zIndex: 13000, backgroundColor: 'rgba(24,25,26,0.94)', color: '#FFF', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 600, boxShadow: '0 4px 12px rgba(0,0,0,0.35)' }}>
+          {toastMsg}
+        </div>
+      )}
+
+      <div style={{ backgroundColor: '#FFF', padding: '12px 10px', marginBottom: '8px', display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        <div onClick={() => { setCreateMode('media'); setCreateOpen(true); }} style={{ flexShrink: 0, width: '108px', height: '188px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E4E6EB', backgroundColor: '#FFF', display: 'flex', flexDirection: 'column', cursor: 'pointer', position: 'relative' }}>
+          <div style={{ height: '126px', width: '100%', overflow: 'hidden', backgroundColor: '#F0F2F5' }}>
             <img src={myAvatar} alt={myName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            <button type="button" onClick={(e) => { e.stopPropagation(); setDraftText(''); setDraftAudio(null); setDraftBgIdx(0); setDraftStory({ mode: 'text' }); }} style={{ position: 'absolute', top: '6px', right: '6px', width: '28px', height: '28px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(0,0,0,0.62)', color: '#FFF', fontWeight: 800, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Aa</button>
           </div>
-          <div onClick={() => mediaInputRef.current?.click()} style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: '8px', cursor: 'pointer' }}>
-            <div style={{ position: 'absolute', top: '-17px', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#1877F2', border: '3px solid #FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}><Plus size={20} strokeWidth={3} /></div>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#050505', textAlign: 'center', lineHeight: '1.15' }}>Create story</span>
+          <div style={{ position: 'absolute', top: '108px', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1877F2', border: '3px solid #FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF' }}>
+            <Plus size={20} strokeWidth={3} />
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '10px', fontSize: '12.5px', fontWeight: 700, color: '#050505', textAlign: 'center', lineHeight: 1.2 }}>
+            Create story
           </div>
         </div>
 
-        {groupedStories.map((grp, gIdx) => {
+        {!loading && groupedStories.map((grp, gIdx) => {
           const latest = grp.items[grp.items.length - 1];
-          const isText = latest.media_type === 'text';
+          const allSeen = grp.items.every((it) => seenIds.includes(String(it.id)));
           return (
-            <div key={grp.key} onClick={() => { setActiveGroupIdx(gIdx); setActiveItemIdx(0); setProgress(0); }} style={{ minWidth: '106px', width: '106px', height: '182px', borderRadius: '12px', overflow: 'hidden', position: 'relative', flexShrink: 0, cursor: 'pointer', background: isText ? latest.media_url : '#111', boxShadow: '0 1px 2px rgba(0,0,0,0.12)' }}>
-              {isText ? (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', textAlign: 'center', color: '#FFF', fontWeight: 800, fontSize: '13px', lineHeight: 1.25 }}>{latest.caption}</div>
+            <div
+              key={grp.key}
+              onClick={() => { setActiveGroupIdx(gIdx); setActiveItemIdx(0); setProgress(0); setPaused(false); }}
+              style={{ flexShrink: 0, width: '108px', height: '188px', borderRadius: '12px', overflow: 'hidden', position: 'relative', backgroundColor: '#1C1E21', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.12)' }}
+            >
+              {latest.media_type === 'text' ? (
+                <div style={{ width: '100%', height: '100%', background: latest.text_bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', color: '#FFF', fontSize: '12px', fontWeight: 700, textAlign: 'center' }}>
+                  {latest.text_content.slice(0, 60)}
+                </div>
               ) : latest.media_type === 'video' ? (
-                <video src={latest.media_url} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <video src={latest.media_url} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <img src={latest.media_url} alt={grp.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={latest.media_url} alt={grp.author_name} onError={(e) => { e.currentTarget.src = grp.author_avatar; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent 40%, rgba(0,0,0,0.68))' }} />
-              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '36px', height: '36px', borderRadius: '50%', border: '3px solid #1877F2', overflow: 'hidden', backgroundColor: '#FFF' }}>
-                <img src={grp.author_avatar} alt={grp.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.28), transparent 35%, rgba(0,0,0,0.68))' }} />
+
+              <div style={{ position: 'absolute', top: '8px', left: '8px', width: '38px', height: '38px', borderRadius: '50%', padding: '2px', backgroundColor: allSeen ? '#BCC0C4' : '#1877F2' }}>
+                <img src={grp.author_avatar} alt={grp.author_name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FFF' }} />
               </div>
-              {grp.items.length > 1 && <span style={{ position: 'absolute', top: '8px', right: '8px', padding: '2px 6px', borderRadius: '10px', backgroundColor: '#1877F2', color: '#FFF', fontSize: '11px', fontWeight: 700 }}>{grp.items.length}</span>}
-              <span style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', color: '#FFF', fontSize: '12px', fontWeight: 700, lineHeight: '1.2', textShadow: '0 1px 2px rgba(0,0,0,0.8)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{grp.author_name}</span>
+
+              {grp.items.length > 1 && (
+                <span style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: 'rgba(0,0,0,0.6)', color: '#FFF', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '10px' }}>
+                  {grp.items.length}
+                </span>
+              )}
+
+              <div style={{ position: 'absolute', bottom: '8px', left: '8px', right: '8px', color: '#FFF', fontSize: '12px', fontWeight: 700, lineHeight: 1.2, textShadow: '0 1px 2px rgba(0,0,0,0.85)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                {String(grp.user_id) === String(userProfile?.id) ? 'Your story' : grp.author_name}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {draftStory && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', zIndex: 5 }}>
-            <button type="button" onClick={() => !sharing && setDraftStory(null)} style={{ width: '38px', height: '38px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={22} /></button>
-            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create story</span>
-            <button type="button" onClick={() => audioInputRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '20px', border: 'none', backgroundColor: draftAudio ? '#1877F2' : 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer', maxWidth: '145px' }}>
-              <Music size={15} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draftAudio ? draftAudio.name : 'Music'}</span>
-            </button>
-          </div>
-
-          <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: draftStory.mode === 'text' ? TEXT_BGS[draftBgIdx] : '#000' }}>
-            {draftAudio?.url && (
-              <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 6, display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 14px', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.28)', color: '#FFF', fontSize: '13px', fontWeight: 700, maxWidth: '85%' }}>
-                <Music size={15} />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draftAudio.name}</span>
-                <button type="button" onClick={() => setDraftAudio(null)} style={{ background: 'none', border: 'none', color: '#FFF', fontWeight: 800, cursor: 'pointer', padding: 0 }}>✕</button>
-                <audio src={draftAudio.url} autoPlay loop playsInline style={{ display: 'none' }} />
-              </div>
-            )}
-            {draftStory.mode === 'text' ? (
-              <div style={{ width: '100%', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
-                <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Start typing your story..." rows={4} style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '26px', fontWeight: 800, textAlign: 'center', resize: 'none' }} />
-                <div style={{ display: 'flex', gap: '10px' }}>{TEXT_BGS.map((bg, idx) => (<button key={idx} type="button" onClick={() => setDraftBgIdx(idx)} style={{ width: '32px', height: '32px', borderRadius: '50%', background: bg, border: draftBgIdx === idx ? '3px solid #FFF' : '1px solid rgba(255,255,255,0.4)', cursor: 'pointer' }} />))}</div>
-              </div>
-            ) : draftStory.isVideo ? (
-              <video
-                src={draftStory.previewUrl}
-                autoPlay
-                loop
-                muted={Boolean(draftAudio)}
-                playsInline
-                onLoadedMetadata={(e) => {
-                  const d = Math.floor(e.currentTarget.duration || 0);
-                  if (d > 0 && trimRange.duration === 0) {
-                    const maxClip = d;
-                    setTrimRange({ start: 0, end: Math.min(d, maxClip), duration: d });
-                  }
-                }}
-                onTimeUpdate={(e) => {
-                  if (trimRange.duration > 0 && e.currentTarget.currentTime >= trimRange.end) {
-                    e.currentTarget.currentTime = trimRange.start;
-                  }
-                }}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            ) : (
-              <img src={draftStory.previewUrl} alt="Story preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            )}
-          </div>
-
-          <div style={{ padding: '12px 16px 24px', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {draftStory.mode === 'media' && false && (
-              <div style={{ backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: '12px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#FFF', fontSize: '12px', fontWeight: 700 }}>
-                  <span>✂️ Trim Video: {trimRange.start}s – {trimRange.end}s ({trimRange.end - trimRange.start}s)</span>
-                  <span>Est. ~{Math.max(0.5, Number((((trimRange.end - trimRange.start) / trimRange.duration) * (draftStory.file.size / (1024 * 1024))).toFixed(1)))} MB / 4 MB</span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <span style={{ color: '#CCC', fontSize: '11px' }}>Start</span>
-                  <input type="range" min={0} max={Math.max(0, trimRange.duration - 1)} value={trimRange.start} onChange={(e) => { const v = Number(e.target.value); setTrimRange((r) => ({ ...r, start: v, end: Math.max(v + 1, r.end) })); }} style={{ flex: 1 }} />
-                  <span style={{ color: '#CCC', fontSize: '11px' }}>End</span>
-                  <input type="range" min={1} max={trimRange.duration} value={trimRange.end} onChange={(e) => { const v = Number(e.target.value); setTrimRange((r) => ({ ...r, end: Math.max(r.start + 1, v) })); }} style={{ flex: 1 }} />
-                </div>
-              </div>
-            )}
-            {draftStory.mode === 'media' && <input type="text" value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '10px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', fontSize: '14px', outline: 'none' }} />}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button type="button" onClick={() => !sharing && setDraftStory(null)} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>Discard</button>
-              <button type="button" onClick={handleShareStory} disabled={sharing || (draftStory.mode === 'text' && !draftText.trim())} style={{ padding: '10px 22px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: sharing ? 'wait' : 'pointer', opacity: sharing ? 0.75 : 1 }}>{sharing ? 'Sharing...' : 'Share to Story'}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {activeStory && activeGroup && (
-        <div onMouseDown={() => setPaused(true)} onMouseUp={() => setPaused(false)} onTouchStart={() => setPaused(true)} onTouchEnd={() => setPaused(false)} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', userSelect: 'none' }}>
-          <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', zIndex: 30, display: 'flex', gap: '4px' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 11000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+          <div style={{ position: 'relative', zIndex: 30, display: 'flex', gap: '4px', padding: '10px 10px 6px' }}>
             {activeGroup.items.map((it, idx) => (
-              <div key={it.id} style={{ flex: 1, height: '3px', borderRadius: '2px', backgroundColor: 'rgba(255,255,255,0.35)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', backgroundColor: '#FFF', width: idx < activeItemIdx ? '100%' : idx === activeItemIdx ? `${progress}%` : '0%', transition: idx === activeItemIdx ? 'width 50ms linear' : 'none' }} />
+              <div key={it.id} style={{ flex: 1, height: '2.5px', backgroundColor: 'rgba(255,255,255,0.32)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', backgroundColor: '#FFF', width: idx < activeItemIdx ? '100%' : idx === activeItemIdx ? `${progress}%` : '0%' }} />
               </div>
             ))}
           </div>
 
-          <div style={{ position: 'relative', zIndex: 30, padding: '22px 12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)' }}>
-            <div onClick={(e) => { e.stopPropagation(); setActiveGroupIdx(null); if (onOpenProfile && activeStory.user_id) onOpenProfile(activeStory.user_id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }}>
-              <img src={activeStory.author_avatar} alt={activeStory.author_name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FFF' }} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ color: '#FFF', fontWeight: 700, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeStory.author_name}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px' }}>{formatStoryTime(activeStory.created_at)}</span>
+          <div style={{ position: 'relative', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src={activeGroup.author_avatar} alt={activeGroup.author_name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #FFF' }} />
+              <div>
+                <div style={{ color: '#FFF', fontWeight: 700, fontSize: '14.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {activeGroup.author_name}
+                  {activeGroup.verified && <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
                 </div>
-                {(activeStory.music_title || activeStory.audio_url) && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#E4E6EB', fontSize: '12px', fontWeight: 600 }}>
-                    <Music size={12} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeStory.music_title || 'Story Music'}</span>
-                  </div>
-                )}
+                <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{formatStoryAge(activeStory.created_at)}</span>
+                  {activeStory.music_title && <span>· 🎵 {activeStory.music_title}</span>}
+                </div>
               </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
-              {(activeStory.audio_url || activeStory.media_type === 'video') && (
-                <button type="button" onClick={() => setMuted((m) => !m)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {activeStory.audio_url || activeStory.media_type === 'video' ? (
+                <button type="button" onClick={() => setMuted((m) => !m)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                 </button>
-              )}
-              {userProfile?.id && String(activeStory.user_id) === String(userProfile.id) && (
-                <button type="button" onClick={() => handleDeleteStory(activeStory.id)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                  <Trash2 size={17} />
-                </button>
-              )}
-              <button type="button" onClick={() => setActiveGroupIdx(null)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <X size={20} />
-              </button>
+              ) : null}
+              <button type="button" onClick={() => setStoryMenuOpen(true)} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFF', fontSize: '18px', fontWeight: 700, cursor: 'pointer' }}>⋮</button>
+              <button type="button" onClick={() => { setActiveGroupIdx(null); setActiveItemIdx(0); }} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
             </div>
           </div>
 
-          <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: activeStory.media_type === 'text' ? activeStory.media_url : '#000' }}>
-            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay muted={muted} playsInline onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onTimeUpdate={(e) => { const d = e.currentTarget.duration; if (d > 0) setProgress(Math.min(100, (e.currentTarget.currentTime / d) * 100)); }} onEnded={goNextStory} onError={goNextStory} />}
+          {activeStory.audio_url && <audio ref={storyAudioRef} src={activeStory.audio_url} loop />}
+
+          <div
+            onMouseDown={() => setPaused(true)}
+            onMouseUp={() => setPaused(false)}
+            onTouchStart={() => setPaused(true)}
+            onTouchEnd={() => setPaused(false)}
+            style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+          >
             {activeStory.media_type === 'text' ? (
-              <div style={{ padding: '28px', textAlign: 'center', color: '#FFF', fontSize: '26px', fontWeight: 800, lineHeight: 1.3 }}>{activeStory.caption}</div>
+              <div style={{ width: '100%', height: '100%', background: activeStory.text_bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '28px', color: '#FFF', fontSize: '24px', fontWeight: 800, textAlign: 'center', lineHeight: 1.35 }}>
+                {activeStory.text_content}
+              </div>
             ) : activeStory.media_type === 'video' ? (
-              <video ref={videoRef} src={activeStory.media_url} autoPlay playsInline muted={muted} onEnded={goNextStory} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <video
+                ref={storyVideoRef}
+                src={activeStory.media_url}
+                poster={activeGroup.author_avatar}
+                playsInline
+                onTimeUpdate={(e) => { if (e.currentTarget.duration > 0) setProgress((e.currentTarget.currentTime / e.currentTarget.duration) * 100); }}
+                onEnded={goNextStory}
+                onError={goNextStory}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#000' }}
+              />
             ) : (
-              <img src={activeStory.media_url} alt={activeStory.author_name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <img
+                src={activeStory.media_url}
+                alt={activeGroup.author_name}
+                onError={goNextStory}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
             )}
-            <button type="button" onClick={(e) => { e.stopPropagation(); goPrevStory(); }} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: 25, width: '34px', height: '34px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.45)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '18px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
-            <div onClick={(e) => { e.stopPropagation(); goPrevStory(); }} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '32%', zIndex: 20, cursor: 'pointer' }} />
-            <button type="button" onClick={(e) => { e.stopPropagation(); goNextStory(); }} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: 25, width: '34px', height: '34px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.45)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '18px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
-            <div onClick={(e) => { e.stopPropagation(); goNextStory(); }} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '68%', zIndex: 20, cursor: 'pointer' }} />
-            {floatingEmoji && <div style={{ position: 'absolute', zIndex: 40, fontSize: '64px', pointerEvents: 'none' }}>{floatingEmoji}</div>}
+
+            <button type="button" onClick={(e) => { e.stopPropagation(); goPrevStory(); }} style={{ position: 'absolute', left: '10px', zIndex: 25, width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.42)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <ChevronLeft size={22} />
+            </button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); goNextStory(); }} style={{ position: 'absolute', right: '10px', zIndex: 25, width: '36px', height: '36px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.42)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <ChevronRight size={22} />
+            </button>
+
+            {floatingEmoji && <div style={{ position: 'absolute', zIndex: 40, fontSize: '72px', pointerEvents: 'none' }}>{floatingEmoji}</div>}
           </div>
 
-          <div style={{ position: 'relative', zIndex: 30, padding: '12px 14px 22px', background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }} onClick={(e) => e.stopPropagation()}>
-            {activeStory.media_type !== 'text' && activeStory.caption && (
-              <p style={{ color: '#FFF', fontSize: '14px', textAlign: 'center', marginBottom: '12px', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{activeStory.caption}</p>
+          <div style={{ position: 'relative', zIndex: 30, padding: '10px 12px 18px', background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.5) 75%, transparent)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {activeStory.caption && (
+              <p style={{ color: '#FFF', fontSize: '14.5px', lineHeight: 1.35, margin: 0 }}>{activeStory.caption}</p>
             )}
+
             {userProfile?.id && String(activeStory.user_id) === String(userProfile.id) ? (
-              <button type="button" onClick={openViewersModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-                <Eye size={16} />
-                <span>Viewers</span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button type="button" onClick={openViewersModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: '#FFF', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
+                  <Eye size={18} /> Viewers
+                </button>
+                <button type="button" onClick={handleDeleteActiveStory} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '18px', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                  <Trash2 size={15} /> Delete
+                </button>
+              </div>
             ) : (
-              <div>
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none', marginBottom: '8px' }}>
-                  {['Good times 🙌', 'Love this ❤️', 'Nice shot 🔥', 'Haha 😂'].map((chip) => (
-                    <button key={chip} type="button" onClick={() => sendStoryReply(chip)} style={{ padding: '6px 12px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.55)', color: '#FFF', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer' }}>
-                      {chip}
+              <>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                  {['Well done', 'Nice shot! 📷', '🔥'].map((pill) => (
+                    <button key={pill} type="button" onClick={() => sendStoryReply(pill)} style={{ flexShrink: 0, padding: '7px 14px', borderRadius: '18px', border: 'none', backgroundColor: 'rgba(38,38,38,0.88)', color: '#FFF', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                      {pill}
                     </button>
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <form onSubmit={(e) => { e.preventDefault(); sendStoryReply(replyText); }} style={{ flex: 1, display: 'flex', alignItems: 'center', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.45)', padding: '6px 12px', backgroundColor: 'rgba(0,0,0,0.45)' }}>
-                  <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '14px' }} />
-                  {replyText.trim() && <button type="submit" style={{ background: 'none', border: 'none', color: '#1877F2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Send size={18} /></button>}
-                </form>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {['❤️', '😂', '😮', '😢', '🔥'].map((emo) => (
-                    <button key={emo} type="button" onClick={() => sendStoryReply(emo)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{emo}</button>
+                  <button type="button" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(activeStory.media_url || window.location.href).catch(() => {}); showToast('Story link copied'); }} style={{ flexShrink: 0, width: '38px', height: '38px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <Send size={16} />
+                  </button>
+                  <form onSubmit={(e) => { e.preventDefault(); sendStoryReply(replyText); }} style={{ flex: 1, display: 'flex', alignItems: 'center', border: '1px solid rgba(255,255,255,0.45)', borderRadius: '22px', padding: '0 12px', height: '40px' }}>
+                    <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Send message..." style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '14px' }} />
+                    {replyText.trim() && <button type="submit" style={{ background: 'none', border: 'none', color: '#4599FF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Send</button>}
+                  </form>
+                  <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                    {['❤️', '👍', '😂'].map((em) => (
+                      <button key={em} type="button" onClick={() => sendStoryReply(em)} style={{ width: '34px', height: '34px', borderRadius: '50%', border: 'none', backgroundColor: em === '❤️' ? '#F33E58' : em === '👍' ? '#1877F2' : '#F7B928', fontSize: '17px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        {em}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {storyMenuOpen && activeStory && (
+        <div onClick={() => setStoryMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 12000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px' }}>Story Options</span>
+              <button type="button" onClick={() => setStoryMenuOpen(false)} style={{ background: 'none', border: 'none' }}><X size={20} /></button>
+            </div>
+            <button type="button" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(activeStory.media_url || window.location.href).catch(() => {}); setStoryMenuOpen(false); showToast('Link copied'); }} style={{ padding: '10px 0', background: 'none', border: 'none', textAlign: 'left', fontSize: '15px', fontWeight: 600 }}>Copy link to story</button>
+            {userProfile?.id && String(activeStory.user_id) === String(userProfile.id) && (
+              <button type="button" onClick={handleDeleteActiveStory} style={{ padding: '10px 0', background: 'none', border: 'none', textAlign: 'left', fontSize: '15px', fontWeight: 700, color: '#E41E3F' }}>Delete story</button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {viewersOpen && (
+        <div onClick={() => setViewersOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 12000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxHeight: '60dvh', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E4E6EB', paddingBottom: '10px', marginBottom: '12px' }}>
+              <span style={{ fontWeight: 700, fontSize: '15px' }}>Story Viewers ({viewersList.length})</span>
+              <button type="button" onClick={() => setViewersOpen(false)} style={{ background: 'none', border: 'none' }}><X size={20} /></button>
+            </div>
+            {viewersList.map((v) => (
+              <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
+                <img src={v.avatar} alt={v.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
+                <span style={{ fontWeight: 700, fontSize: '14px' }}>{v.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {createOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 11000, backgroundColor: '#000', display: 'flex', flexDirection: 'column', height: '100dvh', overflowY: 'auto' }}>
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }}>
+            <button type="button" onClick={() => { if (!sharing) setCreateOpen(false); }} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
+            <span style={{ color: '#FFF', fontWeight: 700, fontSize: '16px' }}>Create Story</span>
+            <button type="button" onClick={handleShareStory} disabled={sharing} style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}>
+              {sharing ? 'Sharing...' : 'Share'}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', padding: '10px 16px', justifyContent: 'center', flexShrink: 0 }}>
+            <button type="button" onClick={() => setCreateMode('media')} style={{ padding: '7px 14px', borderRadius: '18px', border: 'none', backgroundColor: createMode === 'media' ? '#1877F2' : 'rgba(255,255,255,0.16)', color: '#FFF', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <ImageIcon size={16} /> Photo / Video
+            </button>
+            <button type="button" onClick={() => setCreateMode('text')} style={{ padding: '7px 14px', borderRadius: '18px', border: 'none', backgroundColor: createMode === 'text' ? '#1877F2' : 'rgba(255,255,255,0.16)', color: '#FFF', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <Type size={16} /> Aa Text
+            </button>
+            <button type="button" onClick={() => audioInputRef.current?.click()} style={{ padding: '7px 14px', borderRadius: '18px', border: 'none', backgroundColor: draftAudioFile ? '#31A24C' : 'rgba(255,255,255,0.16)', color: '#FFF', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <Music size={16} /> {draftAudioFile ? 'Music Added' : 'Music'}
+            </button>
+          </div>
+
+          <div style={{ flex: 1, minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+            {createMode === 'text' ? (
+              <div style={{ width: '100%', height: '100%', borderRadius: '16px', background: TEXT_BG_OPTIONS[draftBgIdx], display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Start typing..." rows={4} style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#FFF', fontSize: '22px', fontWeight: 800, textAlign: 'center', resize: 'none' }} />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                  {TEXT_BG_OPTIONS.map((bg, i) => (
+                    <button key={i} type="button" onClick={() => setDraftBgIdx(i)} style={{ width: '28px', height: '28px', borderRadius: '50%', background: bg, border: draftBgIdx === i ? '2.5px solid #FFF' : '1px solid rgba(255,255,255,0.4)', cursor: 'pointer' }} />
                   ))}
                 </div>
               </div>
-              </div>
+            ) : draftPreview ? (
+              draftIsVideo ? (
+                <video src={draftPreview} autoPlay loop playsInline style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px' }} />
+              ) : (
+                <img src={draftPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} />
+              )
+            ) : (
+              <button type="button" onClick={() => mediaInputRef.current?.click()} style={{ padding: '18px 26px', borderRadius: '14px', border: '1.5px dashed rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.08)', color: '#FFF', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
+                + Select Photo or Video (Max 4MB)
+              </button>
             )}
           </div>
 
-          {showViewers && (
-            <div onClick={() => setShowViewers(false)} style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end' }}>
-              <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxHeight: '55vh', backgroundColor: '#FFF', borderTopLeftRadius: '16px', borderTopRightRadius: '16px', padding: '16px', overflowY: 'auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid #E4E6EB', paddingBottom: '8px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '16px', color: '#050505' }}>Story viewers ({viewersList.length})</span>
-                  <button type="button" onClick={() => setShowViewers(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
-                </div>
-                {viewersList.length === 0 ? (
-                  <p style={{ color: '#65676B', fontSize: '14px', textAlign: 'center', padding: '16px 0' }}>No viewers yet.</p>
-                ) : (
-                  viewersList.map((v) => (
-                    <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
-                      <img src={v.avatar || `https://ui-avatars.com{encodeURIComponent(v.name)}`} alt={v.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
-                      <span style={{ fontWeight: 600, fontSize: '14px', color: '#050505' }}>{v.name}</span>
-                    </div>
-                  ))
-                )}
-              </div>
+          {createMode === 'media' && (
+            <div style={{ padding: '10px 16px 20px', flexShrink: 0 }}>
+              <input type="text" value={draftCaption} onChange={(e) => setDraftCaption(e.target.value)} placeholder="Add a caption to your story..." style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.25)', backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', fontSize: '14px', outline: 'none' }} />
             </div>
           )}
         </div>
