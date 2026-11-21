@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, X, ChevronLeft, ChevronRight, Volume2, VolumeX,
@@ -546,7 +547,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
               <div>
                 <div style={{ color: '#FFF', fontWeight: 700, fontSize: '14.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   {activeGroup.author_name}
-                  {activeGroup.verified && <span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
+                  <ZukaBadge userId={activeGroup.user_id || activeStory.user_id} size={14} />
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span>{formatStoryAge(activeStory.created_at)}</span>

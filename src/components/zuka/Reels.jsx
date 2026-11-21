@@ -1,3 +1,4 @@
+import ZukaBadge from './ZukaBadge';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ThumbsUp, MessageCircle, Forward, Volume2, VolumeX, MoreHorizontal,
@@ -520,7 +521,7 @@ export default function Reels({ userProfile }) {
                       <img src={reel.author_avatar} alt={reel.author_name} onClick={() => reel.user_id && openCreatorProfile(reel.user_id, reel.author_name, reel.author_avatar)} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #FFF', cursor: 'pointer' }} />
                       <span onClick={() => reel.user_id && openCreatorProfile(reel.user_id, reel.author_name, reel.author_avatar)} style={{ color: '#FFF', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', textShadow: '0 1px 3px rgba(0,0,0,0.75)' }}>
                         {reel.author_name}
-                        {reel.verified && <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '15px', height: '15px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF' }}><Check size={10} strokeWidth={3} /></span>}
+                        <ZukaBadge userId={reel.user_id} size={15} />
                       </span>
                       {userProfile?.id && reel.user_id && String(reel.user_id) !== String(userProfile.id) && (
                         <button type="button" onClick={() => toggleFollow(reel.user_id)} style={{ background: 'none', border: 'none', color: isFollowing ? '#E4E6EB' : '#4599FF', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer', textShadow: '0 1px 3px rgba(0,0,0,0.85)', padding: 0 }}>
@@ -683,7 +684,7 @@ export default function Reels({ userProfile }) {
             <img src={viewingProfile.avatar_url} alt={viewingProfile.full_name} style={{ width: '88px', height: '88px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #FFF', backgroundColor: '#FFF' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#050505', margin: 0 }}>{viewingProfile.full_name}</h2>
-              {viewingProfile.is_verified && <span style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={11} strokeWidth={3} /></span>}
+              <ZukaBadge userId={viewingProfile.id} size={18} />
             </div>
             <div style={{ fontSize: '13.5px', color: '#65676B', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Users size={15} /> {profileLoading ? 'Loading...' : `${viewingProfile.followersCount} Followers · ${(viewingProfile.userReels || []).length} Reels`}
