@@ -357,76 +357,30 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
     showToast(`Added audio: ${f.name.slice(0, 22)}`);
   }
 
-  async function handleShareStory() {
-    if (sharing) return;
-    if (createMode === 'text' && !draftText.trim()) { showToast('Write something first'); return; }
-    if (createMode === 'media' && !draftFile) { showToast('Select a photo or video first'); return; }
-    setSharing(true);
+  const [storyUploadPct, setStoryUploadPct] = useState(0);
+  async function handleShareStory(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (createMode === "text" && !draftText.trim()) { showToast("Write something"); return; }
+    if (createMode === "media" && !draftFile) { showToast("Select a photo or video"); return; }
+    const modeSnap = createMode; const textSnap = draftText.trim(); const bgIdxSnap = draftBgIdx; const fileSnap = draftFile; const isVidSnap = draftIsVideo; const audSnap = draftAudioFile; const capSnap = draftCaption.trim(); const prevSnap = draftPreview;
+    setDraftFile(null); setDraftPreview(""); setDraftText(""); setDraftCaption(""); setDraftAudioFile(null); setSharing(false); setCreateOpen(false);
+    setStoryUploadPct(15);
+    const tick = setInterval(() => setStoryUploadPct((p) => (p < 88 ? p + 7 : p)), 900);
     try {
-      let mediaUrl = '';
-      let mediaType = 'image';
-      let audioUrl = '';
-
-      if (createMode === 'text') {
-        mediaType = 'text';
-        mediaUrl = JSON.stringify({ text: draftText.trim(), bg: TEXT_BG_OPTIONS[draftBgIdx] || TEXT_BG_OPTIONS });
-      } else {
-        mediaType = draftIsVideo ? 'video' : 'image';
-        const readyFile = draftIsVideo ? draftFile : await compressStoryImage(draftFile);
-        const ext = (readyFile.name.split('.').pop() || (draftIsVideo ? 'mp4' : 'jpg')).toLowerCase();
-        const path = `story_${userProfile?.id || 'user'}_${Date.now()}.${ext}`;
-        mediaUrl = await uploadStoryFile(path, readyFile, 14000);
-        if (!mediaUrl || mediaUrl.startsWith('blob:')) {
-          showToast('Upload failed. Check connection and try again.');
-          setSharing(false);
-          return;
-        }
-      }
-
-      if (draftAudioFile) {
-        const aExt = (draftAudioFile.name.split('.').pop() || 'mp3').toLowerCase();
-        audioUrl = await uploadStoryFile(`story_audio_${userProfile?.id || 'user'}_${Date.now()}.${aExt}`, draftAudioFile, 30000);
-      }
-
-      const capClean = draftCaption.trim();
-      const authorLabel = capClean ? `${capClean} [🎵 ${myName}]` : myName;
-      const payload = {
-        user_id: userProfile?.id || null,
-        author_name: authorLabel,
-        media_url: mediaUrl,
-        media_type: mediaType,
-        audio_url: audioUrl || null,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      };
-
-      const { data: inserted } = await supabase.from('stories').insert(payload).select('*').single();
-      const newStoryObj = {
-        id: inserted?.id || `st-${Date.now()}`,
-        user_id: userProfile?.id || null,
-        author_name: myName,
-        author_avatar: myAvatar,
-        verified: Boolean(userProfile?.is_verified),
-        media_url: mediaUrl,
-        media_type: mediaType,
-        audio_url: audioUrl,
-        music_title: draftAudioFile ? draftAudioFile.name.replace(/\.[^.]+$/, '') : '',
-        text_content: createMode === 'text' ? draftText.trim() : '',
-        text_bg: TEXT_BG_OPTIONS[draftBgIdx] || TEXT_BG_OPTIONS,
-        caption: capClean,
-        created_at: inserted?.created_at || new Date().toISOString()
-      };
+      let mediaUrl = ""; let mediaType = modeSnap === "text" ? "text" : (isVidSnap ? "video" : "image"); let audioUrl = "";
+      if (modeSnap === "text") { mediaUrl = JSON.stringify({ text: textSnap, bg: TEXT_BG_OPTIONS[bgIdxSnap] || TEXT_BG_OPTIONS }); }
+      else { const readyFile = isVidSnap ? fileSnap : await compressStoryImage(fileSnap); const ext = (readyFile.name.split(".").pop() || (isVidSnap ? "mp4" : "jpg")).toLowerCase(); const path = `story_${userProfile?.id || "user"}_${Date.now()}.${ext}`; const audTask = audSnap ? uploadStoryFile(`story_audio_${userProfile?.id || "user"}_${Date.now()}.${(audSnap.name.split(".").pop() || "mp3").toLowerCase()}`, audSnap, 60000) : Promise.resolve(""); const [mU, aU] = await Promise.all([uploadStoryFile(path, readyFile, 60000), audTask]); mediaUrl = mU; audioUrl = aU; if (!mediaUrl || mediaUrl.startsWith("blob:")) { clearInterval(tick); setStoryUploadPct(0); showToast("Upload failed. Check connection and try again."); return; } }
+      setStoryUploadPct(94);
+      const authorLabel = capSnap ? `${capSnap} [🎵 ${myName}]` : myName;
+      const payload = { user_id: userProfile?.id || null, author_name: authorLabel, media_url: mediaUrl, media_type: mediaType, audio_url: audioUrl || null, expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() };
+      const { data: inserted } = await supabase.from("stories").insert(payload).select().single();
+      const newStoryObj = { id: inserted?.id || `st-${Date.now()}`, user_id: userProfile?.id || null, author_name: myName, author_avatar: myAvatar, verified: Boolean(userProfile?.is_verified), media_url: mediaUrl, media_type: mediaType, audio_url: audioUrl, music_title: audSnap ? audSnap.name.replace(/\.[^.]+$/, "") : "", text_content: modeSnap === "text" ? textSnap : "", text_bg: TEXT_BG_OPTIONS[bgIdxSnap] || TEXT_BG_OPTIONS, caption: capSnap, created_at: inserted?.created_at || new Date().toISOString() };
       setStories((prev) => [...prev, newStoryObj]);
       if (onUploadStory) try { onUploadStory(newStoryObj); } catch (_) {}
-      if (draftPreview) { try { URL.revokeObjectURL(draftPreview); } catch (_) {} }
-      setDraftFile(null); setDraftPreview(''); setDraftText(''); setDraftCaption(''); setDraftAudioFile(null);
-      setCreateOpen(false);
-      showToast('Shared to your story');
-    } catch (_) {
-      showToast('Could not share story');
-    }
-    setSharing(false);
+      if (prevSnap) { try { URL.revokeObjectURL(prevSnap); } catch (_) {} }
+      setStoryUploadPct(100); showToast("Shared to your story");
+    } catch (_) { showToast("Could not share story"); } finally { clearInterval(tick); setTimeout(() => setStoryUploadPct(0), 600); }
   }
-
   async function sendStoryReply(txt) {
     const clean = String(txt || '').trim();
     if (!clean || !activeStory) return;
@@ -480,6 +434,7 @@ export default function Stories({ userProfile, stories: propStories, onUploadSto
       )}
 
       <div style={{ backgroundColor: '#FFF', padding: '12px 10px', marginBottom: '8px', display: 'flex', gap: '8px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {storyUploadPct > 0 && (<div style={{ marginBottom: "10px", padding: "8px 12px", borderRadius: "10px", backgroundColor: "#E7F3FF", border: "1px solid #D0E3FF" }}><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12.5px", fontWeight: 700, color: "#1877F2", marginBottom: "5px" }}><span>⏳ Sharing story...</span><span>{storyUploadPct}%</span></div><div style={{ width: "100%", height: "4px", borderRadius: "4px", backgroundColor: "#CBE0FF", overflow: "hidden" }}><div style={{ width: storyUploadPct + "%", height: "100%", backgroundColor: "#1877F2", transition: "width 0.35s ease" }} /></div></div>)}
         <div onClick={() => { setCreateMode('media'); setCreateOpen(true); }} style={{ flexShrink: 0, width: '108px', height: '188px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E4E6EB', backgroundColor: '#FFF', display: 'flex', flexDirection: 'column', cursor: 'pointer', position: 'relative' }}>
           <div style={{ height: '126px', width: '100%', overflow: 'hidden', backgroundColor: '#F0F2F5' }}>
             <img src={myAvatar} alt={myName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
