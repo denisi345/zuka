@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Users, MessageCircle, Film, Bell, Store, Plus, Search, Menu, SquarePen, CirclePlus, Clapperboard, MessageSquareQuote, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Header({ activeTab, setActiveTab, onOpenMenu, unreadCount = 0, userProfile }) {
+    const [badges, setBadges] = useState({ feed: 0, friends: 0, messenger: 0, reels: 0, notifications: 0, marketplace: 0 });
+  useEffect(() => { const now = new Date().toISOString(); if (["feed", "reels", "marketplace"].includes(activeTab)) { try { localStorage.setItem("zuka_seen_" + activeTab, now); supabase.auth.getUser().then(({ data }) => { if (data?.user?.id) supabase.from("user_tab_views").upsert({ user_id: data.user.id, tab_name: activeTab, last_seen_at: now }); }).catch(() => {}); } catch (_) {} setBadges((b) => ({ ...b, [activeTab]: 0 })); } }, [activeTab]);
+  useEffect(() => { let live = true; async function loadCounts() { try { const { data: au } = await supabase.auth.getUser(); const uid = au?.user?.id; const getSince = (k) => { try { return localStorage.getItem("zuka_seen_" + k) || new Date(Date.now() - 86400000).toISOString(); } catch (_) { return new Date(Date.now() - 86400000).toISOString(); } }; const [pRes, rRes, mRes] = await Promise.all([supabase.from("posts").select("id", { count: "exact", head: true }).gt("created_at", getSince("feed")), supabase.from("posts").select("id", { count: "exact", head: true }).eq("media_type", "video").gt("created_at", getSince("reels")), supabase.from("marketplace_items").select("id", { count: "exact", head: true }).gt("created_at", getSince("marketplace"))]); let frC = 0, msgC = 0, notC = unreadCount || 0; if (uid) { const [frRes, msRes, ntRes] = await Promise.all([supabase.from("friend_requests").select("id", { count: "exact", head: true }).eq("receiver_id", uid).eq("status", "pending"), supabase.from("messages").select("id", { count: "exact", head: true }).eq("receiver_id", uid).eq("is_read", false), supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_read", false)]); frC = frRes.count || 0; msgC = msRes.count || 0; notC = Math.max(notC, ntRes.count || 0); } if (live) setBadges({ feed: pRes.count || 0, friends: frC, messenger: msgC, reels: rRes.count || 0, notifications: notC, marketplace: mRes.count || 0 }); } catch (_) {} } loadCounts(); const ch = supabase.channel("zuka-header-badges").on("postgres_changes", { event: "*", schema: "public" }, () => loadCounts()).subscribe(); return () => { live = false; supabase.removeChannel(ch); }; }, [unreadCount]);
   const [plusOpen, setPlusOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [postingNote, setPostingNote] = useState(false);
 
   const navItems = [
-    { id: 'feed', icon: Home, label: 'Home' },
-    { id: 'friends', icon: Users, label: 'Friends' },
-    { id: 'messenger', icon: MessageCircle, label: 'Messenger' },
-    { id: 'reels', icon: Film, label: 'Reels' },
-    { id: 'notifications', icon: Bell, label: 'Notifications', badge: unreadCount },
-    { id: 'marketplace', icon: Store, label: 'Marketplace' }
+    { id: 'feed', icon: Home, label: 'Home', badge: badges.feed },
+    { id: 'friends', icon: Users, label: 'Friends', badge: badges.friends },
+    { id: 'messenger', icon: MessageCircle, label: 'Messenger', badge: badges.messenger },
+    { id: 'reels', icon: Film, label: 'Reels', badge: badges.reels },
+    { id: 'notifications', icon: Bell, label: 'Notifications', badge: badges.notifications },
+    { id: 'marketplace', icon: Store, label: 'Marketplace', badge: badges.marketplace }
   ];
 
   function triggerAction(type) {
