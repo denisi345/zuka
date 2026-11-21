@@ -53,30 +53,11 @@ export default function Messenger({ currentUser, initialPeer, onOpenUserProfile 
         list = data.filter((p) => String(p.id) !== String(currentUser?.id));
       }
     } catch (_) {}
-    if (list.length === 0) {
-      list = [{ id: 'zuka-official', full_name: 'ZUKA Official', username: 'zuka', is_verified: true, bio: 'Official ZUKA Team' }];
-    }
+
     setPeers(list);
   }
 
-  useEffect(() => {
-    if (!activePeer || activePeer.is_ai || !currentUser?.id) return;
-    loadThread();
-    const channel = supabase
-      .channel(`chat-${currentUser.id}-${activePeer.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        const m = payload?.new;
-        if (!m) return;
-        const match =
-          (String(m.sender_id) === String(currentUser.id) && String(m.receiver_id) === String(activePeer.id)) ||
-          (String(m.sender_id) === String(activePeer.id) && String(m.receiver_id) === String(currentUser.id));
-        if (match) {
-          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-        }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [activePeer?.id, currentUser?.id]);
+  useEffect(() => { if (!activePeer || activePeer.is_ai || !currentUser?.id) return; loadThread(); const iv = setInterval(loadThread, 4000); return () => clearInterval(iv); }, [activePeer?.id, currentUser?.id]);
 
   async function loadThread() {
     try {
