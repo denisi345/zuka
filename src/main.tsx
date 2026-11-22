@@ -1,3 +1,4 @@
+try { if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then((r) => r.forEach((x) => x.unregister())); } catch (_) {}
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
