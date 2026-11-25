@@ -439,9 +439,10 @@ export default function Stories({
               </div>
               <span className="text-[12px] font-semibold text-gray-900 leading-tight text-center">
                 Create story
-              </span>
-            </div>
-          </button>
+            </span>
+          </div>
+        </button>
+      )}
         
 
         {groups.map((grp, gIdx) => {
