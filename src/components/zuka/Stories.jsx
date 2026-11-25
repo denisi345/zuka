@@ -854,13 +854,13 @@ export default function Stories({
     <div className="px-4 py-3 bg-[#242526] border-t border-white/10 space-y-2.5">
       {createMode === 'text' && (
         <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5">{BG_PRESETS.map((p, idx) => (<button key={p.id} type="button" onClick={() => setBgIdx(idx)=} style={{ background: p.bg }} className={`w-7 h-7 rounded-full border-2 flex-shrink-0 ${bgIdx === idx ? 'border-white scale-110' : 'border-transparent'}`} />))}</div>
+          <div className="flex items-center gap-1.5">{BG_PRESETS.map((p, idx) => (<button key={p.id} type="button" onClick={() => setBgIdx(idx)} style={{ background: p.bg }} className={`w-7 h-7 rounded-full border-2 flex-shrink-0 ${bgIdx === idx ? 'border-white scale-110' : 'border-transparent'}`} />))}</div>
           <button type="button" onClick={() => setFontIdx((f) => (f + 1) % FONT_STYLES.length)} className="px-3 py-1 rounded-full bg-white/10 text-xs font-semibold flex-shrink-0">{FONT_STYLES[fontIdx].label}</button>
         </div>
       )}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-        {['📍 Location', '😊 Feeling', '🔥 Mood', '💬 Ask me'].map((lbl) => (<button key={lbl} type="button" onClick={() => addSticker(lbl}} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-medium flex-shrink-0">{lbl}</button>))}
-        {createMode === 'media' && draftPreview && (<button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-medium flex-shrink-0">Change media</button>))}
+        {['📍 Location', '😊 Feeling', '🔥 Mood', '💬 Ask me'].map((lbl) => (<button key={lbl} type="button" onClick={() => addSticker(lbl)} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-medium flex-shrink-0">{lbl}</button>))}
+        {createMode === 'media' && draftPreview && (<button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-medium flex-shrink-0">Change media</button>)}
       </div>
     </div>
 
@@ -882,7 +882,6 @@ export default function Stories({
               {sharing ? 'Sharing...' : 'Share to story'}
             </button>
           </div>
-        </div>
       )}
     </div>
   );
