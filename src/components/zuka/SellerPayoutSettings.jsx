@@ -64,13 +64,6 @@ export function SellerPayoutSettings({ user = null, onClose = () => {} }) {
             <input required type="text" placeholder="Account Number / IBAN" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
             <div className="grid grid-cols-2 gap-2">
               <input type="text" placeholder="SWIFT / BIC Code" value={swiftCode} onChange={(e) => setSwiftCode(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white" />
-        {method === 'bank_wire' ? (
-          <div className="space-y-2 bg-slate-50 p-3 rounded-xl border">
-            <input required type="text" placeholder="Bank Name" value={bankName} onChange={(e) => setBankName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
-            <input required type="text" placeholder="Account Holder Name" value={accountName} onChange={(e) => setAccountName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
-            <input required type="text" placeholder="Account Number / IBAN" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm bg-white" />
-            <div className="grid grid-cols-2 gap-2">
-              <input type="text" placeholder="SWIFT / BIC Code" value={swiftCode} onChange={(e) => setSwiftCode(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white" />
               <input type="text" placeholder="Routing / Sort Code" value={routingCode} onChange={(e) => setRoutingCode(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white" />
             </div>
           </div>
