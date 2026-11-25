@@ -1,0 +1,215 @@
+import ZukaBadge from './ZukaBadge';
+import React, { useEffect, useState } from 'react';
+import { Briefcase, MapPin, ShieldCheck, Globe } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import Post from './Post';
+import CreatePost from './CreatePost';
+
+export default function ProfileTimeline({ profile, isOwnProfile }) {
+  const [subTab, setSubTab] = useState('posts');
+  const [userPosts, setUserPosts] = useState([]);
+  const [userReels, setUserReels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [photoIdx, setPhotoIdx] = useState(null);
+  const [activeReel, setActiveReel] = useState(null);
+  const [modalPost, setModalPost] = useState(null);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    loadTimeline();
+  }, [profile?.id]);
+
+  async function loadTimeline() {
+    setLoading(true);
+    try {
+      const { data: pData } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+      if (Array.isArray(pData)) {
+        setUserPosts(
+          pData.map((item) => ({
+            ...item,
+            author_name: profile.full_name || profile.username || item.author_name || 'ZUKA Member',
+            avatar_url: profile.avatar_url || item.avatar_url || '',
+            is_verified: Boolean(profile.is_verified || item.is_verified)
+          }))
+        );
+      }
+    } catch (_) {}
+
+    try {
+      const { data: rData } = await supabase
+        .from('reels')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+      if (Array.isArray(rData)) setUserReels(rData);
+    } catch (_) {}
+    setLoading(false);
+  }
+
+  async function handleProfileCreatePost(text, mediaUrl, mediaType = 'image') {
+    const authorName = profile.full_name || profile.username || 'ZUKA Member';
+    const temp = {
+      id: `temp-${Date.now()}`,
+      user_id: profile.id,
+      author_name: authorName,
+      avatar_url: profile.avatar_url || '',
+      is_verified: Boolean(profile.is_verified),
+      content: text,
+      image_url: mediaUrl || '',
+      media_type: mediaType,
+      likes_count: 0,
+      created_at: new Date().toISOString()
+    };
+    setUserPosts((prev) => [temp, ...prev]);
+    try {
+      const payload = { user_id: profile.id, content: text, author_name: authorName, is_verified: Boolean(profile.is_verified) };
+      if (mediaUrl) payload.image_url = mediaUrl;
+      await supabase.from('posts').insert(payload);
+      loadTimeline();
+    } catch (_) {}
+  }
+
+  const photosOnly = userPosts.filter((p) => p.image_url && !/\.(mp4|webm|mov|m4v)(\?|$)/i.test(p.image_url));
+
+  return (
+    <div style={{ marginTop: '12px' }}>
+      <div style={{ display: 'flex', gap: '8px', padding: '10px 14px', borderTop: '1px solid #E4E6EB', borderBottom: '1px solid #E4E6EB', backgroundColor: '#FFFFFF' }}>
+        {[
+          { id: 'posts', label: 'Posts' },
+          { id: 'photos', label: 'Photos' },
+          { id: 'reels', label: 'Reels' }
+        ].map((t) => {
+          const active = subTab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setSubTab(t.id)}
+              style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', backgroundColor: active ? '#E7F3FF' : 'transparent', color: active ? '#1877F2' : '#65676B', fontWeight: 700, fontSize: '14px', cursor: 'pointer' }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+      {subTab === 'posts' && (
+        <div style={{ backgroundColor: '#F0F2F5', paddingBottom: '24px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '14px', borderBottom: '1px solid #E4E6EB' }}>
+            <div style={{ fontWeight: 800, fontSize: '17px', color: '#050505', marginBottom: '10px' }}>Details</div>
+            {profile.bio && <div style={{ fontSize: '14px', color: '#050505', marginBottom: '10px' }}>{profile.bio}</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#050505' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#65676B' }}>
+                <Globe size={17} /> <span>Profile · Digital creator</span>
+              </div>
+              {profile.location && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MapPin size={17} color="#65676B" /> <span>Lives in <strong>{profile.location}</strong></span>
+                </div>
+              )}
+              {profile.is_verified && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1877F2', fontWeight: 600 }}>
+                  <ShieldCheck size={17} /> <span>Verified ZUKA Account</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {isOwnProfile && (
+            <div style={{ marginTop: '8px' }}>
+              <CreatePost userProfile={profile} onCreatePost={handleProfileCreatePost} />
+            </div>
+          )}
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '24px', color: '#65676B', fontSize: '14px' }}>Loading posts...</div>
+          ) : userPosts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '28px 16px', color: '#65676B', fontSize: '14px', backgroundColor: '#FFFFFF', marginTop: '8px' }}>
+              No posts yet on this profile.
+            </div>
+          ) : (
+            userPosts.map((p) => (
+              <Post
+                key={p.id}
+                post={p}
+                currentUserId={profile.id}
+                onDeletePost={(id) => setUserPosts((prev) => prev.filter((x) => x.id !== id))}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {subTab === 'photos' && (
+        <div style={{ backgroundColor: '#FFFFFF', padding: '8px' }}>
+          {photosOnly.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#65676B', fontSize: '14px' }}>No photos uploaded yet.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+              {photosOnly.map((ph) => (
+                <img onClick={() => setModalPost(ph)} key={ph.id} src={ph.image_url} alt="" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: '4px' }} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {modalPost && (
+        <div onClick={() => setModalPost(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.88)', overflowY: 'auto', padding: '12px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px', margin: '0 auto', paddingBottom: '28px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ color: '#FFF', fontWeight: 700, fontSize: '15px' }}>{profile.full_name || profile.username || 'ZUKA'}</span>
+              <button type="button" onClick={() => setModalPost(null)} style={{ backgroundColor: '#FFF', color: '#050505', border: 'none', borderRadius: '20px', padding: '6px 14px', fontWeight: 700, cursor: 'pointer' }}>✕ Close</button>
+            </div>
+            <Post post={modalPost} currentUserId={profile?.id} />
+          </div>
+        </div>
+      )}
+      {activeReel && (
+        <div onClick={() => setActiveReel(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}><span>{profile?.full_name || profile?.username || 'ZUKA Member'}</span>{profile?.is_verified && <ZukaBadge size={14} />}<span style={{ fontSize: '12px', color: '#B0B3B8', marginLeft: '4px' }}>· Reel</span></div>
+            <button type="button" onClick={() => setActiveReel(null)} style={{ border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF', borderRadius: '50%', width: '34px', height: '34px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+          <div onClick={(e) => e.stopPropagation()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <video src={activeReel.video_url} controls autoPlay playsInline style={{ maxWidth: '100%', maxHeight: '78vh', borderRadius: '8px' }} />
+          </div>
+          <div style={{ textAlign: 'center', color: '#E4E6EB', fontSize: '13px' }}>{activeReel.caption || activeReel.content || 'Tap outside video to close'}</div>
+        </div>
+      )}
+      {photoIdx !== null && photosOnly[photoIdx] && (
+        <div onClick={() => setPhotoIdx(null)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.96)', zIndex: 150, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '14px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFFFFF' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}><span>{profile?.full_name || profile?.username || 'ZUKA Member'}</span>{profile?.is_verified && <ZukaBadge size={14} />}</div>
+              <span style={{ fontSize: '12px', color: '#B0B3B8' }}>· {photoIdx + 1} / {photosOnly.length}</span>
+            </div>
+            <button type="button" onClick={() => setPhotoIdx(null)} style={{ border: 'none', backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF', borderRadius: '50%', width: '34px', height: '34px', fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>✕</button>
+          </div>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {photoIdx > 0 && <button type="button" onClick={() => setPhotoIdx(photoIdx - 1)} style={{ position: 'absolute', left: '6px', border: 'none', backgroundColor: 'rgba(255,255,255,0.22)', color: '#FFFFFF', borderRadius: '50%', width: '38px', height: '38px', fontSize: '22px', fontWeight: 700, cursor: 'pointer' }}>‹</button>}
+            <img src={photosOnly[photoIdx].image_url} alt="" style={{ maxWidth: '100%', maxHeight: '78vh', objectFit: 'contain', borderRadius: '6px' }} />
+            {photoIdx < photosOnly.length - 1 && <button type="button" onClick={() => setPhotoIdx(photoIdx + 1)} style={{ position: 'absolute', right: '6px', border: 'none', backgroundColor: 'rgba(255,255,255,0.22)', color: '#FFFFFF', borderRadius: '50%', width: '38px', height: '38px', fontSize: '22px', fontWeight: 700, cursor: 'pointer' }}>›</button>}
+          </div>
+          <div style={{ textAlign: 'center', color: '#E4E6EB', fontSize: '13px' }}>{photosOnly[photoIdx].content || 'Tap outside photo to close'}</div>
+        </div>
+      )}
+      {subTab === 'reels' && (
+        <div style={{ backgroundColor: '#FFFFFF', padding: '8px' }}>
+          {userReels.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#65676B', fontSize: '14px' }}>No reels uploaded yet.</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+              {userReels.map((rl) => (
+                <video onClick={() => setModalPost({ ...rl, image_url: rl.video_url, media_type: 'video', content: rl.caption || rl.content || '', author_name: profile.full_name || profile.username || rl.author_name, avatar_url: profile.avatar_url || rl.avatar_url, is_verified: Boolean(profile.is_verified || rl.is_verified) })} key={rl.id} src={rl.video_url} muted playsInline style={{ width: '100%', aspectRatio: '9 / 16', objectFit: 'cover', borderRadius: '6px', backgroundColor: '#000000' }} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,50 @@
+name: ZUKA Autonomous AI Agent
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  zuka-autonomous-dev:
+    if: contains(github.event.issue.body, '@zuka-ai') || contains(github.event.comment.body, '@zuka-ai')
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout ZUKA repository
+        uses: actions/checkout@v4
+
+      - name: Install OpenCode AI Agent
+        run: npm install -g opencode-ai
+
+      - name: Run Autonomous Coding Agent
+        env:
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.ZUKA }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_BODY: ${{ github.event.comment.body || github.event.issue.body }}
+        run: |
+          git config user.name "ZUKA AI Agent"
+          git config user.email "agent@zuka.app"
+          BRANCH="ai-fix-${{ github.run_number }}"
+          git checkout -b "$BRANCH"
+
+          TASK="MANDATORY EXECUTION RULE: You MUST write actual code changes to the repository files on disk to fulfill this request. Do NOT exit with zero changes. Never use the word Facebook in visible UI text (always use ZUKA). Never use hardcoded personal names. Always preserve existing Supabase IDs and scripts, run npm run build to verify zero errors, and finish. User Request: $ISSUE_BODY"
+
+          opencode run -m "google/gemini-3.8-flash" "$TASK" || \
+          opencode run -m "openrouter/openrouter/free" "$TASK"
+
+          git add .
+          if git diff --cached --quiet; then
+            echo "ERROR: Agent failed to modify any files."
+            exit 1
+          fi
+          git commit -m "ZUKA AI update #${{ github.run_number }}"
+          git push -u origin "$BRANCH"
+          gh pr create --title "ZUKA AI Update #${{ github.run_number }}" --body "Automated ZUKA update." --base main

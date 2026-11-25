@@ -1,0 +1,6 @@
+{
+  "name": "ZUKA Social Super App",
+  "description": "ZUKA - Facebook-like super app featuring news feed, stories, reels, groups, live, marketplace, AI moderation, Messenger with ZUKA AI, and secret owner panel.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
