@@ -55,6 +55,8 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
           </div>
         ) : (
           <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>{AMOUNTS.map((v) => <button key={v} type="button" onClick={() => setAmount(v)} style={{ padding: "6px 12px", borderRadius: "999px", border: Number(amount) === v ? "1.5px solid #F59E0B" : "1px solid #CED0D4", backgroundColor: Number(amount) === v ? "#FEF3C7" : "#FFF", fontWeight: 600, fontSize: "13px" }}>{v.toLocaleString()}</button>)}</div>
               {AMOUNTS.map((v) => <button key={v} type="button" onClick={() => setAmount(v)} style={{ padding: '6px 12px', borderRadius: '999px', border: Number(amount) === v ? '1.5px solid #F59E0B' : '1px solid #CED0D4', backgroundColor: Number(amount) === v ? '#FEF3C7' : '#FFF', fontWeight: 600, fontSize: '13px' }}>{v.toLocaleString()}</button>)}
             </div>
+            <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Custom amount" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', fontSize: '14px' }} />
+            <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', fontSize: '14px', backgroundColor: '#FFF' }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
