@@ -19,8 +19,14 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
     if (!amount || Number(amount) < 100 || sending) return;
     setSending(true);
     try {
-      await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), provider, phone, message });
+            await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), provider, phone, message });
       setDone(true); onSent?.();
     } catch {}
     setSending(false);
   };
+      setDone(true); onSent?.();
+    } catch {}
+    setSending(false);
+  };
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 13800, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
