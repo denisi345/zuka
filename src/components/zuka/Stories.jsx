@@ -450,7 +450,7 @@ export default function Stories({
           const hasUnseen = grp.items.some((it) => !viewedIds.has(it.id));
           return (
             <button
-              key={grp.userId}
+              key={grp.user_id}
               type="button"
               onClick={() => openViewer(gIdx, 0)}
               className="relative flex-shrink-0 w-[112px] h-[200px] rounded-xl overflow-hidden bg-gray-900 shadow-sm group text-left"
@@ -466,7 +466,7 @@ export default function Stories({
               ) : latest.media_url ? (
                 <img
                   src={latest.media_url}
-                  alt={grp.userName || 'Story'}
+                  alt={grp.author_name || 'Story'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
               ) : (
@@ -483,20 +483,20 @@ export default function Stories({
                   hasUnseen ? 'bg-[#1877F2]' : 'bg-gray-300'
                 }`}
               >
-                {grp.avatarUrl ? (
+                {grp.author_avatar ? (
                   <img
-                    src={grp.avatarUrl}
-                    alt={grp.userName || 'User'}
+                    src={grp.author_avatar}
+                    alt={grp.author_name || 'User'}
                     className="w-full h-full rounded-full object-cover border-2 border-white"
                   />
                 ) : (
                   <div className="w-full h-full rounded-full bg-gray-700 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
-                    {(grp.userName || 'U').charAt(0).toUpperCase()}
+                    {(grp.author_name || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               <span className="absolute bottom-2 left-2 right-2 text-white text-[12px] font-semibold leading-tight line-clamp-2 drop-shadow">
-                {grp.userId === user?.id ? 'Your story' : grp.userName || 'User'}
+                {grp.user_id === user?.id ? 'Your story' : grp.author_name || 'User'}
               </span>
             </button>
           );
@@ -597,13 +597,13 @@ export default function Stories({
                 playsInline
                 muted={muted}
                 onEnded={nextStory}
-                className="max-h-full max-w-full object-contain"
+                className="w-full h-full object-cover"
               />
             ) : activeStory.media_url ? (
               <img
                 src={activeStory.media_url}
                 alt="Story"
-                className="max-h-full max-w-full object-contain"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div
