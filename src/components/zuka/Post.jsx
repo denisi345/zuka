@@ -1,3 +1,4 @@
+import CreatorGiftModal from "./CreatorGiftModal";
 import PostAudioSheet from "./PostAudioSheet";
 import React, { useState } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2, Edit3, Pin, EyeOff, AlertCircle, UserMinus, Volume2, VolumeX } from "lucide-react";
