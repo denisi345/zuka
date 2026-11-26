@@ -29,7 +29,6 @@ export default function GlobalSearch(props) {
     const c = term.trim(); if (!c) return;
     const next = [c, ...recent.filter((x) => x.toLowerCase() !== c.toLowerCase())].slice(0, 8);
     setRecent(next); try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {} };
-  };
   const removeRecent = (term) => {
     const next = recent.filter((x) => x !== term);
     setRecent(next); try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {}
@@ -40,10 +39,6 @@ export default function GlobalSearch(props) {
     }
     return [];
   };
-    for (const t of tables) {
-      try { const { data, error } = await fn(supabase.from(t)); if (!error && Array.isArray(data)) return data; } catch {}
-    }
-    return [];
   const sendFriendReq = async (targetId) => {
     setSentIds((prev) => ({ ...prev, [targetId]: true }));
     try { await supabase.from('friendships').insert({ requester_id: currentUser?.id, addressee_id: targetId, status: 'pending' }); } catch {}
@@ -100,7 +95,6 @@ export default function GlobalSearch(props) {
                 <button type="button" onClick={() => removeRecent(item)} style={{ border: "none", background: "none" }}><MoreHorizontal size={18} color="#65676B" /></button>
               </div>
             ))}
-              </div>
             ))}
             {suggested.length > 0 && (
               <div style={{ marginTop: '14px', borderTop: '1px solid #E4E6EB', paddingTop: '12px' }}>
