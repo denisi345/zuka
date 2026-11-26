@@ -517,21 +517,21 @@ export default function Stories({
             </div>
             <div className="flex items-center justify-between text-white">
               <div className="flex items-center gap-2.5 min-w-0">
-                {activeGroup.avatarUrl ? (
+                {activeGroup.author_avatar ? (
                   <img
-                    src={activeGroup.avatarUrl}
-                    alt={activeGroup.userName || 'User'}
+                    src={activeGroup.author_avatar}
+                    alt={activeGroup.author_name || 'User'}
                     className="w-9 h-9 rounded-full object-cover border border-white/40"
                   />
                 ) : (
                   <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center font-bold text-sm">
-                    {(activeGroup.userName || 'U').charAt(0).toUpperCase()}
+                    {(activeGroup.author_name || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold text-sm truncate">
-                      {activeGroup.userName || 'User'}
+                      {activeGroup.author_name || 'User'}
                     </span>
                     <span className="text-xs text-white/75 flex-shrink-0">
                       {timeAgo(activeStory.created_at)}
@@ -597,13 +597,13 @@ export default function Stories({
                 playsInline
                 muted={muted}
                 onEnded={nextStory}
-                className="w-full h-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             ) : activeStory.media_url ? (
               <img
                 src={activeStory.media_url}
                 alt="Story"
-                className="w-full h-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             ) : (
               <div
@@ -822,9 +822,9 @@ export default function Stories({
         {createMode === 'media' ? (
           draftPreview ? (
             draftFile?.type?.startsWith('video') ? (
-              <video src={draftPreview} controls playsInline className="w-full h-full object-cover" />
+              <video src={draftPreview} controls playsInline className="max-h-full max-w-full object-contain" />
             ) : (
-              <img src={draftPreview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={draftPreview} alt="Preview" className="max-h-full max-w-full object-contain" />
             )
           ) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center gap-3 p-6 text-center">
