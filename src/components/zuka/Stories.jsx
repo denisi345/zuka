@@ -651,11 +651,11 @@ export default function Stories({
             {isOwnStory ? (
               <button
                 type="button"
-                onClick={() => openInsights(activeStory.id)}
-                className="flex items-center gap-2 text-white text-sm font-medium flex-col items-start py-1 w-full"
+                onClick={() => openInsights(activeStory.id)} className="flex flex-col items-start text-white"
+                className="flex items-center gap-2 text-white text-sm font-medium flex-col items-start py-1"
               >
                 <span className="text-lg font-bold leading-none">^</span>
-                <span>{(activeStory.views_count || 0) > 0 ? `${activeStory.views_count} viewers` : "No viewers yet"}</span><span onClick={(e) => { e.stopPropagation(); setViewOpen(false); setCreateOpen(true); }} className="ml-auto flex flex-col items-center gap-1"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold">+</span><span className="text-xs font-semibold">Add story</span></span>
+                <span>{(activeStory.views_count || 0) > 0 ? `${activeStory.views_count} viewers` : "No viewers yet"}</span>
               </button>
             ) : (
               <div className="flex items-center gap-2">
