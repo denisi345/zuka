@@ -523,7 +523,7 @@ export default function Stories({
                     alt={activeGroup.author_name || 'User'}
                     className="w-9 h-9 rounded-full object-cover border border-white/40"
                   />
-                <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
+                ) : (
                   <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center font-bold text-sm">
                     {(activeGroup.author_name || 'U').charAt(0).toUpperCase()}
                   </div>
