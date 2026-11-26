@@ -44,3 +44,11 @@ export default function GlobalSearch(props) {
     catch { return []; }
   });
   const [results, setResults] = useState({ people: [], posts: [], reels: [], market: [], pages: [], groups: [] });
+  useEffect(() => {
+    supabase.from('profiles').select('id, full_name, username, avatar_url, is_verified').neq('id', currentUser?.id || '').limit(8).then(({ data }) => { if (data) setSuggested(data); });
+  }, [currentUser?.id]);
+  const saveRecent = (term) => {
+    const c = term.trim(); if (!c) return;
+    const next = [c, ...recent.filter((x) => x.toLowerCase() !== c.toLowerCase())].slice(0, 8);
+    setRecent(next); try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {}
+  };
