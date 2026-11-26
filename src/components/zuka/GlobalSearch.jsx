@@ -76,3 +76,8 @@ export default function GlobalSearch(props) {
     if (!q) { setResults({ people: [], posts: [], reels: [], market: [], pages: [], groups: [] }); setLoading(false); return; }
     setLoading(true);
     const timer = setTimeout(async () => {
+      const p = `%${q}%`;
+      const [people, posts, reels, market, pages, groups] = await Promise.all([
+        safeQuery(['profiles'], (tb) => tb.select('id, full_name, username, avatar_url, is_verified, bio').or(`full_name.ilike.${p},username.ilike.${p}`).limit(15)),
+        safeQuery(['posts'], (tb) => tb.select('id, user_id, content, image_url, video_url, created_at, profiles:user_id(id, full_name, avatar_url, is_verified)').ilike('content', p).order('created_at', { ascending: false }).limit(15)),
+        safeQuery(['reels'], (tb) => tb.select('id, user_id, caption, video_url, thumbnail_url, created_at, profiles:user_id(id, full_name, avatar_url, is_verified)').ilike('caption', p).order('created_at', { ascending: false }).limit(12)),
