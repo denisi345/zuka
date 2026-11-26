@@ -161,3 +161,7 @@ export default function GlobalSearch(props) {
             {(tab === 'all' || tab === 'people') && results.people.length > 0 && (
               <div>
                 <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>People</div>
+                {results.people.map((p) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+                    <div onClick={() => { saveRecent(query); onOpenUserProfile?.(p.id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                      <img src={p.avatar_url || '/placeholder.svg'} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
