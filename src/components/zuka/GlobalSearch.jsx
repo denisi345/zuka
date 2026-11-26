@@ -175,3 +175,9 @@ export default function GlobalSearch(props) {
                 ))}
               </div>
             )}
+                ))}
+              </div>
+            )}
+            {(tab === 'all' || tab === 'posts') && results.posts.length > 0 && (
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>Posts</div>
