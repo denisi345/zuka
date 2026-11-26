@@ -409,7 +409,7 @@ export default function Stories({
   const handleFileChange = pickMedia;
   const loadStories = async () => {};
 
-  const isOwnStory = Boolean(user && activeGroup && activeGroup.userId === user.id);
+  const isOwnStory = Boolean(user && activeGroup && activeGroup.user_id === user.id);
 
   return (
     <div className="w-full bg-white border-b border-gray-200 py-3 px-2 select-none">
