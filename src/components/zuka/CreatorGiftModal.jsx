@@ -31,7 +31,13 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   return (
         <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 13800, backgroundColor: "rgba(0,0,0,0.55)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '480px', backgroundColor: '#FFF', borderRadius: '18px 18px 0 0', padding: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}><div style={{ fontWeight: 700, fontSize: "16px", display: "flex", alignItems: "center", gap: "6px" }}><Sparkles size={18} color="#F59E0B" /><span>Send Creator Gift</span></div><button type="button" onClick={onClose} style={{ border: "none", background: "#F0F2F5", borderRadius: "50%", width: "30px", height: "30px" }}><X size={16} /></button></div>
           <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><Sparkles size={18} color="#F59E0B" /><span>Send Creator Gift</span></div>
           <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
         </div>
+        {isOwner && (
+          <button type="button" onClick={onTogglePrivacy} style={{ width: '100%', marginBottom: '12px', padding: '10px 12px', borderRadius: '10px', border: '1px solid #FDE68A', backgroundColor: '#FFFBEB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#92400E' }}>
+            <span>{hideGifts ? '✨✨✨✨ Miamala Imefichwa (Gusa kuonyesha namba)' : 'Namba Zinaonekana (Gusa kuficha kwa ✨✨✨✨)'}</span>
+            {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
