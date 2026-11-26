@@ -420,7 +420,7 @@ export default function Stories({
             onClick={openCreator}
             className="relative flex-shrink-0 w-[112px] h-[200px] rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm flex flex-col text-left group"
           >
-            <div className="relative w-full h-[146px] bg-gray-100 overflow-hidden">{activeStory?.audio_url&&(<audio ref={storyAudioRef} src={activeStory?.audio_url} autoPlay muted={muted} onTimeUpdate={(e)=>{const a=e.currentTarget;if(a.duration)setProgress((a.currentTime/a.duration)*100);}} onEnded={nextStory} />)}
+            <div className="relative w-full h-[146px] bg-gray-100 overflow-hidden">
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
