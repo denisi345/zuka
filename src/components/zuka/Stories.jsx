@@ -661,7 +661,7 @@ export default function Stories({
                     </button>
                   )}
                 </form>
-                <div className="flex items-center gap-1.5"><button
+                <div className="flex items-center gap-1.5">
                   {QUICK_REACTIONS.slice(0, 4).map((emoji) => (
                     <button
                       key={emoji}
