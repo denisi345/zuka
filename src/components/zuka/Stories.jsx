@@ -664,7 +664,7 @@ export default function Stories({
                     e.preventDefault();
                     sendReply();
                   }}
-                  className="flex-1 flex items-center bg-white/15 border border-white/25 rounded-full px-3.5 py-1.5"
+                  className="flex-1 flex items-center bg-black/25 border border-white/60 rounded-full px-4 py-2"
                 >
                   <input
                     type="text"
@@ -686,12 +686,12 @@ export default function Stories({
                   )}
                 </form>
                 <div className="flex items-center gap-1">
-                  {QUICK_REACTIONS.slice(0, 4).map((emoji) => (
+                  {['❤️', '👍', '😂', '😮'].map((emoji) => (
                     <button
                       key={emoji}
                       type="button"
                       onClick={() => sendReply(emoji)}
-                      className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-lg active:scale-125 transition-transform"
+                      className="w-9 h-9 rounded-full bg-black/35 border border-white/35 hover:bg-black/55 flex items-center justify-center text-lg active:scale-125 transition-transform"
                     >
                       {emoji}
                     </button>
