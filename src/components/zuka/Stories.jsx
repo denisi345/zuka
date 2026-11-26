@@ -483,7 +483,7 @@ export default function Stories({
                   hasUnseen ? 'bg-[#1877F2]' : 'bg-gray-300'
                 }`}
               >
-                {grp.items.length > 1 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#1877F2] text-white text-[10px] font-bold flex items-center justify-center border border-white">{grp.items.length}</span>}{grp.author_avatar ? (
+                {grp.items.length > 1 && <span className="absolute -top-0.5 left-[66px] min-w-[18px] h-[18px] px-1 rounded-full bg-[#1877F2] text-white text-[10px] font-bold flex items-center justify-center border border-white">{grp.items.length}</span>}{grp.author_avatar ? (
                   <img
                     src={grp.author_avatar}
                     alt={grp.author_name || 'User'}
@@ -631,7 +631,7 @@ export default function Stories({
                 className="flex items-center gap-2 text-white text-sm font-medium flex-col items-start py-1"
               >
                 <span className="text-lg font-bold leading-none">^</span>
-                <span>{(activeStory.views_count || 0) > 0 ? `${activeStory.views_count} viewers` : "No viewers yet"}</span>
+                <span>{(activeStory.views_count || 0) > 0 ? `${activeStory.views_count} viewers` : "No viewers yet"}</span><span onClick={(e) => { e.stopPropagation(); setViewOpen(false); setCreateOpen(true); }} className="fixed right-3 bottom-3 z-30 flex flex-col items-center gap-1 text-white cursor-pointer"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></span>
               </button>
             ) : (
               <div className="flex items-center gap-2">
