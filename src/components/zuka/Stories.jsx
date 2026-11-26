@@ -503,7 +503,7 @@ export default function Stories({
         })}
       </div>
       {viewOpen && activeStory && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between select-none">
+        <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#6e5d56] via-[#1c1917] to-[#5e5244] flex flex-col justify-between select-none">
           <div className="relative z-20 pt-3 px-3 bg-gradient-to-b from-black/70 to-transparent">
             <div className="flex gap-1 mb-2.5">
               {activeGroup.items.map((item, idx) => {
@@ -597,13 +597,13 @@ export default function Stories({
                 playsInline
                 muted={muted}
                 onEnded={nextStory}
-                className="w-full h-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             ) : activeStory.media_url ? (
               <img
                 src={activeStory.media_url}
                 alt="Story"
-                className="w-full h-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             ) : (
               <div
@@ -822,9 +822,9 @@ export default function Stories({
         {createMode === 'media' ? (
           draftPreview ? (
             draftFile?.type?.startsWith('video') ? (
-              <video src={draftPreview} controls playsInline className="w-full h-full object-cover" />
+              <video src={draftPreview} controls playsInline className="max-h-full max-w-full object-contain" />
             ) : (
-              <img src={draftPreview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={draftPreview} alt="Preview" className="max-h-full max-w-full object-contain" />
             )
           ) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center gap-3 p-6 text-center">
