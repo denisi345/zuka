@@ -41,3 +41,9 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
             {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
+        {isOwner && (
+          <button type="button" onClick={onTogglePrivacy} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '10px', border: '1px solid #FDE68A', backgroundColor: '#FFFBEB', display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#92400E' }}>
+            <span>{hideGifts ? '✨✨✨✨ Imefichwa (Gusa kuonyesha)' : 'Namba Wazi (Gusa kuficha)'}</span>
+            {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
