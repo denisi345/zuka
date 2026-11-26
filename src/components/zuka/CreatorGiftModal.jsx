@@ -3,7 +3,7 @@ import { X, Sparkles, EyeOff, Eye, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const AMOUNTS = Array.of(500, 1000, 2000, 5000, 10000);
-const PROVIDERS = ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'Halopesa'];
+const PROVIDERS = ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'Visa / Mastercard', 'PayPal'];
 
 export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGifts, onTogglePrivacy, onSent, onClose }) {
   const [amount, setAmount] = useState(1000);
@@ -43,7 +43,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
         )}
         {isOwner && (
           <button type="button" onClick={onTogglePrivacy} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '10px', border: '1px solid #FDE68A', backgroundColor: '#FFFBEB', display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#92400E' }}>
-            <span>{hideGifts ? '✨✨✨✨ Imefichwa (Gusa kuonyesha)' : 'Namba Wazi (Gusa kuficha)'}</span>
+            <span>{hideGifts ? '✨✨✨✨ Hidden (Tap to show count)' : 'Public count (Tap to hide with ✨✨✨✨)'}</span>
             {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
