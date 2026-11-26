@@ -104,3 +104,6 @@ export default function GlobalSearch(props) {
   const totalCount = results.people.length + results.posts.length + results.reels.length + results.market.length + results.pages.length + results.groups.length;
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: '#FFFFFF', overflowY: 'auto', paddingBottom: '32px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#FFFFFF', padding: '10px 12px', borderBottom: '1px solid #E4E6EB' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button type="button" onClick={onBack} style={{ border: 'none', background: 'none', padding: '4px', cursor: 'pointer' }}><ChevronLeft size={26} color="#050505" /></button>
