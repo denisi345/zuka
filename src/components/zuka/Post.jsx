@@ -51,12 +51,12 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
   const fullVidRef = React.useRef(null);
   React.useEffect(() => { const el = feedVidRef.current; if (!el || !isVideo) return; const obs = new IntersectionObserver(([ent]) => { if (ent.isIntersecting && !videoFullOpen) { el.play().catch(() => {}); } else { el.pause(); } }, { threshold: 0.55 }); obs.observe(el); return () => obs.disconnect(); }, [isVideo, videoFullOpen]);
     function fmtVidSec(sec) { const m = Math.floor((sec || 0) / 60); const r = Math.floor((sec || 0) % 60); return m + ":" + (r < 10 ? "0" : "") + r; }
-  const audioRef = React.useRef(null); const photoMediaRef = React.useRef(null); React.useEffect(() => { const el = photoMediaRef.current; if (!el || !parsedAudio) return; const obs = new IntersectionObserver(([ent]) => { if (!ent.isIntersecting const audioRef = React.useRef(null);const audioRef = React.useRef(null); audioRef.current) { audioRef.current.pause(); setAudioPlaying(false); } }, { threshold: 0.45 }); obs.observe(el); return () => { obs.disconnect(); if (audioRef.current) audioRef.current.pause(); }; }, [parsedAudio?.url]);
+  const audioRef = React.useRef(null);
   const audioMatch = String(contentText || "").match(/\[zuka_audio:([^|\]]+)\|([^\]]+)\]/);
   const parsedAudio = audioMatch ? { title: audioMatch.at(1), url: audioMatch.at(2) } : null;
   const cleanText = String(contentText || "").replace(/\n?\[zuka_audio:[^\]]+\]/g, "").trim();
 
-  const isLiveOrDemo = String(post.id).startsWith('live-') || String(post.id).startsWith('funny-') || String(post.id).startsWith('temp-');
+  const photoMediaRef = React.useRef(null); React.useEffect(() => { const el = photoMediaRef.current; if (!el || !parsedAudio) return; const obs = new IntersectionObserver(([ent]) => { if (!ent.isIntersecting && audioRef.current) { audioRef.current.pause(); setAudioPlaying(false); } }, { threshold: 0.45 }); obs.observe(el); return () => { obs.disconnect(); if (audioRef.current) audioRef.current.pause(); }; }, [parsedAudio]); const isLiveOrDemo = String(post.id).startsWith('live-') || String(post.id).startsWith('funny-') || String(post.id).startsWith('temp-');
   const authorName = post.author_name || 'ZUKA Member';
   const isOwner = currentUserId && String(post.user_id) === String(currentUserId);
 
