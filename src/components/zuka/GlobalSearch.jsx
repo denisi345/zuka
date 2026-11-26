@@ -181,3 +181,11 @@ export default function GlobalSearch(props) {
             {(tab === 'all' || tab === 'posts') && results.posts.length > 0 && (
               <div>
                 <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>Posts</div>
+                {results.posts.map((post) => (
+                  <div key={post.id} onClick={() => { saveRecent(query); onOpenTab?.('feed'); }} style={{ padding: '8px 0', borderBottom: '1px solid #F0F2F5' }}>
+                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{post.profiles?.full_name || 'Zuka User'}</div>
+                    <p style={{ fontSize: '14px', margin: '4px 0' }}>{post.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
