@@ -60,3 +60,33 @@ export default function GlobalSearch({ currentUser, onBack, onOpenUserProfile, o
     }, 280);
     return () => clearTimeout(timer);
   }, [query]);
+
+  const TABS = [
+    { id: 'all', label: 'All' },
+    { id: 'people', label: `People (${results.people.length})` },
+    { id: 'posts', label: `Posts (${results.posts.length})` },
+    { id: 'reels', label: `Reels (${results.reels.length})` },
+    { id: 'market', label: `Marketplace (${results.market.length})` },
+    { id: 'communities', label: `Pages & Groups (${results.pages.length + results.groups.length})` },
+  ];
+  const totalCount = results.people.length + results.posts.length + results.reels.length + results.market.length + results.pages.length + results.groups.length;
+
+  return (
+    <div style={{ backgroundColor: '#F0F2F5', minHeight: 'calc(100vh - 56px)', paddingBottom: '32px' }}>
+      <div style={{ backgroundColor: '#FFFFFF', padding: '10px 12px', borderBottom: '1px solid #E4E6EB', position: 'sticky', top: '56px', zIndex: 30 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button type="button" onClick={onBack} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', backgroundColor: '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}><ArrowLeft size={20} color="#050505" /></button>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#F0F2F5', borderRadius: '999px', padding: '0 12px', height: '40px' }}>
+            <Search size={18} color="#65676B" style={{ flexShrink: 0 }} />
+            <input type="text" autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveRecent(query); }} placeholder="Search Zuka" style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '0 8px', fontSize: '15px', color: '#050505' }} />
+            {query && <button type="button" onClick={() => setQuery('')} style={{ border: 'none', background: '#CED0D4', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={13} color="#050505" /></button>}
+          </div>
+        </div>
+        {query.trim() && (
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginTop: '10px', paddingBottom: '2px' }} className="no-scrollbar">
+            {TABS.map((t) => (
+              <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{ padding: '6px 14px', borderRadius: '999px', border: 'none', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', backgroundColor: tab === t.id ? '#E7F3FF' : '#F0F2F5', color: tab === t.id ? '#1877F2' : '#050505' }}>{t.label}</button>
+            ))}
+          </div>
+        )}
+      </div>
