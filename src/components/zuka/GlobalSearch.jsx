@@ -71,3 +71,8 @@ export default function GlobalSearch(props) {
     setSentIds((prev) => ({ ...prev, [targetId]: true }));
     try { await supabase.from('friendships').insert({ requester_id: currentUser?.id, addressee_id: targetId, status: 'pending' }); } catch {}
   };
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) { setResults({ people: [], posts: [], reels: [], market: [], pages: [], groups: [] }); setLoading(false); return; }
+    setLoading(true);
+    const timer = setTimeout(async () => {
