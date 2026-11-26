@@ -761,7 +761,7 @@ export default function Stories({
     <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
       <button type="button" onClick={() => setCreateOpen(false)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><X className="w-5 h-5" /></button>
       <span className="text,[17px] font-bold">Create story</span>
-      <button type="button" onClick={handleCreateStory} disabled={creating} className="px-4 py-1.5 rounded-lg bg-[#1877F2] disabled:opacity-50 text-sm font-semibold">{creating ? 'Sharing...' : 'Share'}</button>
+      <button type="button" onClick={shareStory} disabled={creating} className="px-4 py-1.5 rounded-lg bg-[#1877F2] disabled:opacity-50 text-sm font-semibold">{creating ? 'Sharing...' : 'Share'}</button>
     </div>
     <div className="grid grid-cols-3 gap-2 px-4 pt-3 pb-2">
       <button type="button" onClick={() => { setCreateMode('media'); if (!draftPreview) fileInputRef.current?.click(); }} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'media' ? 'bg-[ #1877F2]/20 border-[ #1877F2]' : 'bg-[ #242526] border-white/10 text-white/80'}`}>
