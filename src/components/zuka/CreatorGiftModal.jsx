@@ -47,3 +47,10 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
             {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
+        {done ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <CheckCircle2 size={42} color="#16A34A" style={{ margin: '0 auto 8px' }} />
+            <div style={{ fontWeight: 700, fontSize: '16px' }}>Gift Sent Successfully!</div>
+            <button type="button" onClick={onClose} style={{ marginTop: '14px', width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
+          </div>
+        ) : (
