@@ -365,4 +365,5 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
   );
 }
 
+      {giftOpen && <CreatorGiftModal post={post} currentUserId={currentUserId} isOwner={String(currentUserId || "") === String(post?.user_id || "")} hideGifts={hideGifts} onTogglePrivacy={async () => { const next = !hideGifts; setHideGifts(next); if (post?.user_id) await supabase.from("profiles").update({ hide_gift_counts: next }).eq("id", post.user_id); }} onSent={() => setGiftsCount((c) => c + 1)} onClose={() => setGiftOpen(false)} />}
 export default React.memo(Post);
