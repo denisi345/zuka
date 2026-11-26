@@ -88,6 +88,7 @@ export default function GlobalSearch(props) {
           </div>
         )}
       </div>
+      </div>
       <div style={{ padding: '12px' }}>
         {!query.trim() ? (
           <div>
