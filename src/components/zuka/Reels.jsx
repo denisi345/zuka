@@ -267,9 +267,13 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
     } catch (_) {}
   }
 
+  const [likedComments, setLikedComments] = useState({});
+  const [replyTarget, setReplyTarget] = useState(null);
+  const toggleCommentLike = (cid) => setLikedComments((p) => ({ ...p, [cid]: !p[cid] }));
   async function handleAddComment(e) {
     e.preventDefault();
-    const text = commentInput.trim();
+    const raw = commentInput.trim();
+    const text = replyTarget && !raw.startsWith("@" + replyTarget.user) ? `@${replyTarget.user} ${raw}` : raw;
     if (!text || !commentReelId || sendingComment) return;
     setSendingComment(true);
     const optimistic = { id: `c-${Date.now()}`, user_id: userProfile?.id || null, user: myName, avatar: myAvatar, verified: Boolean(userProfile?.is_verified), text, created_at: new Date().toISOString() };
@@ -277,6 +281,7 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
     const nextCount = (currentReel?.commentsList?.length || 0) + 1;
     setReels((prev) => prev.map((r) => (String(r.id) === String(commentReelId) ? { ...r, commentsList: [...r.commentsList, optimistic] } : r)));
     setCommentInput('');
+    setReplyTarget(null);
     try {
       if (userProfile?.id) await supabase.from('reel_comments').insert({ reel_id: commentReelId, user_id: userProfile.id, content: text });
       await supabase.from('reels').update({ comments_count: nextCount }).eq('id', commentReelId);
