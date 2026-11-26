@@ -282,7 +282,7 @@ export default function Stories({
         caption: draftText.trim() || null,
         bg_gradient: createMode === 'text' ? BG_PRESETS[bgIdx].bg : null,
         text_color: BG_PRESETS[bgIdx].color,
-        font_family: FONT_STYLES[fontIdx].family,
+        font_family: FONT_STYLES[fontIdx],
         music_title: selectedTrack ? selectedTrack.title : null,
         music_artist: selectedTrack ? selectedTrack.artist : null,
         music_url: selectedTrack ? selectedTrack.url : null,
@@ -761,7 +761,7 @@ export default function Stories({
     <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
       <button type="button" onClick={() => setCreateOpen(false)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"><X className="w-5 h-5" /></button>
       <span className="text,[17px] font-bold">Create story</span>
-      <button type="button" onClick={shareStory} disabled={creating} className="px-4 py-1.5 rounded-lg bg-[#1877F2] disabled:opacity-50 text-sm font-semibold">{creating ? 'Sharing...' : 'Share'}</button>
+      <button type="button" onClick={shareStory} disabled={sharing} className="px-4 py-1.5 rounded-lg bg-[#1877F2] disabled:opacity-50 text-sm font-semibold">{sharing ? 'Sharing...' : 'Share'}</button>
     </div>
     <div className="grid grid-cols-3 gap-2 px-4 pt-3 pb-2">
       <button type="button" onClick={() => { setCreateMode('media'); if (!draftPreview) fileInputRef.current?.click(); }} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'media' ? 'bg-[ #1877F2]/20 border-[ #1877F2]' : 'bg-[ #242526] border-white/10 text-white/80'}`}>
@@ -809,13 +809,13 @@ export default function Stories({
             </button>
           )
         ) : (
-          <div style={{ background: BG_PRESETS[bgIdx].bg, color: BG_PRESETS[bgIdx].color, fontFamily: FONT_STYLES[fontIdx].family }} className="w-full h-full p-6 flex items-center justify-center">
+          <div style={{ background: BG_PRESETS[bgIdx].bg, color: BG_PRESETS[bgIdx].color, fontFamily: FONT_STYLES[fontIdx] }} className="w-full h-full p-6 flex items-center justify-center">
             <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Start typing..." rows={5} className="w-full bg-transparent text-center text-2xl font-bold placeholder-white/60 focus:outline-none resize-none" />
           </div>
         )}
-        {selectedMusic && (
+        {selectedTrack && (
           <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2 bg-black/70 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2 text-white shadow-lg">
-            <div className="flex items-center gap-2 min-w-0"><Music className="w-4 h-4 text-[#1877F2] shrink-0" /><div className="truncate text-xs"><div className="font-semibold truncate">{selectedMusic.title}</div><div className="text-white/70 truncate">{selectedMusic.artist}</div></div></div>
+            <div className="flex items-center gap-2 min-w-0"><Music className="w-4 h-4 text-[#1877F2] shrink-0" /><div className="truncate text-xs"><div className="font-semibold truncate">{selectedTrack.title}</div><div className="text-white/70 truncate">{selectedTrack.artist}</div></div></div>
             <button type="button" onClick={() => setSelectedMusic(null)} className="p-1 rounded-full hover:bg-white/15 text-white/80"><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
@@ -831,7 +831,7 @@ export default function Stories({
       {createMode === 'text' && (
         <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
           <div className="flex flex-col leading-tight">{BG_PRESETS.map((p, idx) => (<button key={p.id} type="button" onClick={() => setBgIdx(idx)} style={{ background: p.bg }} className={`w-7 h-7 rounded-full border-2 flex-shrink-0 ${bgIdx === idx ? 'border-white scale-110' : 'border-transparent'}`} />))}</div>
-          <button type="button" onClick={() => setFontIdx((f) => (f + 1) % FONT_STYLES.length)} className="px-3 py-1 rounded-full bg-white/10 text-xs font-semibold flex-shrink-0">{FONT_STYLES[fontIdx].label}</button>
+          <button type="button" onClick={() => setFontIdx((f) => (f + 1) % FONT_STYLES.length)} className="px-3 py-1 rounded-full bg-white/10 text-xs font-semibold flex-shrink-0">{FONT_STYLES[fontIdx].split(",")[0]}</button>
         </div>
       )}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
