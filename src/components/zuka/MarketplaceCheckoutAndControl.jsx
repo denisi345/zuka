@@ -61,8 +61,11 @@ export function MarketplaceCheckoutAndControl({
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const selectedCurrency = ALL_CURRENCIES.find((c) => c.code === currency) || ALL_CURRENCIES[0];
-  const basePriceTZS = Number(activeItem?.price || 50000);
-  const convertedAmount = (basePriceTZS * selectedCurrency.rate).toLocaleString(undefined, {
+  const itemCurrencyObj = ALL_CURRENCIES.find((x) => x.code === (activeItem?.currency || "TZS")) || ALL_CURRENCIES[0];
+  const rawItemPrice = Number(activeItem?.price || 50000);
+  const basePriceTZS = itemCurrencyObj.code === "TZS" ? rawItemPrice : rawItemPrice / itemCurrencyObj.rate;
+  const rawConvertedAmount = Number((basePriceTZS * selectedCurrency.rate).toFixed(currency === "TZS" || currency === "UGX" ? 0 : 2));
+  const convertedAmount = rawConvertedAmount.toLocaleString(undefined, {
     minimumFractionDigits: currency === 'TZS' || currency === 'UGX' ? 0 : 2,
     maximumFractionDigits: currency === 'TZS' || currency === 'UGX' ? 0 : 2,
   });
@@ -82,7 +85,7 @@ export function MarketplaceCheckoutAndControl({
         product_id: activeItem?.id || null,
         buyer_id: user?.id || null,
         seller_id: activeItem?.seller_id || null,
-        amount: basePriceTZS,
+        amount: rawConvertedAmount,
         currency,
         payment_method: channel,
         status: 'pending_escrow',
@@ -92,7 +95,7 @@ export function MarketplaceCheckoutAndControl({
       const { error } = await supabase.from('orders').insert([fullPayload]);
       if (error) {
         const fallback = await supabase.from('orders').insert([{
-          amount: basePriceTZS,
+          amount: rawConvertedAmount,
           status: 'pending_escrow',
           payment_method: `${channel} (${currency}) - ${bankName || walletRef || phone}`,
         }]);
