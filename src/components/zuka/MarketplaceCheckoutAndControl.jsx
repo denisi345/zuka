@@ -81,6 +81,28 @@ export function MarketplaceCheckoutAndControl({
       escrowStatus: 'HELD_IN_ESCROW', createdAt: new Date().toISOString(),
     };
     try {
+      const { data: ceoCfg } = await supabase.from("marketplace_settings").select("*").eq("id", 1).maybeSingle();
+      const feePct = Number(ceoCfg?.platform_fee_percent ?? ceoCfg?.commission_percent ?? 0);
+      const isBoost = activeItem?.seller_id === "zuka-ads" || String(activeItem?.id || "").startsWith("boost-");
+      const commAmt = isBoost ? rawConvertedAmount : Number(((rawConvertedAmount * feePct) / 100).toFixed(2));
+      const netAmt = isBoost ? 0 : Math.max(0, Number((rawConvertedAmount - commAmt).toFixed(2)));
+      await supabase.from("marketplace_orders").insert([{
+        item_id: isBoost ? String(activeItem?.id || "").replace("boost-", "") : (activeItem?.id || null),
+        item_title: activeItem?.title || "ZUKA Marketplace Item",
+        buyer_id: user?.id || null,
+        seller_id: activeItem?.seller_id || null,
+        amount: rawConvertedAmount,
+        commission_amount: commAmt,
+        seller_net_amount: netAmt,
+        currency,
+        payment_method: channel,
+        delivery_status: isBoost ? "delivered" : "processing",
+        escrow_status: isBoost ? "released" : "held"
+      }]);
+      if (isBoost && activeItem?.target_id) {
+        const exp = new Date(Date.now() + Number(activeItem?.boost_days || 7) * 86400000).toISOString();
+        await supabase.from(activeItem?.target_table || "marketplace_listings").update({ is_boosted: true, boost_expires_at: exp }).eq("id", activeItem.target_id);
+      }
       const fullPayload = {
         product_id: activeItem?.id || null,
         buyer_id: user?.id || null,
