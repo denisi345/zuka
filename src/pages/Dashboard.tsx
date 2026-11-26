@@ -1,3 +1,4 @@
+import GlobalSearch from "@/components/zuka/GlobalSearch";
 import ZukaBackNav from "../components/zuka/ZukaBackNav";
 const ZukaEvents = lazy(() => import("@/components/zuka/ZukaEvents"));
 const ZukaPages = lazy(() => import("@/components/zuka/ZukaPages"));
@@ -93,7 +94,8 @@ const openAnyProfile = (person: any, fallbackName?: string, fallbackAvatar?: str
         </div>
 
         <main style={{ flex: 1, maxWidth: "680px", margin: "0 auto", width: "100%" }}>
-          {activeTab === "feed" && (
+          {activeTab === "search" && <GlobalSearch currentUser={profile} onBack={() => setActiveTab("feed")} onOpenUserProfile={openAnyProfile} onOpenMessenger={(person: any) => { if (person) setChatTarget(person); setActiveTab("messenger"); }} onOpenReel={(r: any) => setInitialReel(r)} onOpenTab={(t: string) => setActiveTab(t)} />}
+        {activeTab === "feed" && (
             <Feed
               userProfile={profile}
               onOpenProfile={() => { setViewedProfile(null); setActiveTab("profile"); }}

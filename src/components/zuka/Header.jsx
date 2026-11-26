@@ -66,7 +66,7 @@ export default function Header({ activeTab, setActiveTab, onOpenMenu, unreadCoun
           <button type="button" onClick={() => setPlusOpen(!plusOpen)} aria-label="Create" style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: plusOpen ? '#D8DADF' : '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
             <Plus size={20} />
           </button>
-          <button type="button" onClick={() => setActiveTab('friends')} aria-label="Search" style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setActiveTab('search')} aria-label="Search" style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
             <Search size={20} />
           </button>
           <button type="button" onClick={onOpenMenu} aria-label="Menu" style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E4E6EB', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#050505', cursor: 'pointer' }}>
