@@ -254,7 +254,18 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
                 <input type="number" placeholder="Price (0 for Free)" min="0" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
                 <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} style={{ width: '100px', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }}>
                   <option value="TZS">TZS</option>
-                  <option value="USD">USD</option>
+<option value="USD">USD</option>
+<option value="EUR">EUR</option>
+<option value="GBP">GBP</option>
+<option value="KES">KES</option>
+<option value="UGX">UGX</option>
+<option value="ZAR">ZAR</option>
+<option value="NGN">NGN</option>
+<option value="AED">AED</option>
+<option value="CAD">CAD</option>
+<option value="AUD">AUD</option>
+<option value="INR">INR</option>
+<option value="CNY">CNY</option>
                 </select>
               </div>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }}>
