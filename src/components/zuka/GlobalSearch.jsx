@@ -90,3 +90,33 @@ export default function GlobalSearch({ currentUser, onBack, onOpenUserProfile, o
           </div>
         )}
       </div>
+      <div style={{ padding: '12px' }}>
+        {!query.trim() ? (
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '14px', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontWeight: 700, fontSize: '16px', color: '#050505' }}>Recent searches</span>
+              {recent.length > 0 && <button type="button" onClick={() => { setRecent([]); localStorage.removeItem(RECENT_KEY); }} style={{ border: 'none', background: 'none', color: '#1877F2', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Clear all</button>}
+            </div>
+            {recent.length === 0 ? <p style={{ color: '#65676B', fontSize: '14px', margin: '12px 0', textAlign: 'center' }}>No recent searches. Search for people, posts, reels, or items.</p> : recent.map((item) => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 4px', borderBottom: '1px solid #F0F2F5' }}>
+                <button type="button" onClick={() => setQuery(item)} style={{ display: 'flex', alignItems: 'center', gap: '10px', border: 'none', background: 'none', cursor: 'pointer', flex: 1, textAlign: 'left', color: '#050505', fontSize: '15px' }}><Clock size={16} color="#65676B" /><span>{item}</span></button>
+                <button type="button" onClick={() => removeRecent(item)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '4px' }}><X size={16} color="#65676B" /></button>
+              </div>
+            ))}
+          </div>
+        ) : loading ? <div style={{ textAlign: 'center', padding: '36px', color: '#65676B', fontWeight: 600 }}>Searching Zuka...</div> : totalCount === 0 ? <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '28px 16px', textAlign: 'center', color: '#65676B' }}>No results found for <strong>"{query}"</strong></div> : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {(tab === 'all' || tab === 'people') && results.people.length > 0 && (
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><User size={17} color="#1877F2" /> People</div>
+                {results.people.map((p) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F0F2F5' }}>
+                    <div onClick={() => { saveRecent(query); onOpenUserProfile?.(p.id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flex: 1 }}>
+                      <img src={p.avatar_url || '/placeholder.svg'} alt="" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', backgroundColor: '#E4E6EB' }} />
+                      <div><div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>{p.full_name || p.username || 'Zuka User'}{p.is_verified && <BadgeCheck size={15} color="#1877F2" />}</div>{p.bio && <div style={{ fontSize: '12px', color: '#65676B', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.bio}</div>}</div>
+                    </div>
+                    {p.id !== currentUser?.id && <button type="button" onClick={() => { saveRecent(query); onOpenMessenger?.(p); }} style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}><MessageCircle size={14} /> Message</button>}
+                  </div>
+                ))}
+              </div>
+            )}
