@@ -141,3 +141,6 @@ export default function GlobalSearch(props) {
             ))}
               </div>
             ))}
+            {suggested.length > 0 && (
+              <div style={{ marginTop: '14px', borderTop: '1px solid #E4E6EB', paddingTop: '12px' }}>
+                <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '10px' }}>People you may know</div>
