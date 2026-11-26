@@ -107,3 +107,9 @@ export default function GlobalSearch(props) {
       <div style={{ position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#FFFFFF', padding: '10px 12px', borderBottom: '1px solid #E4E6EB' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button type="button" onClick={onBack} style={{ border: 'none', background: 'none', padding: '4px', cursor: 'pointer' }}><ChevronLeft size={26} color="#050505" /></button>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#F0F2F5', borderRadius: '999px', padding: '0 14px', height: '38px' }}>
+            <input type="text" autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveRecent(query); }} placeholder="Search..." style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', fontSize: '15px', color: '#050505' }} />
+            {query && <button type="button" onClick={() => setQuery('')} style={{ border: 'none', background: '#CED0D4', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={12} color="#050505" /></button>}
+          </div>
+          <button type="button" onClick={() => saveRecent(query)} style={{ border: 'none', background: 'none', padding: '4px', cursor: 'pointer' }}><Search size={21} color="#050505" /></button>
+        </div>
