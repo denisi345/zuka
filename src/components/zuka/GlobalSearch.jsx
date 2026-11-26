@@ -144,3 +144,6 @@ export default function GlobalSearch(props) {
             {suggested.length > 0 && (
               <div style={{ marginTop: '14px', borderTop: '1px solid #E4E6EB', paddingTop: '12px' }}>
                 <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '10px' }}>People you may know</div>
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '6px' }}>
+                  {suggested.map((u) => (
+                    <div key={u.id} style={{ minWidth: '148px', border: '1px solid #E4E6EB', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#FFF' }}>
