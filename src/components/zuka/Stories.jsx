@@ -110,7 +110,8 @@ export default function Stories({
       if (!alive) return;
       const rows = (data || []).filter((r) =>
         r.media_type === 'text' || String(r.media_url || '').trim()
-      );
+    </div>
+  );
       setStories(rows.map((r) => {
         const pf = pm[String(r.user_id || '').trim()] || {};
         const raw = String(r.author_name || '');
@@ -151,7 +152,8 @@ export default function Stories({
     arr.sort((a, b) =>
       String(a.user_id) === myId ? -1 :
       String(b.user_id) === myId ? 1 : 0
-    );
+    </div>
+  );
     return arr;
   }, [stories, mutedUsers, userProfile?.id]);
   const activeGroup = activeGroupIdx !== null
@@ -406,7 +408,6 @@ export default function Stories({
   const videoRef = useRef(null);
   const timeAgo = formatAge;
   const openCreator = () => { resetDraft(); setCreateOpen(true); };
-  const pickMedia = pickMedia;
   const loadStories = async () => {};
 
   const isOwnStory = Boolean(user && activeGroup && activeGroup.user_id === user.id);
@@ -499,7 +500,8 @@ export default function Stories({
                 {grp.user_id === user?.id ? 'Your story' : grp.author_name || 'User'}
               </span>
             </button>
-          );
+    </div>
+  );
         })}
       </div>
       {viewOpen && activeStory && (
@@ -512,7 +514,8 @@ export default function Stories({
                   <div key={item.id} className="h-[3px] flex-1 bg-white/30 rounded-full overflow-hidden">
                     <div className="h-full bg-white transition-all duration-75" style={{ width: `${w}%` }} />
                   </div>
-                );
+    </div>
+  );
               })}
             </div>
             <div className="flex items-center justify-between text-white">
@@ -820,6 +823,7 @@ export default function Stories({
             />
 
       )}
+    </div>
     </div>
   );
 }
