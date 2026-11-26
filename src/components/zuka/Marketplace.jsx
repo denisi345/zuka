@@ -180,7 +180,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
         </div>
       )}
 
-      {viewTab === "selling" && <div className="mb-4"><SellerPayoutSettings sellerId={userProfile?.id} /><div className="mt-3"><MarketplaceOrdersEscrow userId={userProfile?.id} /></div></div>}
+      {viewTab === "selling" && <div className="mb-4"><SellerPayoutSettings user={userProfile} /><div className="mt-3"><MarketplaceOrdersEscrow userId={userProfile?.id} /></div></div>}
       {loading ? (
         <div style={{ backgroundColor: '#FFFFFF', borderRadius: '8px', padding: '32px', textAlign: 'center', color: '#65676B' }}>Loading Marketplace...</div>
       ) : filtered.length === 0 ? (

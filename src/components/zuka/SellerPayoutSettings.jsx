@@ -6,7 +6,7 @@ const PAYOUT_METHODS = [
   { id: 'wise', label: 'Wise Multi-Currency Transfer' },
   { id: 'mobile_money', label: 'Mobile Money (M-Pesa / Mixx / Airtel / MTN)' },
 ];
-const PAYOUT_CURRENCIES = ['TZS', 'USD', 'EUR', 'GBP', 'KES', 'UGX', 'ZAR', 'NGN', 'AED', 'CAD', 'AUD'];
+const PAYOUT_CURRENCIES = ['TZS', 'USD', 'EUR', 'GBP', 'KES', 'UGX', 'ZAR', 'NGN', 'AED', 'CAD', 'AUD', 'INR', 'CNY'];
 
 export function SellerPayoutSettings({ user = null, onClose = () => {} }) {
   const [method, setMethod] = useState('bank_wire');
