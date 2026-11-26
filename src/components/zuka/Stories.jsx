@@ -529,7 +529,7 @@ export default function Stories({
                   </div>
                 )}
                 <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-col leading-tight">
                     <span className="font-semibold text-sm truncate">
                       {activeGroup.author_name || 'User'}
                     </span>
@@ -589,7 +589,7 @@ export default function Stories({
             onTouchEnd={() => setPaused(false)}
             className="relative flex-1 flex items-center justify-center overflow-hidden"
           >
-            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay loop muted={muted} />}<button type="button" onClick={(e) => { e.stopPropagation(); prevStory(); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/50 text-white text-2xl flex items-center justify-center">‹</button><button type="button" onClick={(e) => { e.stopPropagation(); nextStory(); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/50 text-white text-2xl flex items-center justify-center">›</button>{activeStory.media_type === 'video' && activeStory.media_url ? (
+            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay loop muted={muted} />}<button type="button" onClick={(e) => { e.stopPropagation(); prevStory(); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/35 border border-white/50 text-white text-3xl flex items-center justify-center">‹</button><button type="button" onClick={(e) => { e.stopPropagation(); nextStory(); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/35 border border-white/50 text-white text-3xl flex items-center justify-center">›</button>{activeStory.media_type === 'video' && activeStory.media_url ? (
               <video
                 ref={videoRef}
                 src={activeStory.media_url}
@@ -854,7 +854,7 @@ export default function Stories({
     <div className="px-4 py-3 bg-[#242526] border-t border-white/10 space-y-2.5">
       {createMode === 'text' && (
         <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5">{BG_PRESETS.map((p, idx) => (<button key={p.id} type="button" onClick={() => setBgIdx(idx)} style={{ background: p.bg }} className={`w-7 h-7 rounded-full border-2 flex-shrink-0 ${bgIdx === idx ? 'border-white scale-110' : 'border-transparent'}`} />))}</div>
+          <div className="flex flex-col leading-tight">{BG_PRESETS.map((p, idx) => (<button key={p.id} type="button" onClick={() => setBgIdx(idx)} style={{ background: p.bg }} className={`w-7 h-7 rounded-full border-2 flex-shrink-0 ${bgIdx === idx ? 'border-white scale-110' : 'border-transparent'}`} />))}</div>
           <button type="button" onClick={() => setFontIdx((f) => (f + 1) % FONT_STYLES.length)} className="px-3 py-1 rounded-full bg-white/10 text-xs font-semibold flex-shrink-0">{FONT_STYLES[fontIdx].label}</button>
         </div>
       )}
