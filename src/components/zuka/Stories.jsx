@@ -819,7 +819,6 @@ export default function Stories({
               className="hidden"
             />
 
-          </div>
       )}
     </div>
   );
