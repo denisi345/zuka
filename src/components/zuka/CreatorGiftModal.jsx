@@ -51,6 +51,10 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <CheckCircle2 size={42} color="#16A34A" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontWeight: 700, fontSize: '16px' }}>Gift Sent Successfully!</div>
-            <button type="button" onClick={onClose} style={{ marginTop: '14px', width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
+                        <button type="button" onClick={onClose} style={{ marginTop: "14px", width: "100%", padding: "10px", borderRadius: "10px", border: "none", backgroundColor: "#1877F2", color: "#FFF", fontWeight: 700 }}>Done</button></div>) : (
           </div>
         ) : (
+          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {AMOUNTS.map((v) => <button key={v} type="button" onClick={() => setAmount(v)} style={{ padding: '6px 12px', borderRadius: '999px', border: Number(amount) === v ? '1.5px solid #F59E0B' : '1px solid #CED0D4', backgroundColor: Number(amount) === v ? '#FEF3C7' : '#FFF', fontWeight: 600, fontSize: '13px' }}>{v.toLocaleString()}</button>)}
+            </div>
