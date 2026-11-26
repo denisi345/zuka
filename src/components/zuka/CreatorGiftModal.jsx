@@ -61,10 +61,18 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
                         <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Custom amount" style={{ padding: "10px", borderRadius: "10px", border: "1px solid #CED0D4" }} />
                         <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: "10px", borderRadius: "10px", border: "1px solid #CED0D4", backgroundColor: "#FFF" }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
                         <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: "10px", borderRadius: "10px", border: "1px solid #CED0D4", backgroundColor: "#FFF" }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone or Account Email" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
+                        <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone or Account Email" style={{ padding: "10px", borderRadius: "10px", border: "1px solid #CED0D4" }} />
             <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Add a note (optional)" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone or Account Email" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
+                        <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone or Account Email" style={{ padding: "10px", borderRadius: "10px", border: "1px solid #CED0D4" }} />
             <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Add a note (optional)" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
+            <button type="submit" disabled={sending} style={{ padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: '#F59E0B', color: '#FFF', fontWeight: 700 }}>{sending ? 'Sending...' : 'Send Gift ✨'}</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+            <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Note (optional)" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
             <button type="submit" disabled={sending} style={{ padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: '#F59E0B', color: '#FFF', fontWeight: 700 }}>{sending ? 'Sending...' : 'Send Gift ✨'}</button>
           </form>
         )}
