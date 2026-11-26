@@ -38,3 +38,9 @@ export default function GlobalSearch(props) {
   const [loading, setLoading] = useState(false);
   const [suggested, setSuggested] = useState([]);
   const [sentIds, setSentIds] = useState({});
+;
+  const [recent, setRecent] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+    catch { return []; }
+  });
+  const [results, setResults] = useState({ people: [], posts: [], reels: [], market: [], pages: [], groups: [] });
