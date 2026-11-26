@@ -137,6 +137,7 @@ const openAnyProfile = (person: any, fallbackName?: string, fallbackAvatar?: str
         {activeTab === "saved" && <SavedItems onOpenUserProfile={openAnyProfile} currentUserId={profile?.id} onBack={() => setActiveTab("feed")} />}
         {activeTab === "groups" && <ZukaGroups currentUser={profile} onBack={() => setActiveTab("feed")} />}
         {activeTab === "pages" && <ZukaPages currentUser={profile} onBack={() => setActiveTab("feed")} />}
+              {activeTab === "search" && <GlobalSearch currentUser={profile} onBack={() => setActiveTab("feed")} onOpenUserProfile={openAnyProfile} onOpenMessenger={(person: any) => { if (person) setChatTarget(person); setActiveTab("messenger"); }} onOpenReel={(r: any) => setInitialReel(r)} onOpenTab={(t: string) => setActiveTab(t)} />}
               {activeTab === "events" && <ZukaEvents currentUser={profile} onBack={() => setActiveTab("feed")} />}
         </Suspense>
       </main>
