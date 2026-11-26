@@ -427,7 +427,7 @@ export default function Stories({
                   alt={profile?.full_name || 'User'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
-              ) : (
+              <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-2xl font-bold">
                   {(profile?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
                 </div>
@@ -469,7 +469,7 @@ export default function Stories({
                   alt={grp.author_name || 'Story'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                 />
-              ) : (
+              <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                 <div
                   style={{ background: latest.bg_gradient || '#1877F2', color: latest.text_color || '#fff' }}
                   className="w-full h-full p-2.5 flex items-center justify-center text-center text-[11px] font-bold leading-snug"
@@ -489,7 +489,7 @@ export default function Stories({
                     alt={grp.author_name || 'User'}
                     className="w-full h-full rounded-full object-cover border-2 border-white"
                   />
-                ) : (
+                <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                   <div className="w-full h-full rounded-full bg-gray-700 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
                     {(grp.author_name || 'U').charAt(0).toUpperCase()}
                   </div>
@@ -523,7 +523,7 @@ export default function Stories({
                     alt={activeGroup.author_name || 'User'}
                     className="w-9 h-9 rounded-full object-cover border border-white/40"
                   />
-                ) : (
+                <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                   <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center font-bold text-sm">
                     {(activeGroup.author_name || 'U').charAt(0).toUpperCase()}
                   </div>
@@ -605,7 +605,7 @@ export default function Stories({
                 alt="Story"
                 className="max-h-full max-w-full object-contain"
               />
-            ) : (
+            <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
               <div
                 style={{
                   background: activeStory.bg_gradient || '#1877F2',
@@ -648,7 +648,7 @@ export default function Stories({
             />
           </div>
           <div className="relative z-20 p-3 bg-gradient-to-t from-black/85 to-transparent">
-            {isOwnStory ? (
+            {isOwnStory ? (<div className="flex items-end justify-between w-full px-1">
               <button
                 type="button"
                 onClick={() => openInsights(activeStory.id)} className="flex flex-col items-start text-white"
@@ -657,7 +657,7 @@ export default function Stories({
                 <span className="text-lg font-bold leading-none">^</span>
                 <span>{(activeStory.views_count || 0) > 0 ? `${activeStory.views_count} viewers` : "No viewers yet"}</span>
               </button>
-            ) : (
+            <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
               <div className="flex items-center gap-2">
                 <form
                   onSubmit={(e) => {
@@ -724,7 +724,7 @@ export default function Stories({
                 </h4>
                 {viewersList.length === 0 ? (
                   <p className="text-sm text-gray-500">No viewers yet.</p>
-                ) : (
+                <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                   <div className="space-y-2.5">
                     {viewersList.map((v) => (
                       <div key={v.viewer_id} className="flex items-center justify-between">
@@ -735,7 +735,7 @@ export default function Stories({
                               alt={v.profiles?.full_name || 'Viewer'}
                               className="w-9 h-9 rounded-full object-cover"
                             />
-                          ) : (
+                          <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                             <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold text-sm">
                               {(v.profiles?.full_name || 'U').charAt(0).toUpperCase()}
                             </div>
@@ -756,7 +756,7 @@ export default function Stories({
                 </h4>
                 {repliesList.length === 0 ? (
                   <p className="text-sm text-gray-500">No replies yet.</p>
-                ) : (
+                <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
                   <div className="space-y-2.5">
                     {repliesList.map((r) => (
                       <div key={r.id} className="flex items-start gap-2.5 bg-gray-50 p-2.5 rounded-xl">
@@ -823,16 +823,16 @@ export default function Stories({
           draftPreview ? (
             draftFile?.type?.startsWith('video') ? (
               <video src={draftPreview} controls playsInline className="max-h-full max-w-full object-contain" />
-            ) : (
+            <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
               <img src={draftPreview} alt="Preview" className="max-h-full max-w-full object-contain" />
             )
-          ) : (
+          <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center gap-3 p-6 text-center">
               <div className="w-14 h-14 rounded-full bg-[ #1877F2]/20 flex items-center justify-center"><ImageIcon className="w-7 h-7 text-[#1877F2]" /></div>
               <span className="text-sm font-semibold">Select photo or video</span>
             </button>
           )
-        ) : (
+        <button type="button" onClick={() => { setViewOpen(false); setCreateOpen(true); }} className="flex flex-col items-center gap-1 text-white"><span className="w-9 h-9 rounded-full border-2 border-dashed border-white flex items-center justify-center text-xl font-bold leading-none">+</span><span className="text-xs font-semibold">Add story</span></button></div>) : (
           <div style={{ background: BG_PRESETS[bgIdx].bg, color: BG_PRESETS[bgIdx].color, fontFamily: FONT_STYLES[fontIdx].family }} className="w-full h-full p-6 flex items-center justify-center">
             <textarea value={draftText} onChange={(e) => setDraftText(e.target.value)} placeholder="Start typing..." rows={5} className="w-full bg-transparent text-center text-2xl font-bold placeholder-white/60 focus:outline-none resize-none" />
           </div>
