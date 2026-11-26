@@ -164,4 +164,9 @@ export default function GlobalSearch(props) {
                 {results.people.map((p) => (
                   <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
                     <div onClick={() => { saveRecent(query); onOpenUserProfile?.(p.id); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                      <img src={p.avatar_url || '/placeholder.svg'} alt="" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                                            <img src={p.avatar_url || "/placeholder.svg"} alt="" style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover" }} />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>{p.full_name || p.username || 'Zuka User'}<ZukaBadge verified={p.is_verified} size={15} /></div>
+                        {p.bio && <div style={{ fontSize: '12px', color: '#65676B' }}>{p.bio}</div>}
+                      </div>
+                    </div>
