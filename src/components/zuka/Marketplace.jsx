@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORIES = [
   'All', 'Vehicles', 'Property Rentals', 'Electronics', 'Clothing & Shoes',
-  'Home & Garden', 'Furniture', 'Phones & Accessories', 'Sports & Outdoors', 'Free Stuff'
+  'Home & Garden', 'Furniture', 'Phones & Accessories', 'Sports & Outdoors', 'Free Stuff', 'Services', 'Jobs'
 ];
 const CONDITIONS = ['New', 'Used - Like New', 'Used - Good', 'Used - Fair'];
 
@@ -138,7 +138,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
             <Plus size={16} /> Sell
           </button>
           <button type="button" onClick={() => setShowFilters(!showFilters)} style={{ backgroundColor: '#E4E6EB', color: '#050505', border: 'none', borderRadius: '18px', padding: '8px 12px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-            <SlidersHorizontal size={16} /> Filters
+            <SlidersHorizontal size={16} /> Filters</button><button type="button" onClick={() => { setCtrlItem(null); setCtrlOpen(true); }} style={{ backgroundColor: '#E7F3FF', color: '#1877F2', border: 'none', borderRadius: '18px', padding: '8px 12px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>Orders & Payout
           </button>
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
               <button type="button" onClick={() => toggleSave(selectedItem.id)} style={{ backgroundColor: '#E4E6EB', border: 'none', borderRadius: '8px', padding: '8px 12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}><Bookmark size={16} /> {savedIds.includes(String(selectedItem.id)) ? 'Saved' : 'Save'}</button>
               <button type="button" onClick={() => navigator.clipboard?.writeText(window.location.href)} style={{ backgroundColor: '#E4E6EB', border: 'none', borderRadius: '8px', padding: '8px 12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}><Share2 size={16} /> Share</button>
-  <button type="button" onClick={()=>{setCtrlItem(selectedItem);setCtrlOpen(true)}} className="px-3 py-2 rounded-lg bg-blue-600 text-white font-bold">Buy Now</button>
+  <button type="button" onClick={()=>{setCtrlItem(selectedItem);setSelectedItem(null);setCtrlOpen(true)}} className="px-3 py-2 rounded-lg bg-blue-600 text-white font-bold">Buy Now</button>
               {userProfile?.id && String(selectedItem.user_id || selectedItem.seller_id) === String(userProfile.id) && (
                 <>
                   {selectedItem.status !== 'sold' && <button type="button" onClick={() => handleMarkSold(selectedItem)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '8px 12px', fontWeight: 600, cursor: 'pointer' }}>Mark as Sold</button>}
