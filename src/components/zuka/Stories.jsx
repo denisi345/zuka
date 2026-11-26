@@ -589,7 +589,7 @@ export default function Stories({
             onTouchEnd={() => setPaused(false)}
             className="relative flex-1 flex items-center justify-center overflow-hidden"
           >
-            {activeStory.media_type === 'video' && activeStory.media_url ? (
+            {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay loop muted={muted} />}<button type="button" onClick={(e) => { e.stopPropagation(); prevStory(); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/50 text-white text-2xl flex items-center justify-center">‹</button><button type="button" onClick={(e) => { e.stopPropagation(); nextStory(); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/50 text-white text-2xl flex items-center justify-center">›</button>{activeStory.media_type === 'video' && activeStory.media_url ? (
               <video
                 ref={videoRef}
                 src={activeStory.media_url}
