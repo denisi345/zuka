@@ -167,6 +167,11 @@ export default function GlobalSearch(props) {
                                             <img src={p.avatar_url || "/placeholder.svg"} alt="" style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover" }} />
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>{p.full_name || p.username || 'Zuka User'}<ZukaBadge verified={p.is_verified} size={15} /></div>
-                        {p.bio && <div style={{ fontSize: '12px', color: '#65676B' }}>{p.bio}</div>}
+                                                {p.bio && <div style={{ fontSize: "12px", color: "#65676B" }}>{p.bio}</div>} </div> </div>
                       </div>
                     </div>
+                    {p.id !== currentUser?.id && <button type="button" onClick={() => { saveRecent(query); onOpenMessenger?.(p); }} style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 600, fontSize: '13px' }}>Message</button>}
+                  </div>
+                ))}
+              </div>
+            )}
