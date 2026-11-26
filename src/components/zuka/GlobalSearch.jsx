@@ -133,9 +133,11 @@ export default function GlobalSearch(props) {
             {recent.map((item) => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
                                 <button type="button" onClick={() => setQuery(item)} style={{ display: "flex", alignItems: "center", gap: "12px", border: "none", background: "none", flex: 1, textAlign: "left", fontSize: "15px" }}><Clock size={18} color="#65676B" /><span>{item}</span></button>
-                <button type="button" onClick={() => removeRecent(item)} style={{ border: 'none', background: 'none', padding: '4px' }}><MoreHorizontal size={18} color="#65676B" /></button>
+                <button type="button" onClick={() => removeRecent(item)} style={{ border: "none", background: "none" }}><MoreHorizontal size={18} color="#65676B" /></button>
               </div>
             ))}
-                <button type="button" onClick={() => removeRecent(item)} style={{ border: 'none', background: 'none' }}><MoreHorizontal size={18} color="#65676B" /></button>
+                <button type="button" onClick={() => removeRecent(item)} style={{ border: "none", background: "none" }}><MoreHorizontal size={18} color="#65676B" /></button>
+              </div>
+            ))}
               </div>
             ))}
