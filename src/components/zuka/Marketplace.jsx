@@ -27,7 +27,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [inquiryText, setInquiryText] = useState('Hi, is this still available?');
-  const [sellOpen, setSellOpen] = useState(false);
+  const [sellOpen, setSellOpen] = useState(false); const [ctrlOpen, setCtrlOpen] = useState(false); const [ctrlItem, setCtrlItem] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewType, setPreviewType] = useState('image');
   const [submitting, setSubmitting] = useState(false);
@@ -264,7 +264,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
                 {CONDITIONS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               <input type="text" placeholder="Location" required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} style={{ padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '14px' }} />
-              <input type="file" accept="image/*,video/*" onChange={(e) => { const f = e.target.files?.[0] || null; setForm({ ...form, file: f }); setPreviewUrl(f ? URL.createObjectURL(f) : ""); setPreviewType(f && f.type.startsWith("video") ? "video" : "image"); }} style={{ padding: "8px", borderRadius: "8px", border: "1px solid #CCD0D5", fontSize: "14px" }} /> />
+              <input type="file" accept="image/*,video/*" onChange={(e) => { const f = e.target.files?.[0] || null; setForm({ ...form, file: f }); setPreviewUrl(f ? URL.createObjectURL(f) : ""); setPreviewType(f && f.type.startsWith("video") ? "video" : "image"); }} style={{ padding: "8px", borderRadius: "8px", border: "1px solid #CCD0D5", fontSize: "14px" }} />
               {(previewUrl || form.imageUrl?.trim()) && (
                 <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", border: "1px solid #CED0D4", backgroundColor: "#F0F2F5" }}>
                   {(previewType === "video" || /\.(mp4|webm|mov)(\?|$)/i.test(previewUrl || form.imageUrl)) ? <video src={previewUrl || form.imageUrl} controls playsInline style={{ width: "100%", maxHeight: "220px", objectFit: "cover", display: "block" }} /> : <img src={previewUrl || form.imageUrl} alt="Listing Preview" style={{ width: "100%", maxHeight: "220px", objectFit: "cover", display: "block" }} />}
