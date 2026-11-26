@@ -62,3 +62,8 @@ export default function GlobalSearch(props) {
     }
     return [];
   };
+    for (const t of tables) {
+      try { const { data, error } = await fn(supabase.from(t)); if (!error && Array.isArray(data)) return data; } catch {}
+    }
+    return [];
+  };
