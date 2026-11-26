@@ -36,3 +36,27 @@ export default function GlobalSearch({ currentUser, onBack, onOpenUserProfile, o
     }
     return [];
   };
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setResults({ people: [], posts: [], reels: [], market: [], pages: [], groups: [] });
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      const p = `%${q}%`;
+      const [people, posts, reels, market, pages, groups] = await Promise.all([
+        safeQuery(['profiles'], (tb) => tb.select('id, full_name, username, avatar_url, is_verified, bio').or(`full_name.ilike.${p},username.ilike.${p}`).limit(15)),
+        safeQuery(['posts'], (tb) => tb.select('id, user_id, content, image_url, video_url, created_at, profiles:user_id(id, full_name, avatar_url, is_verified)').ilike('content', p).order('created_at', { ascending: false }).limit(15)),
+        safeQuery(['reels'], (tb) => tb.select('id, user_id, caption, video_url, thumbnail_url, created_at, profiles:user_id(id, full_name, avatar_url, is_verified)').ilike('caption', p).order('created_at', { ascending: false }).limit(12)),
+        safeQuery(['marketplace_items', 'marketplace_listings', 'marketplace'], (tb) => tb.select('*').or(`title.ilike.${p},description.ilike.${p}`).order('created_at', { ascending: false }).limit(12)),
+        safeQuery(['pages', 'zuka_pages'], (tb) => tb.select('*').or(`name.ilike.${p},category.ilike.${p}`).limit(10)),
+        safeQuery(['groups', 'zuka_groups'], (tb) => tb.select('*').or(`name.ilike.${p},description.ilike.${p}`).limit(10)),
+      ]);
+      setResults({ people, posts, reels, market, pages, groups });
+      setLoading(false);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [query]);
