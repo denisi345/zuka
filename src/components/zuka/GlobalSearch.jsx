@@ -10,29 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 const RECENT_KEY = 'zuka_recent_searches_v2';
 
 export default function GlobalSearch(props) {
-  const {
-    currentUser, onBack, onOpenUserProfile,
-    onOpenMessenger, onOpenReel, onOpenTab
-  } = props;
-  const [query, setQuery] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [tab, setTab] = useState('all');
-  const [loading, setLoading] = useState(false);
-  const [suggested, setSuggested] = useState([]);
-  const [sentIds, setSentIds] = useState({});
-  const [recent, setRecent] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
-    } catch {
-      return [];
-    }
-  });
-  const [results, setResults] = useState({
-    people: [], posts: [], reels: [],
-    market: [], pages: [], groups: []
-  });
-
-export default function GlobalSearch(props) {
   const { currentUser, onBack, onOpenUserProfile, onOpenMessenger, onOpenReel, onOpenTab } = props;
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('all');
@@ -90,14 +67,8 @@ export default function GlobalSearch(props) {
     }, 280);
     return () => clearTimeout(timer);
   }, [query]);
-      ]);
-      setResults({ people, posts, reels, market, pages, groups });
-      setLoading(false);
-    }, 280);
-    return () => clearTimeout(timer);
-  }, [query]);
   const TABS = [
-        { id: 'all', label: 'All' }, { id: 'people', label: 'People' }, { id: 'posts', label: 'Posts' }, { id: 'reels', label: 'Reels' }, { id: 'market', label: 'Marketplace' }, { id: 'communities', label: 'Pages { id: 'all', label: 'All' }, { id: 'people', label: `People (${results.people.length})` }, { id: 'posts', label: `Posts (${results.posts.length})` }, { id: 'reels', label: `Reels (${results.reels.length})` }, { id: 'market', label: `Marketplace (${results.market.length})` }, { id: 'communities', label: `Pages & Groups (${results.pages.length + results.groups.length})` } Groups' } ];
+    { id: "all", label: "All" }, { id: "people", label: "People" }, { id: "posts", label: "Posts" }, { id: "reels", label: "Reels" }
   ];
   const totalCount = results.people.length + results.posts.length + results.reels.length + results.market.length + results.pages.length + results.groups.length;
   return (
@@ -111,8 +82,6 @@ export default function GlobalSearch(props) {
           </div>
           <button type="button" onClick={() => saveRecent(query)} style={{ border: 'none', background: 'none', padding: '4px', cursor: 'pointer' }}><Search size={21} color="#050505" /></button>
         </div>
-          </div>
-          <button type="button" onClick={() => saveRecent(query)} style={{ border: 'none', background: 'none', padding: '4px' }}><Search size={21} color="#050505" /></button>
         </div>
         {query.trim() && (
           <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginTop: '10px' }}>
@@ -131,9 +100,6 @@ export default function GlobalSearch(props) {
             {recent.map((item) => (
               <div key={item} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
                                 <button type="button" onClick={() => setQuery(item)} style={{ display: "flex", alignItems: "center", gap: "12px", border: "none", background: "none", flex: 1, textAlign: "left", fontSize: "15px" }}><Clock size={18} color="#65676B" /><span>{item}</span></button>
-                <button type="button" onClick={() => removeRecent(item)} style={{ border: "none", background: "none" }}><MoreHorizontal size={18} color="#65676B" /></button>
-              </div>
-            ))}
                 <button type="button" onClick={() => removeRecent(item)} style={{ border: "none", background: "none" }}><MoreHorizontal size={18} color="#65676B" /></button>
               </div>
             ))}
@@ -168,13 +134,8 @@ export default function GlobalSearch(props) {
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '4px' }}>{p.full_name || p.username || 'Zuka User'}<ZukaBadge verified={p.is_verified} size={15} /></div>
                                                 {p.bio && <div style={{ fontSize: "12px", color: "#65676B" }}>{p.bio}</div>} </div> </div>
-                      </div>
-                    </div>
                     {p.id !== currentUser?.id && <button type="button" onClick={() => { saveRecent(query); onOpenMessenger?.(p); }} style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 600, fontSize: '13px' }}>Message</button>}
                   </div>
-                ))}
-              </div>
-            )}
                 ))}
               </div>
             )}
