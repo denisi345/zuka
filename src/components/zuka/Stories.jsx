@@ -190,20 +190,20 @@ export default function Stories({
   };
   useEffect(() => {
     if (!activeStory) return;
-    setViewedIds((p) => new Set(p).add(activeStory.id));
+    setViewedIds((p) => new Set(p).add(activeStory?.id));
     setViewsMap((p) => {
-      const arr = p[activeStory.id] || [];
+      const arr = p[activeStory?.id] || [];
       if (arr.some((x) => x.name === myName)) return p;
       return {
         ...p,
-        [activeStory.id]: [...arr, { name: myName, avatar: myAvatar, reaction: '' }]
+        [activeStory?.id]: [...arr, { name: myName, avatar: myAvatar, reaction: '' }]
       };
     });
   }, [activeStory?.id]);
 
   useEffect(() => {
     if (!activeStory || paused || viewersOpen || menuOpen) return;
-    if (activeStory.media_type === 'video' || activeStory.audio_url) return;
+    if (activeStory?.media_type === 'video' || activeStory?.audio_url) return;
     const t = setInterval(() => {
       setProgress((p) => {
         if (p + 1 >= 100) { goNext(); return 100; }
@@ -420,7 +420,7 @@ export default function Stories({
             onClick={openCreator}
             className="relative flex-shrink-0 w-[112px] h-[200px] rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm flex flex-col text-left group"
           >
-            <div className="relative w-full h-[146px] bg-gray-100 overflow-hidden">{activeStory.audio_url&&(<audio ref={storyAudioRef} src={activeStory.audio_url} autoPlay muted={muted} onTimeUpdate={(e)=>{const a=e.currentTarget;if(a.duration)setProgress((a.currentTime/a.duration)*100);}} onEnded={nextStory} />)}
+            <div className="relative w-full h-[146px] bg-gray-100 overflow-hidden">{activeStory?.audio_url&&(<audio ref={storyAudioRef} src={activeStory?.audio_url} autoPlay muted={muted} onTimeUpdate={(e)=>{const a=e.currentTarget;if(a.duration)setProgress((a.currentTime/a.duration)*100);}} onEnded={nextStory} />)}
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -534,15 +534,15 @@ export default function Stories({
                       {activeGroup.userName || 'User'}
                     </span>
                     <span className="text-xs text-white/75 flex-shrink-0">
-                      {timeAgo(activeStory.created_at)}
+                      {timeAgo(activeStory?.created_at)}
                     </span>
                   </div>
-                  {activeStory.music_title && (
+                  {activeStory?.music_title && (
                     <div className="flex items-center gap-1 text-[11px] text-white/85 truncate">
                       <Music className="w-3 h-3 flex-shrink-0" />
                       <span className="truncate">
-                        {activeStory.music_title}
-                        {activeStory.music_artist ? ` · ${activeStory.music_artist}` : ''}
+                        {activeStory?.music_title}
+                        {activeStory?.music_artist ? ` · ${activeStory?.music_artist}` : ''}
                       </span>
                     </div>
                   )}
@@ -566,7 +566,7 @@ export default function Stories({
                 {isOwnStory && (
                   <button
                     type="button"
-                    onClick={() => deleteStory(activeStory.id)}
+                    onClick={() => deleteStory(activeStory?.id)}
                     className="p-2 rounded-full hover:bg-white/15"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -589,36 +589,36 @@ export default function Stories({
             onTouchEnd={() => setPaused(false)}
             className="relative flex-1 flex items-center justify-center overflow-hidden"
           >
-            {activeStory.media_type === 'video' && activeStory.media_url ? (
+            {activeStory?.media_type === 'video' && activeStory?.media_url ? (
               <video
                 ref={videoRef}
-                src={activeStory.media_url}
+                src={activeStory?.media_url}
                 autoPlay
                 playsInline
                 muted={muted}
                 onEnded={nextStory}
                 className="max-h-full max-w-full object-contain"
               />
-            ) : activeStory.media_url ? (
+            ) : activeStory?.media_url ? (
               <img
-                src={activeStory.media_url}
+                src={activeStory?.media_url}
                 alt="Story"
                 className="max-h-full max-w-full object-contain"
               />
             ) : (
               <div
                 style={{
-                  background: activeStory.bg_gradient || '#1877F2',
-                  color: activeStory.text_color || '#fff',
-                  fontFamily: activeStory.font_family || 'inherit'
+                  background: activeStory?.bg_gradient || '#1877F2',
+                  color: activeStory?.text_color || '#fff',
+                  fontFamily: activeStory?.font_family || 'inherit'
                 }}
                 className="w-full h-full flex items-center justify-center p-8 text-center text-2xl font-bold"
               >
-                {activeStory.caption || ''}
+                {activeStory?.caption || ''}
               </div>
             )}
-            {Array.isArray(activeStory.stickers) &&
-              activeStory.stickers.map((st) => (
+            {Array.isArray(activeStory?.stickers) &&
+              activeStory?.stickers.map((st) => (
                 <div
                   key={st.id}
                   style={{ left: `${st.x}%`, top: `${st.y}%` }}
@@ -628,9 +628,9 @@ export default function Stories({
                 </div>
               ))}
 
-            {activeStory.media_url && activeStory.caption && (
+            {activeStory?.media_url && activeStory?.caption && (
               <div className="absolute bottom-4 inset-x-4 text-center text-white text-sm bg-black/55 backdrop-blur-sm px-3.5 py-2 rounded-xl">
-                {activeStory.caption}
+                {activeStory?.caption}
               </div>
             )}
 
@@ -651,7 +651,7 @@ export default function Stories({
             {isOwnStory ? (
               <button
                 type="button"
-                onClick={() => openInsights(activeStory.id)}
+                onClick={() => openInsights(activeStory?.id)}
                 className="flex items-center gap-2 text-white text-sm font-medium py-1.5 px-3 rounded-full bg-white/15 hover:bg-white/25"
               >
                 <Eye className="w-4 h-4" />
