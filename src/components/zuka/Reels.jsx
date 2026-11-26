@@ -615,15 +615,19 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
                 <p style={{ textAlign: 'center', color: '#65676B', fontSize: '14px', marginTop: '32px' }}>No comments yet. Be the first to comment!</p>
               ) : (
                 activeCommentReel.commentsList.map((c) => (
-                  <div key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  <div key={c.id} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginLeft: String(c.text || '').startsWith('@') ? '36px' : '0px' }}>
                     <img src={c.avatar} alt={c.user} onClick={() => c.user_id && openCreatorProfile(c.user_id, c.user, c.avatar)} style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer' }} />
-                    <div style={{ backgroundColor: '#F0F2F5', borderRadius: '14px', padding: '8px 12px', maxWidth: '84%' }}>
+                    <div style={{ flex: 1, maxWidth: '84%' }}><div style={{ backgroundColor: '#F0F2F5', borderRadius: '14px', padding: '8px 12px' }}>
                       <div onClick={() => c.user_id && openCreatorProfile(c.user_id, c.user, c.avatar)} style={{ fontWeight: 700, fontSize: '13px', color: '#050505', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                         {c.user}
                         {c.verified && <span style={{ width: '13px', height: '13px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
                       </div>
                       <div style={{ fontSize: '14px', color: '#050505', marginTop: '2px' }}>{c.text}</div>
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '4px', paddingLeft: '8px', fontSize: '12px', fontWeight: 700, color: '#65676B' }}>
+                      <button type="button" onClick={() => toggleCommentLike(c.id)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, color: likedComments[c.id] ? '#1877F2' : '#65676B' }}>Like{likedComments[c.id] ? ' · 1' : ''}</button>
+                      <button type="button" onClick={() => { setReplyTarget({ id: c.id, user: c.user }); setCommentInput('@' + c.user + ' '); }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, color: '#65676B' }}>Reply</button>
+                    </div></div>
                   </div>
                 ))
               )}
