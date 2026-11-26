@@ -89,3 +89,9 @@ export default function GlobalSearch(props) {
     }, 280);
     return () => clearTimeout(timer);
   }, [query]);
+      ]);
+      setResults({ people, posts, reels, market, pages, groups });
+      setLoading(false);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [query]);
