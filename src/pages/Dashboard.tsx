@@ -121,7 +121,7 @@ const openAnyProfile = (person: any, fallbackName?: string, fallbackAvatar?: str
             />
           )}
           <Suspense fallback={<div style={{ padding: "32px", textAlign: "center", color: "#65676B", fontWeight: 600 }}>Loading...</div>}>
-        {activeTab === "messenger" && <Messenger currentUser={profile} onOpenUserProfile={openAnyProfile} initialPeer={chatTarget} />}
+        {activeTab === "messenger" && <Messenger currentUser={profile} initialPeer={chatTarget} />}
           {activeTab === "reels" && <Reels userProfile={profile} onOpenUserProfile={openAnyProfile} initialReel={initialReel} onBackToFeed={undefined} />}
           {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenUserProfile={openAnyProfile} onOpenTab={(tab) => setActiveTab(tab)} />}
           {activeTab === "marketplace" && (

@@ -193,7 +193,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
           </div>
         ) : (
           [...posts].sort((a, b) => Number(Boolean(b.is_pinned)) - Number(Boolean(a.is_pinned))).map((post, idx) => (
-            <FeedGuard key={post.id}><Post key={post.id} post={post} currentUserId={userProfile?.id} onOpenUserProfile={openUserProfileSafe}
+            <FeedGuard key={post.id}><Post key={post.id} post={post} currentUserId={userProfile?.id}
               onOpenUserProfile={openUserProfileSafe}
               onDeletePost={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
             /></FeedGuard>
