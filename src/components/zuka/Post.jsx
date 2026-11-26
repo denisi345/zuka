@@ -17,6 +17,10 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
   const storageKey = `zuka_liked_${post.id}`;
   const [liked, setLiked] = useState(() => localStorage.getItem(storageKey) === '1');
   const [likesCount, setLikesCount] = useState(Number(post.likes_count || 0)); const [commentsCount, setCommentsCount] = useState(Number(post.comments_count || 0)); const [sharesCount, setSharesCount] = useState(Number(post.shares_count || 0)); const [commentLikes, setCommentLikes] = useState({}); const [replyTarget, setReplyTarget] = useState(null); const [commentReplies, setCommentReplies] = useState({}); React.useEffect(() => { if (!post?.id || String(post.id).startsWith('live-') || String(post.id).startsWith('demo-')) return; Promise.all([supabase.from('post_likes').select('user_id').eq('post_id', post.id), supabase.from('comments').select('id', { count: 'exact', head: true }).eq('post_id', post.id)]).then(([lk, cm]) => { if (Array.isArray(lk.data)) { setLikesCount((v) => Math.max(v, lk.data.length)); if (currentUserId && lk.data.some((x) => String(x.user_id) === String(currentUserId))) setLiked(true); } if (typeof cm.count === 'number') setCommentsCount((v) => Math.max(v, cm.count)); }).catch(() => {}); }, [post?.id, currentUserId]);
+  const [giftsCount, setGiftsCount] = React.useState(0);
+  const [hideGifts, setHideGifts] = React.useState(Boolean(post?.profiles?.hide_gift_counts));
+  const [giftOpen, setGiftOpen] = React.useState(false);
+  React.useEffect(() => { if (!post?.id) return; supabase.from("creator_tips").select("id", { count: "exact", head: true }).eq("post_id", String(post.id)).then(({ count }) => { if (typeof count === "number") setGiftsCount(count); }); if (post?.user_id) supabase.from("profiles").select("hide_gift_counts").eq("id", post.user_id).maybeSingle().then(({ data }) => { if (data) setHideGifts(Boolean(data.hide_gift_counts)); }); }, [post?.id, post?.user_id]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
