@@ -193,7 +193,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-          {filtered.map((item) => (
+          {[...filtered].sort((a, b) => Number(Boolean(b.is_boosted)) - Number(Boolean(a.is_boosted))).map((item) => (
             <div key={item.id} onClick={() => setSelectedItem(item)} style={{ cursor: 'pointer' }}>
               <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#E4E6EB' }}>
                 {item.image_url ? (
@@ -201,7 +201,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#65676B', fontSize: '13px', fontWeight: 600 }}>ZUKA Item</div>
                 )}
-                {item.status === 'sold' && <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#E41E3F', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, padding: '3px 7px', borderRadius: '4px' }}>SOLD</span>}
+                {item.status === 'sold' ? <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: '#E41E3F', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, padding: '3px 7px', borderRadius: '4px' }}>SOLD</span> : item.is_boosted && <span style={{ position: 'absolute', top: '8px', left: '8px', backgroundColor: 'rgba(24,119,242,0.92)', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, padding: '3px 7px', borderRadius: '4px' }}>Sponsored</span>}
               </div>
               <div style={{ fontSize: '17px', fontWeight: 700, marginTop: '6px', lineHeight: 1.2 }}>{Number(item.price || 0) === 0 ? 'Free' : `${item.currency || 'TZS'} ${Number(item.price).toLocaleString()}`}</div>
               <div style={{ fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>{item.title}</div>
