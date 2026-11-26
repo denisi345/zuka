@@ -552,14 +552,14 @@ export default function Stories({
                 <button
                   type="button"
                   onClick={() => setPaused((p) => !p)}
-                  className="p-2 rounded-full hover:bg-white/15"
+                  className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center"
                 >
                   {paused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
                 </button>
                 <button
                   type="button"
                   onClick={() => setMuted((m) => !m)}
-                  className="p-2 rounded-full hover:bg-white/15"
+                  className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center"
                 >
                   {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
@@ -567,7 +567,7 @@ export default function Stories({
                   <button
                     type="button"
                     onClick={() => deleteStory(activeStory.id)}
-                    className="p-2 rounded-full hover:bg-white/15"
+                    className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -575,7 +575,7 @@ export default function Stories({
                 <button
                   type="button"
                   onClick={() => setViewOpen(false)}
-                  className="p-2 rounded-full hover:bg-white/15"
+                  className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -587,7 +587,7 @@ export default function Stories({
             onMouseUp={() => setPaused(false)}
             onTouchStart={() => setPaused(true)}
             onTouchEnd={() => setPaused(false)}
-            className="relative flex-1 flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-10 flex items-center justify-center overflow-hidden"
           >
             {activeStory.audio_url && <audio ref={audioRef} src={activeStory.audio_url} autoPlay loop muted={muted} />}<button type="button" onClick={(e) => { e.stopPropagation(); prevStory(); }} className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/35 border border-white/50 text-white text-3xl flex items-center justify-center">‹</button><button type="button" onClick={(e) => { e.stopPropagation(); nextStory(); }} className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-black/35 border border-white/50 text-white text-3xl flex items-center justify-center">›</button>{activeStory.media_type === 'video' && activeStory.media_url ? (
               <video
@@ -597,13 +597,13 @@ export default function Stories({
                 playsInline
                 muted={muted}
                 onEnded={nextStory}
-                className="max-h-full max-w-full object-contain"
+                className="w-full h-full object-cover"
               />
             ) : activeStory.media_url ? (
               <img
                 src={activeStory.media_url}
                 alt="Story"
-                className="max-h-full max-w-full object-contain"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div
@@ -822,9 +822,9 @@ export default function Stories({
         {createMode === 'media' ? (
           draftPreview ? (
             draftFile?.type?.startsWith('video') ? (
-              <video src={draftPreview} controls playsInline className="max-h-full max-w-full object-contain" />
+              <video src={draftPreview} controls playsInline className="w-full h-full object-cover" />
             ) : (
-              <img src={draftPreview} alt="Preview" className="max-h-full max-w-full object-contain" />
+              <img src={draftPreview} alt="Preview" className="w-full h-full object-cover" />
             )
           ) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center justify-center gap-3 p-6 text-center">
