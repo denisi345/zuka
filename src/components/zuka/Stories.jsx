@@ -406,7 +406,7 @@ export default function Stories({
   const videoRef = useRef(null);
   const timeAgo = formatAge;
   const openCreator = () => { resetDraft(); setCreateOpen(true); };
-  const handleFileChange = pickMedia;
+  const pickMedia = pickMedia;
   const loadStories = async () => {};
 
   const isOwnStory = Boolean(user && activeGroup && activeGroup.user_id === user.id);
@@ -763,36 +763,6 @@ export default function Stories({
       <span className="text,[17px] font-bold">Create story</span>
       <button type="button" onClick={shareStory} disabled={sharing} className="px-4 py-1.5 rounded-lg bg-[#1877F2] disabled:opacity-50 text-sm font-semibold">{sharing ? 'Sharing...' : 'Share'}</button>
     </div>
-    <div className="grid grid-cols-3 gap-2 px-4 pt-3 pb-2">
-      <button type="button" onClick={() => { setCreateMode('media'); if (!draftPreview) fileInputRef.current?.click(); }} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'media' ? 'bg-[ #1877F2]/20 border-[ #1877F2]' : 'bg-[ #242526] border-white/10 text-white/80'}`}>
-        <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center"><ImageIcon className="w-4 h-4 text-white" /></div>
-        <span>Photo / Video</span>
-      </button>
-      <button type="button" onClick={() => setCreateMode('text')} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'text' ? 'bg-purple-500/20 border-purple-400' : 'bg-[#242526] border-white/10 text-white/80'}`}>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-sm font-bold">Aa</div>
-        <span>Text</span>
-      </button>
-      <label className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border bg-[ #242526] border-white/10 text-white/80 text-xs font-semibold cursor-pointer">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center"><Music className="w-4 h-4 text-white" /></div>
-        <span>Music</span>
-        <input type="file" accept="audio/*" onChange={pickAudio} className="hidden" />
-      </label>
-    </div>
-    <div className="grid grid-cols-3 gap-2 px-4 pt-3 pb-2">
-      <button type="button" onClick={() => { setCreateMode('media'); if (!draftPreview) fileInputRef.current?.click(); }} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'media' ? 'bg-[ #1877F2]/20 border-[ #1877F2]' : 'bg-[ #242526] border-white/10 text-white/80'}`}>
-        <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center"><ImageIcon className="w-4 h-4 text-white" /></div>
-        <span>Photo / Video</span>
-      </button>
-      <button type="button" onClick={() => setCreateMode('text')} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'text' ? 'bg-purple-500/20 border-purple-400' : 'bg-[ #242526] border-white/10 text-white/80'}`}>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-sm font-bold">Aa</div>
-        <span>Text</span>
-      </button>
-      <label className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border bg-[ #242526] border-white/10 text-white/80 text-xs font-semibold cursor-pointer">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center"><Music className="w-4 h-4 text-white" /></div>
-        <span>Music</span>
-        <input type="file" accept="audio/*" onChange={pickAudio} className="hidden" />
-      </label>
-    </div>
     <div className="flex-1 flex items-center justify-center px-4 py-2 overflow-hidden">
       <div className="relative w-full max-w-[340px] aspect-[9/16] max-h-full rounded-2xl overflow-hidden bg-[ #242526] border border-white/10 shadow-2xl flex items-center justify-center">
         {createMode === 'media' ? (
@@ -816,7 +786,7 @@ export default function Stories({
         {selectedTrack && (
           <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2 bg-black/70 backdrop-blur-md border border-white/15 rounded-xl px-3 py-2 text-white shadow-lg">
             <div className="flex items-center gap-2 min-w-0"><Music className="w-4 h-4 text-[#1877F2] shrink-0" /><div className="truncate text-xs"><div className="font-semibold truncate">{selectedTrack.title}</div><div className="text-white/70 truncate">{selectedTrack.artist}</div></div></div>
-            <button type="button" onClick={() => setSelectedMusic(null)} className="p-1 rounded-full hover:bg-white/15 text-white/80"><X className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={() => setSelectedTrack(null)} className="p-1 rounded-full hover:bg-white/15 text-white/80"><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
         {stickers.map((st) => (
@@ -845,18 +815,10 @@ export default function Stories({
               ref={fileInputRef}
               type="file"
               accept="image/*,video/*"
-              onChange={handleFileChange}
+              onChange={pickMedia}
               className="hidden"
             />
 
-            <button
-              type="button"
-              disabled={sharing}
-              onClick={shareStory}
-              className="w-full py-2.5 rounded-xl bg-[#1877F2] hover:bg-[#166FE5] disabled:opacity-50 text-white font-semibold text-sm shadow"
-            >
-              {sharing ? 'Sharing...' : 'Share to story'}
-            </button>
           </div>
       )}
     </div>
