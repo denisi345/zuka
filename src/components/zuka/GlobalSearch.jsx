@@ -127,5 +127,12 @@ export default function GlobalSearch(props) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <span style={{ fontWeight: 700, fontSize: '17px', color: '#050505' }}>Recent</span>
-              {recent.length > 0 && <button type="button" onClick={() => { setRecent([]); localStorage.removeItem(RECENT_KEY); }} style={{ border: 'none', background: 'none', color: '#1877F2', fontSize: '14px', fontWeight: 600 }}>Clear all</button>}
+                            {recent.length > 0 && <button type="button" onClick={() => { setRecent([]); localStorage.removeItem(RECENT_KEY); }} style={{ border: "none", background: "none", color: "#1877F2", fontWeight: 600 }}>Clear all</button>}
             </div>
+            </div>
+            {recent.map((item) => (
+              <div key={item} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+                <button type="button" onClick={() => setQuery(item)} style={{ display: 'flex', alignItems: 'center', gap: '12px', border: 'none', background: 'none', flex: 1, textAlign: 'left', fontSize: '15px', fontWeight: 500 }}><Clock size={18} color="#65676B" /><span>{item}</span></button>
+                <button type="button" onClick={() => removeRecent(item)} style={{ border: 'none', background: 'none', padding: '4px' }}><MoreHorizontal size={18} color="#65676B" /></button>
+              </div>
+            ))}
