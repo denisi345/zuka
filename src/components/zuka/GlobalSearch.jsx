@@ -148,3 +148,29 @@ export default function GlobalSearch({ currentUser, onBack, onOpenUserProfile, o
                 </div>
               </div>
             )}
+            {(tab === 'all' || tab === 'market') && results.market.length > 0 && (
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><ShoppingBag size={17} color="#1877F2" /> Marketplace</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {results.market.map((m) => (
+                    <div key={m.id} onClick={() => { saveRecent(query); onOpenTab?.('marketplace'); }} style={{ border: '1px solid #E4E6EB', borderRadius: '10px', overflow: 'hidden', cursor: 'pointer' }}>
+                      {m.image_url && <img src={m.image_url} alt="" style={{ width: '100%', height: '110px', objectFit: 'cover' }} />}
+                      <div style={{ padding: '8px' }}><div style={{ fontWeight: 700, fontSize: '14px', color: '#050505' }}>{m.price ? `TZS ${Number(m.price).toLocaleString()}` : ''}</div><div style={{ fontSize: '13px', color: '#65676B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.title}</div></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(tab === 'all' || tab === 'communities') && (results.pages.length > 0 || results.groups.length > 0) && (
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><Users size={17} color="#1877F2" /> Pages & Groups</div>
+                {results.pages.map((pg) => <div key={`pg-${pg.id}`} onClick={() => { saveRecent(query); onOpenTab?.('pages'); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #F0F2F5', cursor: 'pointer' }}><Flag size={20} color="#1877F2" /><div><div style={{ fontWeight: 600, fontSize: '14px' }}>{pg.name}</div><div style={{ fontSize: '12px', color: '#65676B' }}>Page • {pg.category || 'Community'}</div></div></div>)}
+                {results.groups.map((gr) => <div key={`gr-${gr.id}`} onClick={() => { saveRecent(query); onOpenTab?.('groups'); }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: '1px solid #F0F2F5', cursor: 'pointer' }}><Users size={20} color="#1877F2" /><div><div style={{ fontWeight: 600, fontSize: '14px' }}>{gr.name}</div><div style={{ fontSize: '12px', color: '#65676B' }}>Group</div></div></div>)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
