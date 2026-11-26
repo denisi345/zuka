@@ -50,5 +50,15 @@ export default function GlobalSearch(props) {
   const saveRecent = (term) => {
     const c = term.trim(); if (!c) return;
     const next = [c, ...recent.filter((x) => x.toLowerCase() !== c.toLowerCase())].slice(0, 8);
+    setRecent(next); try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {} };
+  };
+  const removeRecent = (term) => {
+    const next = recent.filter((x) => x !== term);
     setRecent(next); try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {}
+  };
+  const safeQuery = async (tables, fn) => {
+    for (const t of tables) {
+      try { const { data, error } = await fn(supabase.from(t)); if (!error && Array.isArray(data)) return data; } catch {}
+    }
+    return [];
   };
