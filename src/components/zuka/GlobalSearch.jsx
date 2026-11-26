@@ -44,7 +44,6 @@ export default function GlobalSearch(props) {
       try { const { data, error } = await fn(supabase.from(t)); if (!error && Array.isArray(data)) return data; } catch {}
     }
     return [];
-  };
   const sendFriendReq = async (targetId) => {
     setSentIds((prev) => ({ ...prev, [targetId]: true }));
     try { await supabase.from('friendships').insert({ requester_id: currentUser?.id, addressee_id: targetId, status: 'pending' }); } catch {}
