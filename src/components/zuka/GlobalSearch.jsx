@@ -30,3 +30,11 @@ export default function GlobalSearch(props) {
     people: [], posts: [], reels: [],
     market: [], pages: [], groups: []
   });
+
+export default function GlobalSearch(props) {
+  const { currentUser, onBack, onOpenUserProfile, onOpenMessenger, onOpenReel, onOpenTab } = props;
+  const [query, setQuery] = useState('');
+  const [tab, setTab] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [suggested, setSuggested] = useState([]);
+  const [sentIds, setSentIds] = useState({});
