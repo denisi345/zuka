@@ -147,3 +147,6 @@ export default function GlobalSearch(props) {
                 <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '6px' }}>
                   {suggested.map((u) => (
                     <div key={u.id} style={{ minWidth: '148px', border: '1px solid #E4E6EB', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#FFF' }}>
+                      <img onClick={() => onOpenUserProfile?.(u.id)} src={u.avatar_url || '/placeholder.svg'} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover', cursor: 'pointer', backgroundColor: '#E4E6EB' }} />
+                      <div style={{ padding: '8px' }}>
+                        <div style={{ fontWeight: 600, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.full_name || u.username || 'Zuka User'}</div>
