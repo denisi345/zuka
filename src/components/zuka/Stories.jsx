@@ -483,7 +483,7 @@ export default function Stories({
                   hasUnseen ? 'bg-[#1877F2]' : 'bg-gray-300'
                 }`}
               >
-                {grp.author_avatar ? (
+                {grp.items.length > 1 && <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#1877F2] text-white text-[10px] font-bold flex items-center justify-center border border-white">{grp.items.length}</span>}{grp.author_avatar ? (
                   <img
                     src={grp.author_avatar}
                     alt={grp.author_name || 'User'}
