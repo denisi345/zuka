@@ -230,6 +230,7 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
               {userProfile?.id && String(selectedItem.user_id || selectedItem.seller_id) === String(userProfile.id) && (
                 <>
                   {selectedItem.status !== 'sold' && <button type="button" onClick={() => handleMarkSold(selectedItem)} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '8px 12px', fontWeight: 600, cursor: 'pointer' }}>Mark as Sold</button>}
+{selectedItem.status !== "sold" && ceoCfg.boost_enabled !== false && <button type="button" onClick={() => { setBoostItem(selectedItem); setSelectedItem(null); }} style={{ backgroundColor: "#E7F3FF", color: "#1877F2", border: "none", borderRadius: "8px", padding: "8px 12px", fontWeight: 700, cursor: "pointer" }}>🚀 Boost</button>}
                   <button type="button" onClick={() => handleDelete(selectedItem)} style={{ backgroundColor: '#FFEBE9', color: '#E41E3F', border: 'none', borderRadius: '8px', padding: '8px 12px', fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </>
               )}
