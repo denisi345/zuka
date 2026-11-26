@@ -68,7 +68,7 @@ export default function Stories({
   const [activeItemIdx, setActiveItemIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(false); const [menuOpen, setMenuOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createMode, setCreateMode] = useState('media');
   const [draftFile, setDraftFile] = useState(null);
