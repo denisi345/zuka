@@ -95,3 +95,9 @@ export default function GlobalSearch(props) {
     }, 280);
     return () => clearTimeout(timer);
   }, [query]);
+  const VerifiedTick = () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="#1877F2" style={{ flexShrink: 0 }}><path d="M12 2L14.8 4.2L18.4 4L19.6 7.4L22.4 9.6L21.4 13L22.4 16.4L19.6 18.6L18.4 22L14.8 21.8L12 24L9.2 21.8L5.6 22L4.4 18.6L1.6 16.4L2.6 13L1.6 9.6L4.4 7.4L5.6 4L9.2 4.2L12 2Z"/><path d="M9.5 12.5L11.2 14.2L15 10.2" stroke="#FFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+  );
+  const TABS = [
+    { id: 'all', label: 'All' }, { id: 'people', label: `People (${results.people.length})` }, { id: 'posts', label: `Posts (${results.posts.length})` }, { id: 'reels', label: `Reels (${results.reels.length})` }, { id: 'market', label: `Marketplace (${results.market.length})` }, { id: 'communities', label: `Pages & Groups (${results.pages.length + results.groups.length})` }
+  ];
