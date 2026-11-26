@@ -120,3 +120,31 @@ export default function GlobalSearch({ currentUser, onBack, onOpenUserProfile, o
                 ))}
               </div>
             )}
+            {(tab === 'all' || tab === 'posts') && results.posts.length > 0 && (
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><FileText size={17} color="#1877F2" /> Posts</div>
+                {results.posts.map((post) => (
+                  <div key={post.id} onClick={() => { saveRecent(query); onOpenTab?.('feed'); }} style={{ padding: '10px 0', borderBottom: '1px solid #F0F2F5', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <img src={post.profiles?.avatar_url || '/placeholder.svg'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <span style={{ fontWeight: 600, fontSize: '14px' }}>{post.profiles?.full_name || 'Zuka User'}</span>
+                    </div>
+                    <p style={{ fontSize: '14px', color: '#050505', margin: '0 0 6px 0', lineHeight: 1.4 }}>{post.content}</p>
+                    {post.image_url && <img src={post.image_url} alt="" style={{ width: '100%', maxHeight: '180px', objectFit: 'cover', borderRadius: '8px' }} />}
+                  </div>
+                ))}
+              </div>
+            )}
+            {(tab === 'all' || tab === 'reels') && results.reels.length > 0 && (
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', padding: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.08)' }}>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}><Film size={17} color="#1877F2" /> Reels</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                  {results.reels.map((r) => (
+                    <div key={r.id} onClick={() => { saveRecent(query); onOpenReel?.(r); }} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#000', aspectRatio: '9/14', cursor: 'pointer' }}>
+                      <video src={r.video_url} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(transparent 55%, rgba(0,0,0,0.8))', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '8px', color: '#FFF' }}><div style={{ fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.caption || 'Reel'}</div></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
