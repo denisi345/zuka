@@ -110,8 +110,7 @@ export default function Stories({
       if (!alive) return;
       const rows = (data || []).filter((r) =>
         r.media_type === 'text' || String(r.media_url || '').trim()
-    </div>
-  );
+      );
       setStories(rows.map((r) => {
         const pf = pm[String(r.user_id || '').trim()] || {};
         const raw = String(r.author_name || '');
@@ -152,8 +151,7 @@ export default function Stories({
     arr.sort((a, b) =>
       String(a.user_id) === myId ? -1 :
       String(b.user_id) === myId ? 1 : 0
-    </div>
-  );
+    );
     return arr;
   }, [stories, mutedUsers, userProfile?.id]);
   const activeGroup = activeGroupIdx !== null
@@ -408,6 +406,7 @@ export default function Stories({
   const videoRef = useRef(null);
   const timeAgo = formatAge;
   const openCreator = () => { resetDraft(); setCreateOpen(true); };
+  const handleFileChange = pickMedia;
   const loadStories = async () => {};
 
   const isOwnStory = Boolean(user && activeGroup && activeGroup.user_id === user.id);
@@ -500,8 +499,7 @@ export default function Stories({
                 {grp.user_id === user?.id ? 'Your story' : grp.author_name || 'User'}
               </span>
             </button>
-    </div>
-  );
+          );
         })}
       </div>
       {viewOpen && activeStory && (
@@ -514,8 +512,7 @@ export default function Stories({
                   <div key={item.id} className="h-[3px] flex-1 bg-white/30 rounded-full overflow-hidden">
                     <div className="h-full bg-white transition-all duration-75" style={{ width: `${w}%` }} />
                   </div>
-    </div>
-  );
+                );
               })}
             </div>
             <div className="flex items-center justify-between text-white">
@@ -766,6 +763,21 @@ export default function Stories({
       <span className="text,[17px] font-bold">Create story</span>
       <button type="button" onClick={shareStory} disabled={sharing} className="px-4 py-1.5 rounded-lg bg-[#1877F2] disabled:opacity-50 text-sm font-semibold">{sharing ? 'Sharing...' : 'Share'}</button>
     </div>
+    <div className="grid grid-cols-3 gap-2 px-4 pt-3 pb-2">
+      <button type="button" onClick={() => { setCreateMode('media'); if (!draftPreview) fileInputRef.current?.click(); }} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'media' ? 'bg-[ #1877F2]/20 border-[ #1877F2]' : 'bg-[ #242526] border-white/10 text-white/80'}`}>
+        <div className="w-8 h-8 rounded-full bg-[#1877F2] flex items-center justify-center"><ImageIcon className="w-4 h-4 text-white" /></div>
+        <span>Photo / Video</span>
+      </button>
+      <button type="button" onClick={() => setCreateMode('text')} className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border text-xs font-semibold ${createMode === 'text' ? 'bg-purple-500/20 border-purple-400' : 'bg-[#242526] border-white/10 text-white/80'}`}>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-sm font-bold">Aa</div>
+        <span>Text</span>
+      </button>
+      <label className="flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl border bg-[ #242526] border-white/10 text-white/80 text-xs font-semibold cursor-pointer">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center"><Music className="w-4 h-4 text-white" /></div>
+        <span>Music</span>
+        <input type="file" accept="audio/*" onChange={pickAudio} className="hidden" />
+      </label>
+    </div>
     <div className="flex-1 flex items-center justify-center px-4 py-2 overflow-hidden">
       <div className="relative w-full max-w-[340px] aspect-[9/16] max-h-full rounded-2xl overflow-hidden bg-[ #242526] border border-white/10 shadow-2xl flex items-center justify-center">
         {createMode === 'media' ? (
@@ -822,8 +834,8 @@ export default function Stories({
               className="hidden"
             />
 
+          </div>
       )}
-    </div>
     </div>
   );
 }
