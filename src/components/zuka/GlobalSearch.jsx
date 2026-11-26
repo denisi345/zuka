@@ -150,3 +150,12 @@ export default function GlobalSearch(props) {
                       <img onClick={() => onOpenUserProfile?.(u.id)} src={u.avatar_url || '/placeholder.svg'} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover', cursor: 'pointer', backgroundColor: '#E4E6EB' }} />
                       <div style={{ padding: '8px' }}>
                         <div style={{ fontWeight: 600, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.full_name || u.username || 'Zuka User'}</div>
+                        <button type="button" onClick={() => sendFriendReq(u.id)} style={{ marginTop: '8px', width: '100%', padding: '6px 0', borderRadius: '6px', border: 'none', backgroundColor: sentIds[u.id] ? '#E4E6EB' : '#E7F3FF', color: sentIds[u.id] ? '#050505' : '#1877F2', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>{sentIds[u.id] ? <><Check size={14} /> Requested</> : <><UserPlus size={14} /> Add Friend</>}</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : loading ? <div style={{ textAlign: 'center', padding: '36px', color: '#65676B', fontWeight: 600 }}>Searching Zuka...</div> : (
