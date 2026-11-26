@@ -549,7 +549,8 @@ export default function Stories({
                 </div>
               </div>
               <div className="flex items-center gap-2 relative">{menuOpen && (<div className="absolute right-10 top-11 z-40 w-44 rounded-xl bg-neutral-900/95 border border-white/15 shadow-xl py-1 text-sm text-white"><button type="button" onClick={() => { setPaused((p) => !p); setMenuOpen(false); }} className="w-full px-3.5 py-2.5 text-left hover:bg-white/10">{paused ? "Play story" : "Pause story"}</button><button type="button" onClick={() => { setMuted((m) => !m); setMenuOpen(false); }} className="w-full px-3.5 py-2.5 text-left hover:bg-white/10">{muted ? "Unmute" : "Mute"}</button>{isOwnStory && <button type="button" onClick={() => { setMenuOpen(false); deleteStory(activeStory.id); }} className="w-full px-3.5 py-2.5 text-left text-red-400 hover:bg-white/10">Delete story</button>}</div>)}<button type="button" onClick={() => setMenuOpen((o) => !o)} className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white text-xl font-bold">⋮</button>
-                  type="button"
+                  <button
+                      type="button"
                   onClick={() => setViewOpen(false)}
                   className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center"
                 >
