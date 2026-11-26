@@ -122,3 +122,10 @@ export default function GlobalSearch(props) {
           </div>
         )}
       </div>
+      <div style={{ padding: '12px' }}>
+        {!query.trim() ? (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontWeight: 700, fontSize: '17px', color: '#050505' }}>Recent</span>
+              {recent.length > 0 && <button type="button" onClick={() => { setRecent([]); localStorage.removeItem(RECENT_KEY); }} style={{ border: 'none', background: 'none', color: '#1877F2', fontSize: '14px', fontWeight: 600 }}>Clear all</button>}
+            </div>
