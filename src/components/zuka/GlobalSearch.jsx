@@ -189,3 +189,11 @@ export default function GlobalSearch(props) {
                 ))}
               </div>
             )}
+            {(tab === 'all' || tab === 'reels') && results.reels.length > 0 && (
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>Reels</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  {results.reels.map((r) => <div key={r.id} onClick={() => { saveRecent(query); onOpenReel?.(r); }} style={{ borderRadius: '10px', overflow: 'hidden', backgroundColor: '#000', aspectRatio: '9/14' }}><video src={r.video_url} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>)}
+                </div>
+              </div>
+            )}
