@@ -116,3 +116,9 @@ export default function GlobalSearch(props) {
           </div>
           <button type="button" onClick={() => saveRecent(query)} style={{ border: 'none', background: 'none', padding: '4px' }}><Search size={21} color="#050505" /></button>
         </div>
+        {query.trim() && (
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginTop: '10px' }}>
+            {TABS.map((t) => <button key={t.id} type="button" onClick={() => setTab(t.id)} style={{ padding: '6px 14px', borderRadius: '999px', border: 'none', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', backgroundColor: tab === t.id ? '#E7F3FF' : '#F0F2F5', color: tab === t.id ? '#1877F2' : '#050505' }}>{t.label}</button>)}
+          </div>
+        )}
+      </div>
