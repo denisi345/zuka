@@ -28,6 +28,8 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
   const [selectedItem, setSelectedItem] = useState(null);
   const [inquiryText, setInquiryText] = useState('Hi, is this still available?');
   const [sellOpen, setSellOpen] = useState(false); const [ctrlOpen, setCtrlOpen] = useState(false); const [ctrlItem, setCtrlItem] = useState(null);
+  const [boostItem, setBoostItem] = useState(null);
+  const [boostDays, setBoostDays] = useState(7);
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewType, setPreviewType] = useState('image');
   const [submitting, setSubmitting] = useState(false);
