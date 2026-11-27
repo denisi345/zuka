@@ -66,3 +66,19 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
               <select value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 700 }}>{Object.keys(FX).map((c) => <option key={c} value={c}>{c}</option>)}</select>
               <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 600 }}>{new Array(1, 3, 7, 14, 30).map((d) => <option key={d} value={d}>{d} {d === 1 ? 'Day' : 'Days'}</option>)}</select>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {PROVIDERS.map((p) => (
+                <button key={p.id} type="button" onClick={() => setProvider(p.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '10px', border: provider === p.id ? '2px solid #1877F2' : '1px solid #CCD0D5', backgroundColor: provider === p.id ? '#E7F3FF' : '#FFF', cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ backgroundColor: p.bg, color: p.fg, fontWeight: 800, fontSize: '10px', padding: '3px 6px', borderRadius: '6px', flexShrink: 0 }}>{p.badge}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.id}</span>
+                </button>
+              ))}
+            </div>
+            <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Your Phone Number or Account Email" style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
+            <button type="submit" disabled={submitting} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>{submitting ? 'Submitting...' : `Pay ${fx.symbol}${amount.toLocaleString()}`}</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
