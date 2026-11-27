@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, EyeOff, Eye, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,6 +12,8 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
     const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
+  const [policy, setPolicy] = useState({ gifts_enabled: true, gift_commission_percent: 0, mpesa_number: '', tigopesa_number: '', airtelmoney_number: '', paypal_email: '' });
+  useEffect(() => { supabase.from('system_settings').select('*').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPolicy((p) => ({ ...p, ...data })); }).catch(() => {}); }, []);
   const handleSend = async (e) => {
     e.preventDefault();
     if (!amount || Number(amount) < 100 || sending) return;
