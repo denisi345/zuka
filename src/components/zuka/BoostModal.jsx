@@ -10,5 +10,25 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
   const [account, setAccount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  useEffect(() => {
+    supabase.from('system_settings').select('*').eq('id', 1).maybeSingle().then(({ data }) => {
+      if (data) setSettings((prev) => ({ ...prev, ...data }));
+    }).catch(() => {});
+  }, []);
+
+  const unit = currency === 'TZS' ? Number(settings.boost_price_tzs || 5000) : Number(settings.boost_price_usd || 2);
+  const amount = unit * Number(days || 1);
+  const payTo = provider === 'M-Pesa' ? settings.mpesa_number : provider === 'Tigo Pesa' ? settings.tigopesa_number : provider === 'Airtel Money' ? settings.airtelmoney_number : settings.paypal_email;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!currentUserId || !account.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await supabase.from('payment_requests').insert({ user_id: currentUserId, request_type: 'boost', target_type: targetType, target_id: String(targetId || ''), duration_days: Number(days), amount, currency, payment_provider: provider, payer_account: account.trim() });
+      setSubmitted(true);
+    } catch (err) {}
+    setSubmitting(false);
+  };
   return null;
 }
