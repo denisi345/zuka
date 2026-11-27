@@ -234,7 +234,8 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
           <textarea rows={3} value={cleanText} onChange={(e) => setContentText(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #CED0D4', fontSize: '15px', boxSizing: 'border-box' }} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
             <button type="button" onClick={() => setEditingPost(false)} style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#E4E6EB', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#1877F2', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Save</button>
+            <button type="button" onClick={toggleVoiceComment} style={{ width: "36px", height: "36px", borderRadius: "50%", border: "none", backgroundColor: recording ? "#DC2626" : "#F0F2F5", color: recording ? "#FFF" : "#050505", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>{recording ? <Square size={14} /> : <Mic size={16} />}</button>
+                    <button type="submit" style={{ padding: '7px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#1877F2', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>Save</button>
           </div>
         </form>
       ) : (
@@ -294,7 +295,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'inline-block', maxWidth: '100%', backgroundColor: '#F0F2F5', borderRadius: '18px', padding: '8px 12px' }}>
                     <strong onClick={() => c.user_id && onOpenUserProfile && onOpenUserProfile(c.user_id, c.author_name, c.avatar_url)} style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '13px', color: '#050505' }}>{c.author_name}{c.is_verified && <VerifiedBadge size={13} />}</strong>
-                    <div style={{ fontSize: '14px', color: '#050505', lineHeight: 1.35, wordBreak: 'break-word' }}>{c.content}</div>
+                    <div style={{ fontSize: '14px', color: '#050505', lineHeight: 1.35, wordBreak: 'break-word' }}>{c.audio_url ? <audio controls src={c.audio_url} style={{ height: "30px", maxWidth: "210px", marginTop: "4px" }} /> : c.content}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '3px 8px 0', fontSize: '12px', fontWeight: 600 }}>
                     <span onClick={() => setCommentLikes((prev) => ({ ...prev, [c.id]: !prev[c.id] }))} style={{ cursor: 'pointer', color: cLiked ? '#1877F2' : '#65676B' }}>Like</span>
