@@ -323,7 +323,8 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
               <Bookmark size={20} /> Save post
             </button>
             {isOwner && (
-              <>
+                <>
+                  <button type="button" onClick={() => { setMenuOpen(false); setBoostOpen(true); }} style={{ padding: "12px", borderRadius: "10px", border: "none", backgroundColor: "#F0F2F5", fontWeight: 700, fontSize: "15px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", color: "#050505", textAlign: "left" }}><span style={{ fontSize: "18px" }}>🚀</span> Boost post</button>
                 <button type="button" onClick={() => { setMenuOpen(false); setPinned(!pinned); showToast(!pinned ? 'Pinned to profile' : 'Unpinned'); }} style={{ padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F0F2F5', fontWeight: 700, fontSize: '15px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', color: '#050505', textAlign: 'left' }}>
                   <Pin size={20} /> {pinned ? 'Unpin post' : 'Pin post'}
                 </button>
