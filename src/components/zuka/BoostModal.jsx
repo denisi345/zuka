@@ -9,12 +9,15 @@ const FX = {
 };
 
 const PROVIDERS = new Array(
-  { id: 'M-Pesa', badge: 'M-PESA', bg: '#E60000', fg: '#FFF' },
-  { id: 'Mixx by Yas', badge: 'yas', bg: '#FFD100', fg: '#002B49' },
-  { id: 'Airtel Money', badge: 'airtel', bg: '#ED1C24', fg: '#FFF' },
-  { id: 'Visa / Mastercard', badge: 'VISA / MC', bg: '#1A1F71', fg: '#FFF' },
-  { id: 'PayPal', badge: 'PayPal', bg: '#003087', fg: '#FFF' },
-  { id: 'Apple / Google Pay', badge: 'G /  Pay', bg: '#111827', fg: '#FFF' }
+  { id: "M-Pesa", badge: "M-PESA", bg: "#E60000", fg: "#FFF" },
+  { id: "Mixx by Yas", badge: "yas", bg: "#FFD100", fg: "#002B49" },
+  { id: "Airtel Money", badge: "airtel", bg: "#ED1C24", fg: "#FFF" },
+  { id: "HaloPesa", badge: "HaloPesa", bg: "#FF6B00", fg: "#FFF" },
+  { id: "T-Pesa", badge: "T-PESA", bg: "#0054A6", fg: "#FFF" },
+  { id: "AzamPesa", badge: "AzamPesa", bg: "#0072CE", fg: "#FFF" },
+  { id: "Visa / Mastercard", badge: "VISA / MC", bg: "#1A1F71", fg: "#FFF" },
+  { id: "PayPal", badge: "PayPal", bg: "#003087", fg: "#FFF" },
+  { id: "Apple / Google Pay", badge: "G /  Pay", bg: "#111827", fg: "#FFF" }
 );
 
 export default function BoostModal({ targetType = 'post', targetId, currentUserId, onClose }) {
@@ -34,7 +37,7 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
   const fx = FX[currency] || FX.USD;
   const unit = currency === 'TZS' ? Number(settings.boost_price_tzs || 0) : Math.round(Number(settings.boost_price_usd || 0) * fx.rate * 100) / 100;
   const amount = Math.round(unit * Number(days || 1) * 100) / 100;
-  const payTo = provider === 'M-Pesa' ? settings.mpesa_number : provider === 'Mixx by Yas' ? settings.tigopesa_number : provider === 'Airtel Money' ? settings.airtelmoney_number : settings.paypal_email;
+  const payTo = provider === "M-Pesa" ? settings.mpesa_number : provider === "Mixx by Yas" ? settings.tigopesa_number : provider === "Airtel Money" ? settings.airtelmoney_number : provider === "HaloPesa" ? settings.halopesa_number : provider === "T-Pesa" ? settings.tpesa_number : provider === "AzamPesa" ? settings.azampesa_number : settings.paypal_email;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
