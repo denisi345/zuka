@@ -1,3 +1,4 @@
+window.__ERR_TRAP__=true; window.addEventListener("error",e=>{document.body.innerHTML="<pre style=\"background:#111;color:#ff5555;padding:16px;white-space:pre-wrap;font-size:13px\">RUNTIME ERROR:\n"+(e.error?.stack||e.message)+"</pre>";}); window.addEventListener("unhandledrejection",e=>{document.body.innerHTML="<pre style=\"background:#111;color:#ffaa00;padding:16px;white-space:pre-wrap;font-size:13px\">PROMISE ERROR:\n"+(e.reason?.stack||e.reason)+"</pre>";});
 try { if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then((r) => r.forEach((x) => x.unregister())); } catch (_) {}
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'

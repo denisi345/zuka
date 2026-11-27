@@ -98,12 +98,10 @@ const openAnyProfile = (person: any, fallbackName?: string, fallbackAvatar?: str
             <Feed
               userProfile={profile}
               onOpenProfile={() => { setViewedProfile(null); setActiveTab("profile"); }}
-              onOpenUserProfile={openAnyProfile}
-            />
+              />
           )}
 {activeTab === "profile" && (
             <Profile
-              onOpenUserProfile={openAnyProfile}
               currentUser={profile}
               targetProfile={viewedProfile}
               onBack={() => setActiveTab("feed")}
@@ -116,28 +114,26 @@ const openAnyProfile = (person: any, fallbackName?: string, fallbackAvatar?: str
           )}
           {activeTab === "friends" && (
             <FriendsView
-              onOpenUserProfile={openAnyProfile}
               userProfile={profile}
               onMessageUser={(person) => { setChatTarget(person); setActiveTab("messenger"); }}
             />
           )}
           <Suspense fallback={<div style={{ padding: "32px", textAlign: "center", color: "#65676B", fontWeight: 600 }}>Loading...</div>}>
         {activeTab === "messenger" && <Messenger currentUser={profile} initialPeer={chatTarget} />}
-          {activeTab === "reels" && <Reels userProfile={profile} onOpenUserProfile={openAnyProfile} initialReel={initialReel} onBackToFeed={undefined} />}
-          {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenUserProfile={openAnyProfile} onOpenTab={(tab) => setActiveTab(tab)} />}
+          {activeTab === "reels" && <Reels userProfile={profile} initialReel={initialReel} onBackToFeed={undefined} />}
+          {activeTab === "notifications" && <NotificationsView userProfile={profile} onOpenTab={(tab) => setActiveTab(tab)} />}
           {activeTab === "marketplace" && (
-          <Marketplace onOpenUserProfile={openAnyProfile}
-            userProfile={profile}
+          <Marketplace userProfile={profile}
             onMessageSeller={(sellerId, sellerName, msg) => {
               if (sellerId) setChatTarget({ id: sellerId, full_name: sellerName, prefill: msg });
               setActiveTab("messenger");
             }}
           />
         )}
-        {activeTab === "saved" && <SavedItems onOpenUserProfile={openAnyProfile} currentUserId={profile?.id} onBack={() => setActiveTab("feed")} />}
+        {activeTab === "saved" && <SavedItems currentUserId={profile?.id} onBack={() => setActiveTab("feed")} />}
         {activeTab === "groups" && <ZukaGroups currentUser={profile} onBack={() => setActiveTab("feed")} />}
         {activeTab === "pages" && <ZukaPages currentUser={profile} onBack={() => setActiveTab("feed")} />}
-              {activeTab === "search" && <GlobalSearch currentUser={profile} onBack={() => setActiveTab("feed")} onOpenUserProfile={openAnyProfile} onOpenMessenger={(person: any) => { if (person) setChatTarget(person); setActiveTab("messenger"); }} onOpenReel={(r: any) => setInitialReel(r)} onOpenTab={(t: string) => setActiveTab(t)} />}
+              {activeTab === "search" && <GlobalSearch currentUser={profile} onBack={() => setActiveTab("feed")} onOpenMessenger={(person: any) => { if (person) setChatTarget(person); setActiveTab("messenger"); }} onOpenReel={(r: any) => setInitialReel(r)} onOpenTab={(t: string) => setActiveTab(t)} />}
               {activeTab === "events" && <ZukaEvents currentUser={profile} onBack={() => setActiveTab("feed")} />}
         </Suspense>
       </main>
@@ -148,7 +144,7 @@ const openAnyProfile = (person: any, fallbackName?: string, fallbackAvatar?: str
 
       {initialReel && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, backgroundColor: "#000" }}>
-          <Reels userProfile={profile} onOpenUserProfile={openAnyProfile} initialReel={initialReel} onBackToFeed={() => { (window as any).__ZUKA_OPEN_REEL__ = null; setInitialReel(null); }} onOpenUserProfile={(uid: any) => { setInitialReel(null); setViewedProfile(uid); }} />
+          <Reels userProfile={profile} initialReel={initialReel} onBackToFeed={() => { (window as any).__ZUKA_OPEN_REEL__ = null; setInitialReel(null); }} onOpenUserProfile={(uid: any) => { setInitialReel(null); setViewedProfile(uid); }} />
         </div>
       )}
       </div>
