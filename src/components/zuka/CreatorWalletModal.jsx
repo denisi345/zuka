@@ -15,7 +15,7 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
     if (!currentUser?.id) return;
     const { data: s } = await supabase.from('system_settings').select('min_payout_tzs,min_payout_usd').eq('id', 1).maybeSingle();
     if (s) setPolicy((p) => ({ ...p, ...s }));
-    const { data: t } = await supabase.from('creator_tips').select('id,amount,creator_net,commission_amount,provider,created_at').eq('receiver_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+    const { data: t } = await supabase.from('creator_tips').select('id,amount,creator_net,commission_amount,provider,created_at').eq('receiver_id', currentUser.id).eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(20);
     if (t) setTips(t);
     const { data: p } = await supabase.from('payout_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
     if (p) setPayouts(p);
@@ -52,7 +52,7 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
         <form onSubmit={handleRequest} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
           <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Withdraw Amount (TZS)" style={{ padding: '9px', borderRadius: '8px', border: '1px solid #CED0D4' }} />
           <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '9px', borderRadius: '8px', border: '1px solid #CED0D4' }}>
-            <option>M-Pesa</option><option>Tigo Pesa</option><option>Airtel Money</option><option>PayPal</option>
+            <option>M-Pesa</option><option>Mixx by Yas</option><option>Airtel Money</option><option>HaloPesa</option><option>T-Pesa</option><option>AzamPesa</option><option>PayPal</option>
           </select>
           <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Your Phone or PayPal Email" style={{ padding: '9px', borderRadius: '8px', border: '1px solid #CED0D4' }} />
           <button type="submit" disabled={loading || balance < minPayout || balance <= 0} style={{ padding: '10px', borderRadius: '8px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>{loading ? 'Sending...' : 'Request Payout'}</button>
