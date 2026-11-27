@@ -90,3 +90,22 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
                 </button>
               ))}
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {PROVIDERS.map((p) => (
+                <button key={p.id} type="button" onClick={() => setProvider(p.id)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '10px', border: provider === p.id ? '2px solid #1877F2' : '1px solid #CCD0D5', backgroundColor: provider === p.id ? '#E7F3FF' : '#FFF', cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ backgroundColor: p.bg, color: p.fg, fontWeight: 800, fontSize: '10px', padding: '3px 6px', borderRadius: '6px', letterSpacing: '0.3px', flexShrink: 0 }}>{p.badge}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#050505', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.id}</span>
+                </button>
+              ))}
+            </div>
+            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone, Card Last 4, or PayPal Email" style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
+            <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Add a note (optional)" style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
+            <button type="submit" disabled={sending} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F59E0B', color: '#FFF', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>
+              {sending ? 'Sending...' : `Send Gift (${curr.symbol}${Number(amount || 0).toLocaleString()}) ✨`}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
