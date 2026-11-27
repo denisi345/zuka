@@ -13,6 +13,9 @@ export default function CreatePost({ userProfile, onCreatePost }) {
   const [audioPreview, setAudioPreview] = useState('');
   const [audioTitle, setAudioTitle] = useState('');
   const [posting, setPosting] = useState(false);
+  const [fundOpen, setFundOpen] = useState(false);
+  const [fundTitle, setFundTitle] = useState('');
+  const [fundGoal, setFundGoal] = useState('');
 
   const photoInputRef = useRef(null);
   const videoInputRef = useRef(null);
@@ -49,7 +52,9 @@ export default function CreatePost({ userProfile, onCreatePost }) {
 
   const [bgUploading, setBgUploading] = useState(false);
   async function uploadToStorage(file, folder) { const clean = (file.name || "file").replace(/[^a-zA-Z0-9._-]/g, ""); const path = `${folder}/${Date.now()}_${clean}`; for (const bucket of ["media", "post-media", "stories", "public"]) { const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true, cacheControl: "3600" }); if (!error) { const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path); if (pub?.publicUrl) return pub.publicUrl; } } return URL.createObjectURL(file); }
-  async function handleSubmit(e) { e.preventDefault(); if (!text.trim() && !mediaFile && !audioFile) return; const tSnap = text.trim(); const mSnap = mediaFile; const mTypeSnap = mediaType; const aSnap = audioFile; const aTitleSnap = audioTitle; setText(""); setMediaFile(null); setMediaPreview(""); setAudioFile(null); setAudioTitle(""); setPosting(false); setOpen(false); if (mSnap || aSnap) setBgUploading(true); try { const [uMedia, uAudio] = await Promise.all([mSnap ? (async () => uploadToStorage(mTypeSnap === "image" ? await compressImageFile(mSnap) : mSnap, mTypeSnap === "video" ? "videos" : "images"))() : Promise.resolve(""), aSnap ? uploadToStorage(aSnap, "audio") : Promise.resolve("")]); const finalText = uAudio ? `${tSnap}\n[zuka_audio:${aTitleSnap || "Audio Track"}|${uAudio}]` : tSnap; if (onCreatePost) await onCreatePost(finalText, uMedia, mTypeSnap); } catch (_) {} finally { setBgUploading(false); } }
+  async function handleSubmit(e) { e.preventDefault(); if (!text.trim() && !mediaFile && !audioFile) return; const tSnap = text.trim(); const mSnap = mediaFile; const mTypeSnap = mediaType; const aSnap = audioFile; const aTitleSnap = audioTitle; setText(""); setMediaFile(null); setMediaPreview(""); setAudioFile(null); setAudioTitle(""); setPosting(false); setOpen(false); if (mSnap || aSnap) setBgUploading(true); try { const [uMedia, uAudio] = await Promise.all([mSnap ? (async () => uploadToStorage(mTypeSnap === "image" ? await compressImageFile(mSnap) : mSnap, mTypeSnap === "video" ? "videos" : "images"))() : Promise.resolve(""), aSnap ? uploadToStorage(aSnap, "audio") : Promise.resolve("")]); const finalText = uAudio ? `${tSnap}\n[zuka_audio:${aTitleSnap || "Audio Track"}|${uAudio}]` : tSnap; const fObj = fundOpen && Number(fundGoal) > 0 ? { fundraiser_title: fundTitle.trim() || "Fundraiser", fundraiser_goal: Number(fundGoal), fundraiser_raised: 0 } : null;
+      setFundOpen(false); setFundTitle(''); setFundGoal('');
+      if (onCreatePost) await onCreatePost(finalText, uMedia, mTypeSnap, fObj); } catch (_) {} finally { setBgUploading(false); } }
   return (
     <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E4E6EB', padding: '12px' }}>{bgUploading && (<div style={{ backgroundColor: "#E7F3FF", color: "#1877F2", padding: "8px 12px", borderRadius: "8px", marginBottom: "8px", fontSize: "13px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}><span>⏳</span><span>Uploading media in background...</span></div>)}
       <input ref={photoInputRef} type="file" accept="image/*" onChange={(e) => handlePickMedia(e, 'image')} style={{ display: 'none' }} />
@@ -110,10 +115,17 @@ export default function CreatePost({ userProfile, onCreatePost }) {
               </div>
             )}
 
+            {fundOpen && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "8px", borderRadius: "8px", backgroundColor: "#F0F2F5" }}>
+                <input type="text" value={fundTitle} onChange={(e) => setFundTitle(e.target.value)} placeholder="Fundraiser Title (e.g. Community Support)" style={{ padding: "8px", borderRadius: "6px", border: "1px solid #CED0D4", fontSize: "13px" }} />
+                <input type="number" value={fundGoal} onChange={(e) => setFundGoal(e.target.value)} placeholder="Target Goal (TZS)" style={{ padding: "8px", borderRadius: "6px", border: "1px solid #CED0D4", fontSize: "13px" }} />
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '8px' }}>
               <button type="button" onClick={() => photoInputRef.current?.click()} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #CED0D4', backgroundColor: '#FFFFFF', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>+ Photo</button>
               <button type="button" onClick={() => videoInputRef.current?.click()} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #CED0D4', backgroundColor: '#FFFFFF', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>+ Video</button>
               <button type="button" onClick={() => audioInputRef.current?.click()} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #CED0D4', backgroundColor: '#FFFFFF', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>+ Music</button>
+              <button type="button" onClick={() => setFundOpen((v) => !v)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #CED0D4', backgroundColor: fundOpen ? '#E7F3FF' : '#FFFFFF', color: fundOpen ? '#1877F2' : '#050505', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}>+ Fundraiser</button>
             </div>
 
             <button type="submit" disabled={posting} style={{ backgroundColor: '#1877F2', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '10px', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>
