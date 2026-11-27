@@ -217,6 +217,20 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
       ) : (
         cleanText && <div style={{ padding: '4px 12px 10px', fontSize: '15px', color: '#050505', lineHeight: '1.4', whiteSpace: 'pre-line' }}>{cleanText}</div>
       )}
+      {Number(post.fundraiser_goal) > 0 && (() => {
+        const goal = Number(post.fundraiser_goal || 0);
+        const raised = Number(post.fundraiser_raised || 0);
+        const pct = Math.min(100, Math.round((raised / Math.max(1, goal)) * 100));
+        return (
+          <div style={{ margin: "4px 12px 10px", padding: "10px 12px", borderRadius: "10px", backgroundColor: "#F0F2F5", border: "1px solid #E4E6EB" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <div><div style={{ fontWeight: 700, fontSize: "13.5px", color: "#050505" }}>{post.fundraiser_title || "Fundraiser"}</div><div style={{ fontSize: "12px", color: "#65676B" }}>Raised TZS {raised.toLocaleString()} of {goal.toLocaleString()} ({pct}%)</div></div>
+              <button type="button" onClick={() => setGiftOpen(true)} style={{ padding: "6px 12px", borderRadius: "8px", border: "none", backgroundColor: "#1877F2", color: "#FFF", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>Contribute</button>
+            </div>
+            <div style={{ height: "6px", borderRadius: "99px", backgroundColor: "#D8DADF", overflow: "hidden" }}><div style={{ width: pct + "%", height: "100%", backgroundColor: "#1877F2" }} /></div>
+          </div>
+        );
+      })()}
 
       {post.image_url && (
         isVideo
