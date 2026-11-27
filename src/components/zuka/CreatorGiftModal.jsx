@@ -68,3 +68,25 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
             {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
+        {done ? (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <CheckCircle2 size={42} color="#16A34A" style={{ margin: '0 auto 8px' }} />
+            <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '4px' }}>Gift Sent!</div>
+            <div style={{ fontSize: '13px', color: '#65676B', marginBottom: '14px' }}>You sent {curr.symbol}{amount} to {post.author_name || 'Creator'}.</div>
+            <button type="button" onClick={onClose} style={{ width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSend} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select value={currency} onChange={(e) => pickCurr(e.target.value)} style={{ width: '95px', padding: '10px 8px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 700, backgroundColor: '#F0F2F5' }}>
+                {Object.keys(CURRENCIES).map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <input type="number" min={curr.min} value={amount} onChange={(e) => setAmount(e.target.value)} style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '15px', fontWeight: 600 }} />
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {curr.amounts.map((v) => (
+                <button key={v} type="button" onClick={() => setAmount(v)} style={{ flex: '1 1 auto', padding: '7px 10px', borderRadius: '20px', border: Number(amount) === v ? '1.5px solid #F59E0B' : '1px solid #CCD0D5', backgroundColor: Number(amount) === v ? '#FEF3C7' : '#FFF', fontWeight: 700, fontSize: '13px' }}>
+                  {curr.symbol}{v.toLocaleString()}
+                </button>
+              ))}
+            </div>
