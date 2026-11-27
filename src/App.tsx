@@ -19,6 +19,7 @@ import Profile from "./pages/Profile";
 import FriendProfile from "./pages/FriendProfile";
 import NotFound from "./pages/NotFound";
 import PublicSupportListener from "./components/zuka/PublicSupportListener";
+import ZukaDiagnostics from "./components/zuka/ZukaDiagnostics";
 
 // Auth-protected route
 const ProtectedRoute = ({ children, path }: { children: JSX.Element, path: string }) => {
@@ -131,6 +132,7 @@ const App = () => (
         <Toaster />
         <SonnerToaster />
         <PublicSupportListener />
+        <ZukaDiagnostics />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
