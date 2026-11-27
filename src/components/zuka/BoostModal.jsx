@@ -53,3 +53,16 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '16px' }}><TrendingUp size={18} color="#1877F2" /><span>Boost {targetType}</span></div>
           <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} /></button>
         </div>
+        {submitted ? (
+          <div style={{ textAlign: 'center', padding: '16px 0' }}>
+            <CheckCircle2 size={40} color="#16A34A" style={{ margin: '0 auto 8px' }} />
+            <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '6px' }}>Boost Request Submitted!</div>
+            <div style={{ fontSize: '13px', color: '#65676B', marginBottom: '12px' }}>Amount: <b>{fx.symbol}{amount.toLocaleString()}</b> ({days} days).{payTo ? ` Send to: ${payTo}` : ''}</div>
+            <button type="button" onClick={onClose} style={{ width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 700 }}>{Object.keys(FX).map((c) => <option key={c} value={c}>{c}</option>)}</select>
+              <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 600 }}>{new Array(1, 3, 7, 14, 30).map((d) => <option key={d} value={d}>{d} {d === 1 ? 'Day' : 'Days'}</option>)}</select>
+            </div>
