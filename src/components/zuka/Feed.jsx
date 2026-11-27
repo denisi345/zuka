@@ -150,12 +150,12 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
     } catch (_) {}
   }
 
-  async function handleCreatePost(text, mediaUrl = '', mediaType = 'image') {
+  async function handleCreatePost(text, mediaUrl = '', mediaType = 'image', fObj = null) {
     const authorName = userProfile?.full_name || userProfile?.username || 'ZUKA Member';
-    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, avatar_url: userProfile?.avatar_url, is_verified: userProfile?.is_verified, content: text, image_url: mediaUrl, media_type: mediaType, time_label: 'Just now' };
+    const optimistic = { id: `temp-${Date.now()}`, user_id: userProfile?.id, author_name: authorName, avatar_url: userProfile?.avatar_url, is_verified: userProfile?.is_verified, content: text, image_url: mediaUrl, media_type: mediaType, time_label: 'Just now', ...(fObj || {}) };
     setPosts((prev) => [optimistic, ...prev]);
     try {
-      const payload = { content: text, author_name: authorName, is_verified: Boolean(userProfile?.is_verified) };
+      const payload = { content: text, author_name: authorName, is_verified: Boolean(userProfile?.is_verified), ...(fObj || {}) };
       if (mediaUrl && !String(mediaUrl).startsWith("blob:")) { payload.image_url = mediaUrl; payload.media_type = mediaType; }
       if (userProfile?.id) payload.user_id = userProfile.id;
       const ins = await supabase.from('posts').insert(payload); if (ins.error && payload.media_type) { delete payload.media_type; await supabase.from('posts').insert(payload); }
