@@ -34,7 +34,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
-  const [done, setDone] = useState(false);
+  const [step, setStep] = useState("form"); const [err, setErr] = useState(""); const [tipId, setTipId] = useState(null);
   const [policy, setPolicy] = useState({ gifts_enabled: true, gift_commission_percent: 0 });
   const curr = CURRENCIES[currency] || CURRENCIES.USD;
   const pickCurr = (c) => { setCurrency(c); setAmount(CURRENCIES[c].amounts.at(1)); };
