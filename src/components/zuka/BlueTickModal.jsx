@@ -26,3 +26,9 @@ export default function BlueTickModal({ currentUser, onClose }) {
     } catch {}
     setSubmitting(false);
   };
+      setSubmitted(true);
+    } catch {}
+    setSubmitting(false);
+  };
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 13900, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
