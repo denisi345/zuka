@@ -13,7 +13,7 @@ serve(async (req) => {
     if (!key) return new Response(JSON.stringify({ error: "Missing FLUTTERWAVE_SECRET_KEY" }), { status: 400, headers: cors });
     const tx_ref = "zuka_gift_" + (tipId || Date.now());
     if (isCard) {
-      const res = await fetch("https://://flutterwave.com/v3/payments", {
+      const res = await fetch("https://api.flutterwave.com/v3/payments", {
         method: "POST",
         headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
         body: JSON.stringify({ tx_ref, amount, currency, redirect_url: "https://zuka-world-app.pages.dev", customer: { email: phone }, customizations: { title: "ZUKA Creator Gift" } })
@@ -22,7 +22,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ checkoutUrl: json?.data?.link || null, raw: json }), { headers: { ...cors, "Content-Type": "application/json" } });
     }
     const netMap: Record<string, string> = { "M-Pesa": "MPESA", "Mixx by Yas": "TIGO", "Airtel Money": "AIRTEL", "HaloPesa": "HALOPESA" };
-    const res = await fetch("https://://flutterwave.com/v3/charges?type=mobile_money_tanzania", {
+    const res = await fetch("https://api.flutterwave.com/v3/charges?type=mobile_money_tanzania", {
       method: "POST",
       headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
       body: JSON.stringify({ tx_ref, amount, currency: currency || "TZS", email: "gift@zuka.app", phone_number: phone, network: netMap[provider] || "MPESA" })
