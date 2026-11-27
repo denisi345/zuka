@@ -16,12 +16,15 @@ const CURRENCIES = {
 };
 
 const PROVIDERS = new Array(
-  { id: 'M-Pesa', badge: 'M-PESA', bg: '#E60000', fg: '#FFF' },
-  { id: 'Mixx by Yas', badge: 'yas', bg: '#FFD100', fg: '#002B49' },
-  { id: 'Airtel Money', badge: 'airtel', bg: '#ED1C24', fg: '#FFF' },
-  { id: 'Visa / Mastercard', badge: 'VISA / MC', bg: '#1A1F71', fg: '#FFF' },
-  { id: 'PayPal', badge: 'PayPal', bg: '#003087', fg: '#FFF' },
-  { id: 'Apple / Google Pay', badge: 'G /  Pay', bg: '#111827', fg: '#FFF' }
+  { id: "M-Pesa", badge: "M-PESA", bg: "#E60000", fg: "#FFF" },
+  { id: "Mixx by Yas", badge: "yas", bg: "#FFD100", fg: "#002B49" },
+  { id: "Airtel Money", badge: "airtel", bg: "#ED1C24", fg: "#FFF" },
+  { id: "HaloPesa", badge: "HaloPesa", bg: "#FF6B00", fg: "#FFF" },
+  { id: "T-Pesa", badge: "T-PESA", bg: "#0054A6", fg: "#FFF" },
+  { id: "AzamPesa", badge: "AzamPesa", bg: "#0072CE", fg: "#FFF" },
+  { id: "Visa / Mastercard", badge: "VISA / MC", bg: "#1A1F71", fg: "#FFF" },
+  { id: "PayPal", badge: "PayPal", bg: "#003087", fg: "#FFF" },
+  { id: "Apple / Google Pay", badge: "G /  Pay", bg: "#111827", fg: "#FFF" }
 );
 
 export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGifts, onTogglePrivacy, onSent, onClose }) {
