@@ -52,3 +52,19 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
       setDone(true); if (onSent) onSent();
     } catch (_) {} finally { setSending(false); }
   };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 14000, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', boxSizing: 'border-box' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '400px', backgroundColor: '#FFF', borderRadius: '16px', padding: '16px', boxSizing: 'border-box', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '16px', color: '#050505' }}>
+            <Sparkles size={18} color="#F59E0B" /><span>Send Creator Gift</span>
+          </div>
+          <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} /></button>
+        </div>
+        {isOwner && (
+          <button type="button" onClick={onTogglePrivacy} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '10px', border: '1px solid #FDE68A', backgroundColor: '#FFFBEB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#92400E', boxSizing: 'border-box' }}>
+            <span>{hideGifts ? '✨✨✨ Hidden (Tap to show)' : 'Public count (Tap to hide)'}</span>
+            {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
