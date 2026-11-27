@@ -10,3 +10,8 @@ export default function BlueTickModal({ currentUser, onClose }) {
   const [currency, setCurrency] = useState('TZS');
   const [provider, setProvider] = useState('M-Pesa');
   const [account, setAccount] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  useEffect(() => {
+    supabase.from('platform_settings').select('blue_tick_price_tzs, blue_tick_price_usd').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPrices({ tzs: Number(data.blue_tick_price_tzs || 15000), usd: Number(data.blue_tick_price_usd || 6) }); });
+  }, []);
