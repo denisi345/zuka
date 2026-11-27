@@ -16,3 +16,22 @@ const PROVIDERS = new Array(
   { id: 'PayPal', badge: 'PayPal', bg: '#003087', fg: '#FFF' },
   { id: 'Apple / Google Pay', badge: 'G /  Pay', bg: '#111827', fg: '#FFF' }
 );
+
+export default function BoostModal({ targetType = 'post', targetId, currentUserId, onClose }) {
+  const [settings, setSettings] = useState({ boost_price_tzs: 0, boost_price_usd: 0 });
+  const [currency, setCurrency] = useState('USD');
+  const [days, setDays] = useState(3);
+  const [provider, setProvider] = useState('M-Pesa');
+  const [account, setAccount] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    supabase.from('system_settings').select('*').eq('id', 1).maybeSingle()
+      .then(({ data }) => { if (data) setSettings((prev) => ({ ...prev, ...data })); }).catch(() => {});
+  }, new Array());
+
+  const fx = FX[currency] || FX.USD;
+  const unit = currency === 'TZS' ? Number(settings.boost_price_tzs || 0) : Math.round(Number(settings.boost_price_usd || 0) * fx.rate * 100) / 100;
+  const amount = Math.round(unit * Number(days || 1) * 100) / 100;
+  const payTo = provider === 'M-Pesa' ? settings.mpesa_number : provider === 'Mixx by Yas' ? settings.tigopesa_number : provider === 'Airtel Money' ? settings.airtelmoney_number : settings.paypal_email;
