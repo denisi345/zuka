@@ -3,16 +3,16 @@ import { X, Sparkles, EyeOff, Eye, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const CURRENCIES = {
-  USD: { symbol: '$', amounts:, min: 1 },
-  EUR: { symbol: '€', amounts:, min: 1 },
-  GBP: { symbol: '£', amounts:, min: 1 },
-  TZS: { symbol: 'TZS ', amounts:, min: 100 },
-  KES: { symbol: 'KES ', amounts:, min: 10 },
-  UGX: { symbol: 'UGX ', amounts:, min: 500 },
-  NGN: { symbol: '₦', amounts:, min: 100 },
-  ZAR: { symbol: 'R', amounts:, min: 5 },
-  INR: { symbol: '₹', amounts:, min: 10 },
-  AED: { symbol: 'AED ', amounts:, min: 1 }
+  USD: { symbol: "$", amounts:, min: 1 },
+  EUR: { symbol: "€", amounts:, min: 1 },
+  GBP: { symbol: "£", amounts:, min: 1 },
+  TZS: { symbol: "TZS ", amounts:, min: 100 },
+  KES: { symbol: "KES ", amounts:, min: 10 },
+  UGX: { symbol: "UGX ", amounts:, min: 500 },
+  NGN: { symbol: "₦", amounts:, min: 100 },
+  ZAR: { symbol: "R", amounts:, min: 5 },
+  INR: { symbol: "₹", amounts:, min: 10 },
+  AED: { symbol: "AED ", amounts:, min: 1 }
 };
 
 const PROVIDERS = ['Visa / Mastercard', 'PayPal', 'Apple Pay / Google Pay', 'M-Pesa', 'Mixx by Yas', 'Airtel Money'];
