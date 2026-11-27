@@ -23,6 +23,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
     setSending(true);
     try {
             await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), provider, phone, message, commission_percent: feePct, commission_amount, creator_net });
+      if (post?.id && Number(post?.fundraiser_goal) > 0) { await supabase.from('posts').update({ fundraiser_raised: Number(post.fundraiser_raised || 0) + Number(amount) }).eq('id', post.id); }
       setDone(true); onSent?.();
     } catch {}
     setSending(false);
