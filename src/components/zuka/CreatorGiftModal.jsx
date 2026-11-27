@@ -84,7 +84,14 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
             {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
-        {done ? (
+        {step === "pin" ? (
+          <div style={{ textAlign: "center", padding: "20px 8px" }}>
+            <div style={{ fontSize: "36px", marginBottom: "8px" }}>📲</div>
+            <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "6px", color: "#050505" }}>Weka PIN kwenye simu yako</div>
+            <div style={{ fontSize: "13px", color: "#65676B", marginBottom: "14px" }}>Tumetuma ombi la <b>{provider}</b> ({curr.symbol}{Number(amount).toLocaleString()}) kwenda <b>{phone}</b>. Ingiza PIN yako kuthibitisha.</div>
+            <button type="button" onClick={() => setStep("form")} style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid #CCD0D5", backgroundColor: "#F0F2F5", fontWeight: 600, fontSize: "13px" }}>Ghairi / Badili Namba</button>
+          </div>
+        ) : step === "done" ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <CheckCircle2 size={42} color="#16A34A" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '4px' }}>Gift Sent!</div>
@@ -119,6 +126,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
             <button type="submit" disabled={sending} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F59E0B', color: '#FFF', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>
               {sending ? 'Sending...' : `Send Gift (${curr.symbol}${Number(amount || 0).toLocaleString()}) ✨`}
             </button>
+          {err && <div style={{ color: "#DC2626", fontSize: "12px", fontWeight: 700 }}>{err}</div>}
           </form>
         )}
       </div>
