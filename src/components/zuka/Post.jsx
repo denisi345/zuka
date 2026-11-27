@@ -22,7 +22,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
   const [hideGifts, setHideGifts] = React.useState(Boolean(post?.profiles?.hide_gift_counts));
   const [giftOpen, setGiftOpen] = React.useState(false);
   const [boostOpen, setBoostOpen] = React.useState(false);
-  React.useEffect(() => { if (!post?.id) return; supabase.from("creator_tips").select("id", { count: "exact", head: true }).eq("post_id", String(post.id)).then(({ count }) => { if (typeof count === "number") setGiftsCount(count); }); if (post?.user_id) supabase.from("profiles").select("hide_gift_counts").eq("id", post.user_id).maybeSingle().then(({ data }) => { if (data) setHideGifts(Boolean(data.hide_gift_counts)); }); }, [post?.id, post?.user_id]);
+  React.useEffect(() => { if (!post?.id) return; supabase.from("creator_tips").select("id", { count: "exact", head: true }).eq("post_id", String(post.id)).eq("payment_status", "paid").then(({ count }) => { if (typeof count === "number") setGiftsCount(count); }); if (post?.user_id) supabase.from("profiles").select("hide_gift_counts").eq("id", post.user_id).maybeSingle().then(({ data }) => { if (data) setHideGifts(Boolean(data.hide_gift_counts)); }); }, [post?.id, post?.user_id]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
