@@ -32,3 +32,8 @@ export default function BlueTickModal({ currentUser, onClose }) {
   };
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 13900, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '480px', backgroundColor: '#FFF', borderRadius: '18px 18px 0 0', padding: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><ZukaBadge size={18} /><span>Get Verified (Blue Tick)</span></div>
+          <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
+        </div>
