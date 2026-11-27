@@ -23,11 +23,7 @@ export default function BlueTickModal({ currentUser, onClose }) {
     try {
       await supabase.from('payment_transactions').insert({ user_id: currentUser.id, item_type: 'blue_tick', amount, currency, provider, reference: `BT-${Date.now()}`, status: 'pending' });
       setSubmitted(true);
-    } catch {}
-    setSubmitting(false);
-  };
-      setSubmitted(true);
-    } catch {}
+    } catch (e) {}
     setSubmitting(false);
   };
   return (
@@ -36,7 +32,6 @@ export default function BlueTickModal({ currentUser, onClose }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><ZukaBadge size={18} /><span>Get Verified (Blue Tick)</span></div>
           <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
-        </div>
         </div>
         {submitted ? (
           <div style={{ textAlign: 'center', padding: '18px 0' }}>
@@ -51,7 +46,6 @@ export default function BlueTickModal({ currentUser, onClose }) {
               <button type="button" onClick={() => setCurrency('TZS')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: currency === 'TZS' ? '2px solid #1877F2' : '1px solid #CED0D4', fontWeight: 700 }}>TZS {prices.tzs.toLocaleString()}</button>
               <button type="button" onClick={() => setCurrency('USD')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: currency === 'USD' ? '2px solid #1877F2' : '1px solid #CED0D4', fontWeight: 700 }}>USD ${prices.usd}</button>
             </div>
-            <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', backgroundColor: '#FFF' }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
             <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', backgroundColor: '#FFF' }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
             <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Phone or Account Email" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
             <button type="submit" disabled={submitting} style={{ padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>{submitting ? 'Processing...' : `Pay ${currency} ${amount.toLocaleString()}`}</button>
