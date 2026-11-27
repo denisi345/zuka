@@ -30,5 +30,15 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
     } catch (err) {}
     setSubmitting(false);
   };
-  return null;
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '400px', backgroundColor: '#FFF', borderRadius: '14px', padding: '18px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={18} color="#1877F2" /><span>Boost {targetType === 'reel' ? 'Reel' : 'Post'}</span></div>
+          <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
+        </div>
+        {submitted ? <div style={{ textAlign: 'center', padding: '16px', color: '#1877F2', fontWeight: 700 }}>Boost request sent for approval.</div> : null}
+      </div>
+    </div>
+  );
 }
