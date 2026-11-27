@@ -52,3 +52,12 @@ export default function BlueTickModal({ currentUser, onClose }) {
               <button type="button" onClick={() => setCurrency('USD')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: currency === 'USD' ? '2px solid #1877F2' : '1px solid #CED0D4', fontWeight: 700 }}>USD ${prices.usd}</button>
             </div>
             <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', backgroundColor: '#FFF' }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
+            <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', backgroundColor: '#FFF' }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
+            <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Phone or Account Email" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
+            <button type="submit" disabled={submitting} style={{ padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>{submitting ? 'Processing...' : `Pay ${currency} ${amount.toLocaleString()}`}</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
