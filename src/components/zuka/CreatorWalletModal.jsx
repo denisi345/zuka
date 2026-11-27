@@ -39,5 +39,19 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
     } catch (err) {}
     setLoading(false);
   };
-  return null;
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '420px', maxHeight: '85vh', overflowY: 'auto', backgroundColor: '#FFF', borderRadius: '14px', padding: '18px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><Wallet size={18} color="#1877F2" /><span>Creator Wallet (Private)</span></div>
+          <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
+        </div>
+        <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#E7F3FF', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#65676B' }}>Available Balance (Net after commission)</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: '#1877F2' }}>TZS {balance.toLocaleString()}</div>
+          <div style={{ fontSize: '11px', color: '#65676B' }}>Total Earned: TZS {earned.toLocaleString()} | Min Payout: TZS {minPayout.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+  );
 }
