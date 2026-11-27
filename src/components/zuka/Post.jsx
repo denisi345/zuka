@@ -54,6 +54,29 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
   const [replyingToComment, setReplyingToComment] = useState(null);
   const [likedCommentIds, setLikedCommentIds] = useState({});
   const commentInputRef = React.useRef(null);
+  const [recording, setRecording] = useState(false);
+  const recRef = React.useRef(null);
+  const toggleVoiceComment = async () => {
+    if (recording && recRef.current) { recRef.current.stop(); setRecording(false); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream); const chunks = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const path = `${post.id}/${Date.now()}.webm`;
+        const { error } = await supabase.storage.from("voice-comments").upload(path, blob);
+        if (!error) {
+          const { data } = supabase.storage.from("voice-comments").getPublicUrl(path);
+          const row = { post_id: post.id, user_id: currentUserId || null, author_name: "Member", content: "Voice note", audio_url: data.publicUrl };
+          const { data: ins } = await supabase.from("comments").insert(row).select("*").single();
+          setComments((prev) => [...prev, ins || { ...row, id: Date.now() }]);
+        }
+      };
+      recRef.current = mr; mr.start(); setRecording(true);
+    } catch (_) {}
+  };
   const feedVidRef = React.useRef(null);
   const fullVidRef = React.useRef(null);
   React.useEffect(() => { const el = feedVidRef.current; if (!el || !isVideo) return; const obs = new IntersectionObserver(([ent]) => { if (ent.isIntersecting && !videoFullOpen) { el.play().catch(() => {}); } else { el.pause(); } }, { threshold: 0.55 }); obs.observe(el); return () => obs.disconnect(); }, [isVideo, videoFullOpen]);
