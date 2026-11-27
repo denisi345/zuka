@@ -46,4 +46,9 @@ export default function BlueTickModal({ currentUser, onClose }) {
             <button type="button" onClick={onClose} style={{ marginTop: '14px', width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
           </div>
         ) : (
-          <form onSubmit={handlePay} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <form onSubmit={handlePay} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" onClick={() => setCurrency('TZS')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: currency === 'TZS' ? '2px solid #1877F2' : '1px solid #CED0D4', fontWeight: 700 }}>TZS {prices.tzs.toLocaleString()}</button>
+              <button type="button" onClick={() => setCurrency('USD')} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: currency === 'USD' ? '2px solid #1877F2' : '1px solid #CED0D4', fontWeight: 700 }}>USD ${prices.usd}</button>
+            </div>
+            <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4', backgroundColor: '#FFF' }}>{PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}</select>
