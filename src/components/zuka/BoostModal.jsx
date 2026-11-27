@@ -37,7 +37,22 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
           <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={18} color="#1877F2" /><span>Boost {targetType === 'reel' ? 'Reel' : 'Post'}</span></div>
           <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
         </div>
-        {submitted ? <div style={{ textAlign: 'center', padding: '16px', color: '#1877F2', fontWeight: 700 }}>Boost request sent for approval.</div> : null}
+        {submitted ? <div style={{ textAlign: 'center', padding: '16px', color: '#1877F2', fontWeight: 700 }}>Boost request sent for approval.</div> : (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {['TZS', 'USD'].map((c) => <button key={c} type="button" onClick={() => setCurrency(c)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #1877F2', backgroundColor: currency === c ? '#1877F2' : '#FFF', color: currency === c ? '#FFF' : '#1877F2', fontWeight: 700 }}>{c}</button>)}
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {[1, 3, 7, 14, 30].map((d) => <button key={d} type="button" onClick={() => setDays(d)} style={{ flex: 1, padding: '7px 0', borderRadius: '8px', border: '1px solid #CED0D4', backgroundColor: days === d ? '#E7F3FF' : '#FFF', color: days === d ? '#1877F2' : '#050505', fontWeight: 700, fontSize: '12px' }}>{d}d</button>)}
+            </div>
+            <div style={{ padding: '10px', borderRadius: '10px', backgroundColor: '#F0F2F5', fontSize: '13px' }}>Total: <b>{currency} {amount.toLocaleString()}</b> ({days} days) | Pay to: <b>{payTo || 'See CEO settings'}</b></div>
+            <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }}>
+              <option>M-Pesa</option><option>Tigo Pesa</option><option>Airtel Money</option><option>PayPal</option>
+            </select>
+            <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Phone or Account Email" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
+            <button type="submit" disabled={submitting} style={{ padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>{submitting ? 'Processing...' : `Pay ${currency} ${amount.toLocaleString()}`}</button>
+          </form>
+        )}
       </div>
     </div>
   );
