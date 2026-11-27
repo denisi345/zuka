@@ -90,8 +90,8 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
         {step === "pin" ? (
           <div style={{ textAlign: "center", padding: "20px 8px" }}>
             <div style={{ fontSize: "36px", marginBottom: "8px" }}>📲</div>
-            <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "6px", color: "#050505" }}>Weka PIN kwenye simu yako</div>
-            <div style={{ fontSize: "13px", color: "#65676B", marginBottom: "14px" }}>Tumetuma ombi la <b>{provider}</b> ({curr.symbol}{Number(amount).toLocaleString()}) kwenda <b>{phone}</b>. Ingiza PIN yako kuthibitisha.</div>
+            <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "6px", color: "#050505" }}>{isCardOrGlobal ? "Kamilisha Malipo ya Kadi / Kimataifa" : "Weka PIN kwenye simu yako"}</div>
+            <div style={{ fontSize: "13px", color: "#65676B", marginBottom: "14px" }}>{isCardOrGlobal ? `Kamilisha malipo ya ${curr.symbol}${Number(amount).toLocaleString()} kupitia ${provider} (${phone}). Zawadi itaenda kwa mwandaaji mara tu malipo yakithibitishwa.` : `Tumetuma ombi la ${provider} (${curr.symbol}${Number(amount).toLocaleString()}) kwenda ${phone}. Ingiza PIN yako kuthibitisha.`}</div>
             <button type="button" onClick={() => setStep("form")} style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid #CCD0D5", backgroundColor: "#F0F2F5", fontWeight: 600, fontSize: "13px" }}>Ghairi / Badili Namba</button>
           </div>
         ) : step === "done" ? (
@@ -124,7 +124,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
                 </button>
               ))}
             </div>
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone, Card Last 4, or PayPal Email" style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
+            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={isCardOrGlobal ? "Your Email for Payment Receipt" : "Mobile Money Number (e.g. 07XXXXXXXX)"} style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
             <input type="text" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Add a note (optional)" style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
             <button type="submit" disabled={sending} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#F59E0B', color: '#FFF', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>
               {sending ? 'Sending...' : `Send Gift (${curr.symbol}${Number(amount || 0).toLocaleString()}) ✨`}
