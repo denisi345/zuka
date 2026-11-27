@@ -42,3 +42,8 @@ export default function BlueTickModal({ currentUser, onClose }) {
           <div style={{ textAlign: 'center', padding: '18px 0' }}>
             <CheckCircle2 size={42} color="#16A34A" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontWeight: 700, fontSize: '16px' }}>Payment Submitted!</div>
+            <div style={{ fontSize: '13px', color: '#65676B', marginTop: '4px' }}>Your Blue Tick will activate automatically once payment is confirmed.</div>
+            <button type="button" onClick={onClose} style={{ marginTop: '14px', width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
+          </div>
+        ) : (
+          <form onSubmit={handlePay} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
