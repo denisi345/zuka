@@ -44,16 +44,29 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
       .then(({ data }) => { if (data) setPolicy((p) => ({ ...p, ...data })); }).catch(() => {});
   }, new Array());
 
+    useEffect(() => {
+    if (!tipId || step !== "pin") return;
+    const ch = supabase.channel("tip-" + tipId)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "creator_tips", filter: "id=eq." + tipId }, (p) => {
+        if (p.new?.payment_status === "paid") { setStep("done"); if (onSent) onSent(); }
+        if (p.new?.payment_status === "failed") { setErr("Malipo yameshindikana au yameghairiwa."); setStep("form"); }
+      }).subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, new Array(tipId, step));
+
   const handleSend = async (e) => {
     e.preventDefault();
+    setErr("");
+    if (!phone.trim()) { setErr("Weka namba yako ya simu au akaunti ya malipo."); return; }
     if (policy.gifts_enabled === false || !amount || Number(amount) < curr.min || sending) return;
-    const feePct = Number(policy.gift_commission_percent || 0);
-    const commission_amount = Math.round((Number(amount) * feePct) / 100);
     setSending(true);
     try {
-      await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), currency, provider, phone, message, commission_percent: feePct, commission_amount, creator_net: Number(amount) - commission_amount });
-      setDone(true); if (onSent) onSent();
-    } catch (_) {} finally { setSending(false); }
+      const { data: row, error } = await supabase.from("creator_tips").insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), currency, provider, phone: phone.trim(), message, payment_status: "awaiting_pin" }).select("id").single();
+      if (error) throw error;
+      setTipId(row.id);
+      setStep("pin");
+      await supabase.functions.invoke("gift-stk-push", { body: { tipId: row.id, amount: Number(amount), currency, provider, phone: phone.trim() } }).catch(() => {});
+    } catch (ex) { setErr(ex?.message || "Imeshindwa kuanzisha muamala."); } finally { setSending(false); }
   };
 
   return (
