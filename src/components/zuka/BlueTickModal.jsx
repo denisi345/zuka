@@ -6,14 +6,14 @@ import ZukaBadge from './ZukaBadge';
 const PROVIDERS = ['M-Pesa', 'Mixx by Yas', 'Airtel Money', 'Visa / Mastercard', 'PayPal'];
 
 export default function BlueTickModal({ currentUser, onClose }) {
-  const [prices, setPrices] = useState({ tzs: 15000, usd: 6 });
+  const [prices, setPrices] = useState({ tzs: 0, usd: 6 });
   const [currency, setCurrency] = useState('TZS');
   const [provider, setProvider] = useState('M-Pesa');
   const [account, setAccount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   useEffect(() => {
-    supabase.from('platform_settings').select('blue_tick_price_tzs, blue_tick_price_usd').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPrices({ tzs: Number(data.blue_tick_price_tzs || 15000), usd: Number(data.blue_tick_price_usd || 6) }); });
+    supabase.from('platform_settings').select('blue_tick_price_tzs, blue_tick_price_usd').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPrices({ tzs: Number(data.blue_tick_price_tzs || 0), usd: Number(data.blue_tick_price_usd || 0) }); });
   }, []);
   const amount = currency === 'TZS' ? prices.tzs : prices.usd;
   const handlePay = async (e) => {

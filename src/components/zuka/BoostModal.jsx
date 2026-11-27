@@ -3,7 +3,7 @@ import { X, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function BoostModal({ targetType = 'post', targetId, currentUserId, onClose }) {
-  const [settings, setSettings] = useState({ boost_price_tzs: 5000, boost_price_usd: 2 });
+  const [settings, setSettings] = useState({ boost_price_tzs: 0, boost_price_usd: 0 });
   const [currency, setCurrency] = useState('TZS');
   const [days, setDays] = useState(3);
   const [provider, setProvider] = useState('M-Pesa');
@@ -16,7 +16,7 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
     }).catch(() => {});
   }, []);
 
-  const unit = currency === 'TZS' ? Number(settings.boost_price_tzs || 5000) : Number(settings.boost_price_usd || 2);
+  const unit = currency === 'TZS' ? Number(settings.boost_price_tzs || 0) : Number(settings.boost_price_usd || 0);
   const amount = unit * Number(days || 1);
   const payTo = provider === 'M-Pesa' ? settings.mpesa_number : provider === 'Tigo Pesa' ? settings.tigopesa_number : provider === 'Airtel Money' ? settings.airtelmoney_number : settings.paypal_email;
 
