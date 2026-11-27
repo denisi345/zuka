@@ -45,6 +45,10 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div style={{ fontSize: '11px', color: '#65676B' }}>Total Earned: TZS {earned.toLocaleString()} | Min Payout: TZS {minPayout.toLocaleString()}</div>
         </div>
+        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+          <button type="button" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/?support=${currentUser?.id}`); setMsg("Support link copied!"); }} style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1px solid #1877F2", backgroundColor: "#FFF", color: "#1877F2", fontWeight: 700, fontSize: "12px" }}>Copy Support Link</button>
+          <a href={`https://wa.me${encodeURIComponent("Support me on ZUKA: " + window.location.origin + "/?support=" + (currentUser?.id || ""))}`} target="_blank" rel="noreferrer" style={{ flex: 1, padding: "8px", borderRadius: "8px", backgroundColor: "#25D366", color: "#FFF", fontWeight: 700, fontSize: "12px", textAlign: "center", textDecoration: "none" }}>Share WhatsApp</a>
+        </div>
         <form onSubmit={handleRequest} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
           <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Withdraw Amount (TZS)" style={{ padding: '9px', borderRadius: '8px', border: '1px solid #CED0D4' }} />
           <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '9px', borderRadius: '8px', border: '1px solid #CED0D4' }}>
