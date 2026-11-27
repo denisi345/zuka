@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Users, Film, Store, MessageCircle, Sparkles, Newspaper, Calendar, Flag, Bookmark, Settings, HelpCircle, ChevronDown, ChevronUp, Moon, Sun, LogOut, X } from 'lucide-react';
 import ZukaBadge from './ZukaBadge';
 import BlueTickModal from './BlueTickModal';
+import CreatorWalletModal from './CreatorWalletModal';
 
 export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenProfile, onOpenAI, onLogout }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -9,6 +10,7 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
   const [darkMode, setDarkMode] = useState(() => document.body.style.filter === 'invert(0.92) hue-rotate(180deg)');
   const [infoNotice, setInfoNotice] = useState('');
   const [blueTickOpen, setBlueTickOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
 
   const name = profile?.full_name || profile?.username || 'ZUKA Member';
 
@@ -19,6 +21,7 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
   }
 
   const shortcuts = [
+    { label: 'Creator Wallet', desc: 'Earnings & payouts', icon: <Wallet size={22} color="#1877F2" />, action: () => setWalletOpen(true) },
     { label: 'Get Verified', desc: 'Blue tick verification', icon: <ZukaBadge size={22} />, action: () => setBlueTickOpen(true) },
     { label: 'Friends', desc: 'Find & manage friends', icon: <Users size={22} color="#1877F2" />, action: () => { onNavigateTab('friends'); onClose(); } },
     { label: 'Reels', desc: 'Short vertical videos', icon: <Film size={22} color="#F3425F" />, action: () => { onNavigateTab('reels'); onClose(); } },
