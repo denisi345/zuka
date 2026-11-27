@@ -16,10 +16,13 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   useEffect(() => { supabase.from('system_settings').select('*').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPolicy((p) => ({ ...p, ...data })); }).catch(() => {}); }, []);
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!amount || Number(amount) < 100 || sending) return;
+    if (policy.gifts_enabled === false || !amount || Number(amount) < 100 || sending) return;
+    const feePct = Number(policy.gift_commission_percent || 0);
+    const commission_amount = Math.round((Number(amount) * feePct) / 100);
+    const creator_net = Number(amount) - commission_amount;
     setSending(true);
     try {
-            await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), provider, phone, message });
+            await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), provider, phone, message, commission_percent: feePct, commission_amount, creator_net });
       setDone(true); onSent?.();
     } catch {}
     setSending(false);
@@ -36,7 +39,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
             {hideGifts ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
-        {done ? (
+        {policy.gifts_enabled === false ? <div style={{ textAlign: "center", padding: "20px 0", color: "#65676B", fontWeight: 600 }}>Creator gifts are currently disabled by platform policy.</div> : done ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <CheckCircle2 size={42} color="#16A34A" style={{ margin: '0 auto 8px' }} />
             <div style={{ fontWeight: 700, fontSize: '16px' }}>Gift Sent Successfully!</div>
