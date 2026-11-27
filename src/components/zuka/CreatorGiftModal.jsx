@@ -23,3 +23,15 @@ const PROVIDERS = new Array(
   { id: 'PayPal', badge: 'PayPal', bg: '#003087', fg: '#FFF' },
   { id: 'Apple / Google Pay', badge: 'G /  Pay', bg: '#111827', fg: '#FFF' }
 );
+
+export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGifts, onTogglePrivacy, onSent, onClose }) {
+  const [currency, setCurrency] = useState('USD');
+  const [amount, setAmount] = useState(5);
+  const [provider, setProvider] = useState('M-Pesa');
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+  const [policy, setPolicy] = useState({ gifts_enabled: true, gift_commission_percent: 0 });
+  const curr = CURRENCIES[currency] || CURRENCIES.USD;
+  const pickCurr = (c) => { setCurrency(c); setAmount(CURRENCIES[c].amounts.at(1)); };
