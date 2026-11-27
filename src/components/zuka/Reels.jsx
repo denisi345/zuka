@@ -1,4 +1,5 @@
 import ZukaBadge from './ZukaBadge';
+import BoostModal from './BoostModal';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   ThumbsUp, MessageCircle, Forward, Volume2, VolumeX, MoreHorizontal,
@@ -62,6 +63,7 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
   const [sendingComment, setSendingComment] = useState(false);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [boostReelId, setBoostReelId] = useState(null);
   const [draftVideo, setDraftVideo] = useState(null);
   const [draftCaption, setDraftCaption] = useState('');
   const [draftMusic, setDraftMusic] = useState('');
@@ -270,6 +272,30 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
   const [likedComments, setLikedComments] = useState({});
   const [replyTarget, setReplyTarget] = useState(null);
   const toggleCommentLike = (cid) => setLikedComments((p) => ({ ...p, [cid]: !p[cid] }));
+  const [reelRec, setReelRec] = useState(false);
+  const reelRecRef = React.useRef(null);
+  const toggleReelVoice = async () => {
+    if (reelRec && reelRecRef.current) { reelRecRef.current.stop(); setReelRec(false); return; }
+    if (!commentReelId) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream); const chunks = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const path = `reels/${commentReelId}/${Date.now()}.webm`;
+        const { error } = await supabase.storage.from("voice-comments").upload(path, blob);
+        if (!error) {
+          const { data } = supabase.storage.from("voice-comments").getPublicUrl(path);
+          const item = { id: `c-${Date.now()}`, user_id: userProfile?.id || null, user: myName, avatar: myAvatar, verified: Boolean(userProfile?.is_verified), text: "Voice note", audio_url: data.publicUrl };
+          setReels((prev) => prev.map((r) => (String(r.id) === String(commentReelId) ? { ...r, commentsList: [...r.commentsList, item] } : r)));
+          if (userProfile?.id) await supabase.from("reel_comments").insert({ reel_id: commentReelId, user_id: userProfile.id, content: "Voice note", audio_url: data.publicUrl });
+        }
+      };
+      reelRecRef.current = mr; mr.start(); setReelRec(true);
+    } catch (_) {}
+  };
   async function handleAddComment(e) {
     e.preventDefault();
     const raw = commentInput.trim();
@@ -622,7 +648,7 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
                         {c.user}
                         {c.verified && <span style={{ width: '13px', height: '13px', borderRadius: '50%', backgroundColor: '#1877F2', color: '#FFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><Check size={9} strokeWidth={3} /></span>}
                       </div>
-                      <div style={{ fontSize: '14px', color: '#050505', marginTop: '2px' }}>{c.text}</div>
+                      <div style={{ fontSize: '14px', color: '#050505', marginTop: '2px' }}>{c.audio_url ? <audio controls src={c.audio_url} style={{ height: "30px", maxWidth: "210px", marginTop: "4px" }} /> : c.text}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '4px', paddingLeft: '8px', fontSize: '12px', fontWeight: 700, color: '#65676B' }}>
                       <button type="button" onClick={() => toggleCommentLike(c.id)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 700, color: likedComments[c.id] ? '#1877F2' : '#65676B' }}>Like{likedComments[c.id] ? ' · 1' : ''}</button>
@@ -635,7 +661,7 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
             <form onSubmit={handleAddComment} style={{ padding: '10px 12px', borderTop: '1px solid #E4E6EB', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFF' }}>
               <img src={myAvatar} alt={myName} style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }} />
               <input type="text" value={commentInput} onChange={(e) => setCommentInput(e.target.value)} placeholder="Add a comment..." style={{ flex: 1, padding: '9px 14px', borderRadius: '20px', border: 'none', backgroundColor: '#F0F2F5', fontSize: '14px', outline: 'none', color: '#050505' }} />
-              <button type="submit" disabled={!commentInput.trim() || sendingComment} style={{ background: 'none', border: 'none', color: commentInput.trim() ? '#1877F2' : '#BCC0C4', cursor: 'pointer', padding: '4px' }}><Send size={20} /></button>
+              <button type="button" onClick={toggleReelVoice} style={{ width: "34px", height: "34px", borderRadius: "50%", border: "none", backgroundColor: reelRec ? "#DC2626" : "#F0F2F5", color: reelRec ? "#FFF" : "#050505", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>{reelRec ? <Square size={14} /> : <Mic size={16} />}</button><button type="submit" disabled={!commentInput.trim() || sendingComment} style={{ background: 'none', border: 'none', color: commentInput.trim() ? '#1877F2' : '#BCC0C4', cursor: 'pointer', padding: '4px' }}><Send size={20} /></button>
             </form>
           </div>
         </div>
@@ -668,6 +694,7 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
               <span style={{ fontWeight: 700, fontSize: '15px', color: '#050505' }}>Reel Options</span>
               <button type="button" onClick={() => setMenuReelId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
             </div>
+            <button type="button" onClick={() => { setBoostReelId(menuReelId); setMenuReelId(null); }} style={{ width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, cursor: 'pointer' }}>Boost Reel</button>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '14px', fontWeight: 600, color: '#050505', display: 'flex', alignItems: 'center', gap: '8px' }}><FastForward size={18} /> Playback Speed</span>
               <div style={{ display: 'flex', gap: '6px' }}>
@@ -747,6 +774,7 @@ export default function Reels({ userProfile, onOpenUserProfile, initialReel, onB
           </div>
         </div>
       )}
+    {boostReelId && <BoostModal targetType="reel" targetId={boostReelId} currentUserId={userProfile?.id} onClose={() => setBoostReelId(null)} />}
     </div>
   );
 }
