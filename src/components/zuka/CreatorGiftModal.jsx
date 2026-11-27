@@ -35,3 +35,20 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   const [policy, setPolicy] = useState({ gifts_enabled: true, gift_commission_percent: 0 });
   const curr = CURRENCIES[currency] || CURRENCIES.USD;
   const pickCurr = (c) => { setCurrency(c); setAmount(CURRENCIES[c].amounts.at(1)); };
+
+  useEffect(() => {
+    supabase.from('system_settings').select('*').eq('id', 1).maybeSingle()
+      .then(({ data }) => { if (data) setPolicy((p) => ({ ...p, ...data })); }).catch(() => {});
+  }, new Array());
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (policy.gifts_enabled === false || !amount || Number(amount) < curr.min || sending) return;
+    const feePct = Number(policy.gift_commission_percent || 0);
+    const commission_amount = Math.round((Number(amount) * feePct) / 100);
+    setSending(true);
+    try {
+      await supabase.from('creator_tips').insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), currency, provider, phone, message, commission_percent: feePct, commission_amount, creator_net: Number(amount) - commission_amount });
+      setDone(true); if (onSent) onSent();
+    } catch (_) {} finally { setSending(false); }
+  };
