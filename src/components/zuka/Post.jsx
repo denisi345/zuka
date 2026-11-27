@@ -1,4 +1,5 @@
 import CreatorGiftModal from "./CreatorGiftModal";
+import BoostModal from "./BoostModal";
 import PostAudioSheet from "./PostAudioSheet";
 import React, { useState } from 'react';
 import { ThumbsUp, MessageCircle, Share2, Trash2, Send, MoreHorizontal, X, Bookmark, Link2, Edit3, Pin, EyeOff, AlertCircle, UserMinus, Volume2, VolumeX } from "lucide-react";
@@ -20,6 +21,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
   const [giftsCount, setGiftsCount] = React.useState(0);
   const [hideGifts, setHideGifts] = React.useState(Boolean(post?.profiles?.hide_gift_counts));
   const [giftOpen, setGiftOpen] = React.useState(false);
+  const [boostOpen, setBoostOpen] = React.useState(false);
   React.useEffect(() => { if (!post?.id) return; supabase.from("creator_tips").select("id", { count: "exact", head: true }).eq("post_id", String(post.id)).then(({ count }) => { if (typeof count === "number") setGiftsCount(count); }); if (post?.user_id) supabase.from("profiles").select("hide_gift_counts").eq("id", post.user_id).maybeSingle().then(({ data }) => { if (data) setHideGifts(Boolean(data.hide_gift_counts)); }); }, [post?.id, post?.user_id]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState([]);
@@ -239,6 +241,7 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
         <button type="button" onClick={handleToggleComments} style={{ flex: 1, height: '36px', borderRadius: '20px', border: 'none', backgroundColor: '#F0F2F5', color: '#65676B', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><MessageCircle size={18} /> {commentsCount > 0 ? commentsCount : 'Comment'}</button>
         <button type="button" onClick={handleShare} style={{ flex: 1, height: '36px', borderRadius: '20px', border: 'none', backgroundColor: '#F0F2F5', color: '#65676B', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Share2 size={18} /> {sharesCount > 0 ? sharesCount : 'Share'}</button>
         <button type="button" onClick={() => setGiftOpen(true)} style={{ height: '36px', padding: '0 12px', borderRadius: '20px', border: '1px solid rgba(245,158,11,0.32)', background: 'linear-gradient(135deg, rgba(254,243,199,0.55), rgba(253,230,138,0.35))', color: '#B45309', fontWeight: 700, fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', animation: 'zukaGiftGlow 2.4s infinite ease-in-out' }}>{hideGifts ? '✨✨✨✨' : (giftsCount > 0 ? `✨ ${giftsCount}` : '✨ Gift')}</button>
+          {String(currentUserId || "") === String(post?.user_id || "") && (<button type="button" onClick={() => setBoostOpen(true)} style={{ height: '36px', padding: '0 12px', borderRadius: '20px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Boost</button>)}
       </div>
 
       {commentsOpen && (
@@ -366,4 +369,5 @@ function Post({ post, currentUserId, onOpenUserProfile, onDeletePost, userProfil
 }
 
       {giftOpen && <CreatorGiftModal post={post} currentUserId={currentUserId} isOwner={String(currentUserId || "") === String(post?.user_id || "")} hideGifts={hideGifts} onTogglePrivacy={async () => { const next = !hideGifts; setHideGifts(next); if (post?.user_id) await supabase.from("profiles").update({ hide_gift_counts: next }).eq("id", post.user_id); }} onSent={() => setGiftsCount((c) => c + 1)} onClose={() => setGiftOpen(false)} />}
+{boostOpen && <BoostModal targetType="post" targetId={post.id} currentUserId={currentUserId} onClose={() => setBoostOpen(false)} />}
 export default React.memo(Post);
