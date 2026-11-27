@@ -1,59 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, TrendingUp } from 'lucide-react';
+import { X, TrendingUp, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-export default function BoostModal({ targetType = 'post', targetId, currentUserId, onClose }) {
-  const [settings, setSettings] = useState({ boost_price_tzs: 0, boost_price_usd: 0 });
-  const [currency, setCurrency] = useState('TZS');
-  const [days, setDays] = useState(3);
-  const [provider, setProvider] = useState('M-Pesa');
-  const [account, setAccount] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  useEffect(() => {
-    supabase.from('system_settings').select('*').eq('id', 1).maybeSingle().then(({ data }) => {
-      if (data) setSettings((prev) => ({ ...prev, ...data }));
-    }).catch(() => {});
-  }, []);
+const FX = {
+  USD: { symbol: '$', rate: 1 }, EUR: { symbol: '€', rate: 0.92 }, GBP: { symbol: '£', rate: 0.79 },
+  TZS: { symbol: 'TZS ', rate: null }, KES: { symbol: 'KES ', rate: 129 }, UGX: { symbol: 'UGX ', rate: 3700 },
+  NGN: { symbol: '₦', rate: 1550 }, ZAR: { symbol: 'R', rate: 18 }, INR: { symbol: '₹', rate: 84 }, AED: { symbol: 'AED ', rate: 3.67 }
+};
 
-  const unit = currency === 'TZS' ? Number(settings.boost_price_tzs || 0) : Number(settings.boost_price_usd || 0);
-  const amount = unit * Number(days || 1);
-  const payTo = provider === 'M-Pesa' ? settings.mpesa_number : provider === 'Tigo Pesa' ? settings.tigopesa_number : provider === 'Airtel Money' ? settings.airtelmoney_number : settings.paypal_email;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!currentUserId || !account.trim() || submitting) return;
-    setSubmitting(true);
-    try {
-      await supabase.from('payment_requests').insert({ user_id: currentUserId, request_type: 'boost', target_type: targetType, target_id: String(targetId || ''), duration_days: Number(days), amount, currency, payment_provider: provider, payer_account: account.trim() });
-      setSubmitted(true);
-    } catch (err) {}
-    setSubmitting(false);
-  };
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '400px', backgroundColor: '#FFF', borderRadius: '14px', padding: '18px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}><TrendingUp size={18} color="#1877F2" /><span>Boost {targetType === 'reel' ? 'Reel' : 'Post'}</span></div>
-          <button type="button" onClick={onClose} style={{ border: 'none', background: '#F0F2F5', borderRadius: '50%', width: '30px', height: '30px' }}><X size={16} /></button>
-        </div>
-        {submitted ? <div style={{ textAlign: 'center', padding: '16px', color: '#1877F2', fontWeight: 700 }}>Boost request sent for approval.</div> : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {['TZS', 'USD'].map((c) => <button key={c} type="button" onClick={() => setCurrency(c)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #1877F2', backgroundColor: currency === c ? '#1877F2' : '#FFF', color: currency === c ? '#FFF' : '#1877F2', fontWeight: 700 }}>{c}</button>)}
-            </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {[1, 3, 7, 14, 30].map((d) => <button key={d} type="button" onClick={() => setDays(d)} style={{ flex: 1, padding: '7px 0', borderRadius: '8px', border: '1px solid #CED0D4', backgroundColor: days === d ? '#E7F3FF' : '#FFF', color: days === d ? '#1877F2' : '#050505', fontWeight: 700, fontSize: '12px' }}>{d}d</button>)}
-            </div>
-            <div style={{ padding: '10px', borderRadius: '10px', backgroundColor: '#F0F2F5', fontSize: '13px' }}>Total: <b>{currency} {amount.toLocaleString()}</b> ({days} days) | Pay to: <b>{payTo || 'See CEO settings'}</b></div>
-            <select value={provider} onChange={(e) => setProvider(e.target.value)} style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }}>
-              <option>M-Pesa</option><option>Tigo Pesa</option><option>Airtel Money</option><option>PayPal</option>
-            </select>
-            <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Phone or Account Email" style={{ padding: '10px', borderRadius: '10px', border: '1px solid #CED0D4' }} />
-            <button type="submit" disabled={submitting} style={{ padding: '11px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>{submitting ? 'Processing...' : `Pay ${currency} ${amount.toLocaleString()}`}</button>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-}
+const PROVIDERS = new Array(
+  { id: 'M-Pesa', badge: 'M-PESA', bg: '#E60000', fg: '#FFF' },
+  { id: 'Mixx by Yas', badge: 'yas', bg: '#FFD100', fg: '#002B49' },
+  { id: 'Airtel Money', badge: 'airtel', bg: '#ED1C24', fg: '#FFF' },
+  { id: 'Visa / Mastercard', badge: 'VISA / MC', bg: '#1A1F71', fg: '#FFF' },
+  { id: 'PayPal', badge: 'PayPal', bg: '#003087', fg: '#FFF' },
+  { id: 'Apple / Google Pay', badge: 'G /  Pay', bg: '#111827', fg: '#FFF' }
+);
