@@ -37,6 +37,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   const [step, setStep] = useState("form"); const [err, setErr] = useState(""); const [tipId, setTipId] = useState(null);
   const [policy, setPolicy] = useState({ gifts_enabled: true, gift_commission_percent: 0 });
   const curr = CURRENCIES[currency] || CURRENCIES.USD;
+  const isCardOrGlobal = provider === "Visa / Mastercard" || provider === "PayPal" || provider === "Apple / Google Pay";
   const pickCurr = (c) => { setCurrency(c); setAmount(CURRENCIES[c].amounts.at(1)); };
 
   useEffect(() => {
@@ -57,10 +58,12 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   const handleSend = async (e) => {
     e.preventDefault();
     setErr("");
-    if (!phone.trim()) { setErr("Weka namba yako ya simu au akaunti ya malipo."); return; }
+    if (!phone.trim()) { setErr(isCardOrGlobal ? "Weka Email yako ya risiti ya malipo." : "Weka namba yako ya simu."); return; }
     if (policy.gifts_enabled === false || !amount || Number(amount) < curr.min || sending) return;
     setSending(true);
     try {
+      const { data: fnData } = await supabase.functions.invoke("gift-stk-push", { body: { amount: Number(amount), currency, provider, phone: phone.trim(), isCard: isCardOrGlobal } }).catch(() => ({ data: null }));
+      if (fnData?.checkoutUrl) { window.open(fnData.checkoutUrl, "_blank", "noopener"); }
       const { data: row, error } = await supabase.from("creator_tips").insert({ post_id: String(post.id), sender_id: currentUserId || null, receiver_id: post.user_id, amount: Number(amount), currency, provider, phone: phone.trim(), message, payment_status: "awaiting_pin" }).select("id").single();
       if (error) throw error;
       setTipId(row.id);
