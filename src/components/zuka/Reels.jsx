@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import ZukaBadge from './ZukaBadge';
 import BoostModal from './BoostModal';
 import React, { useState, useEffect, useRef } from 'react';

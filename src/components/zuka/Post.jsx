@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import CreatorGiftModal from "./CreatorGiftModal";
 import BoostModal from "./BoostModal";
 import PostAudioSheet from "./PostAudioSheet";
