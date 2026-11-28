@@ -35,12 +35,12 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
     e.preventDefault();
     const val = Number(amount);
     if (!currentUser?.id || loading) return;
-    if (val < minPayout) return setMsg({ text: `Minimum payout is TZS ${minPayout.toLocaleString()}`, type: 'error' });
-    if (val > balance) return setMsg({ text: 'Amount exceeds your available balance.', type: 'error' });
+    if (val < Number((minPayout * RATES[currency]).toFixed(2))) return setMsg({ text: `Minimum payout is TZS ${minPayout.toLocaleString()}`, type: 'error' });
+    if (val > Number((balance * RATES[currency]).toFixed(2))) return setMsg({ text: 'Amount exceeds your available balance.', type: 'error' });
     if (!account.trim()) return setMsg({ text: 'Enter your mobile money number or PayPal email.', type: 'error' });
     setLoading(true); setMsg({ text: '', type: 'info' });
     try {
-      const { error } = await supabase.from('payout_requests').insert({ user_id: currentUser.id, amount: val, currency: 'TZS', payment_provider: provider, payout_account: account.trim() });
+      const { error } = await supabase.from('payout_requests').insert({ user_id: currentUser.id, amount: val, currency, payment_provider: provider, payout_account: account.trim() });
       if (error) throw error;
       setAmount(''); setMsg({ text: 'Payout request submitted successfully!', type: 'success' }); await loadWallet();
     } catch (err) { setMsg({ text: err?.message || 'Failed to submit payout request.', type: 'error' }); }
@@ -54,7 +54,7 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
             <div style={{ width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#E7F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1877F2' }}><Wallet size={18} /></div>
             <div><div style={{ fontWeight: 800, fontSize: '16px', color: '#050505' }}>Creator Wallet</div><div style={{ fontSize: '11px', color: '#65676B' }}>Earnings & Payouts</div></div>
           </div>
-          <button type="button" onClick={onClose} style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', backgroundColor: '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#050505' }}><X size={18} /></button>
+          <select value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ padding: "5px 8px", borderRadius: "8px", border: "1px solid #CED0D4", fontWeight: 700, fontSize: "12px", backgroundColor: "#F0F2F5" }}>{Object.keys(RATES).map((k) => <option key={k} value={k}>{k}</option>)}</select><button type="button" onClick={onClose} style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', backgroundColor: '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#050505' }}><X size={18} /></button>
         </div>
         <div style={{ padding: '16px' }}>
           <div style={{ background: 'linear-gradient(135deg, #1877F2, #0D5BD3)', borderRadius: '14px', padding: '16px', color: '#FFF', marginBottom: '12px' }}>
