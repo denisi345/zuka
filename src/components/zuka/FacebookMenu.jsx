@@ -4,6 +4,9 @@ import { Users, Film, Store, MessageCircle, Sparkles, Newspaper, Calendar, Flag,
 import ZukaBadge from './ZukaBadge';
 import BlueTickModal from './BlueTickModal';
 import CreatorWalletModal from './CreatorWalletModal';
+import BoostModal from './BoostModal';
+import { TrendingUp } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenProfile, onOpenAI, onLogout }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -12,6 +15,7 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
   const [infoNotice, setInfoNotice] = useState('');
   const [blueTickOpen, setBlueTickOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
+  const [boostTarget, setBoostTarget] = useState(null);
 
   const name = profile?.full_name || profile?.username || 'ZUKA Member';
 
