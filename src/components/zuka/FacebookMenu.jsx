@@ -117,6 +117,8 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
           </button>
         </div>
       </div>
+      {walletOpen && (<div style={{ position: "fixed", inset: 0, zIndex: 10000 }}><CreatorWalletModal currentUser={profile} onClose={() => setWalletOpen(false)} /></div>)}
+      {blueTickOpen && (<div style={{ position: "fixed", inset: 0, zIndex: 10000 }}><BlueTickModal currentUser={profile} onClose={() => setBlueTickOpen(false)} /></div>)}
     </div>
   );
 }
