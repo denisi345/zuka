@@ -130,6 +130,7 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
       </div>
       {walletOpen && (<div style={{ position: "fixed", inset: 0, zIndex: 10000 }}><CreatorWalletModal currentUser={profile} onClose={() => setWalletOpen(false)} /></div>)}
       {blueTickOpen && (<div style={{ position: "fixed", inset: 0, zIndex: 10000 }}><BlueTickModal currentUser={profile} onClose={() => setBlueTickOpen(false)} /></div>)}
+      {boostTarget && (<div style={{ position: "fixed", inset: 0, zIndex: 10000 }}><BoostModal targetType={boostTarget.targetType} targetId={boostTarget.targetId} currentUserId={profile?.id} onClose={() => setBoostTarget(null)} /></div>)}
     </div>
   );
 }
