@@ -44,8 +44,8 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
     setLoading(true); setMsg({ text: '', type: 'info' });
     try {
       const { error } = await supabase.from('payout_requests').insert({ user_id: currentUser.id, amount: val, currency, payment_provider: provider, payout_account: isBank ? `${holder.trim()} | Acc: ${account.trim()}${swift.trim() ? " | SWIFT: " + swift.trim() : ""}` : account.trim() });
-      if (error) throw error;
-      setAmount(''); setMsg({ text: 'Payout request submitted successfully!', type: 'success' }); await loadWallet();
+      if (error) throw error; const { error: fwErr } = await supabase.functions.invoke('creator-payout', { body: { userId: currentUser.id, amount: val, currency, provider, account: account.trim(), holder: holder.trim() } }); if (fwErr) throw fwErr;
+      setAmount(''); setMsg({ text: 'Payout sent automatically to your account!', type: 'success' }); await loadWallet();
     } catch (err) { setMsg({ text: err?.message || 'Failed to submit payout request.', type: 'error' }); }
     setLoading(false);
   };
