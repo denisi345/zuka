@@ -193,7 +193,7 @@ export default function Feed({ userProfile, onOpenProfile, onOpenUserProfile }) 
             No posts yet. Share the first update on ZUKA above!
           </div>
         ) : (
-          [...posts].sort((a, b) => Number(Boolean(b.is_pinned)) - Number(Boolean(a.is_pinned))).map((post, idx) => (
+          [...posts].sort((a, b) => ((Number(Boolean(b.is_boosted)) * 2 + Number(Boolean(b.is_pinned))) - (Number(Boolean(a.is_boosted)) * 2 + Number(Boolean(a.is_pinned))))).map((post, idx) => (
             <FeedGuard key={post.id}><Post key={post.id} post={post} currentUserId={userProfile?.id}
               onOpenUserProfile={openUserProfileSafe}
               onDeletePost={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
