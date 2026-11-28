@@ -71,7 +71,7 @@ const AppInitializer = () => {
   return null;
 };
 
-class RootGuard extends React.Component<any, { err: string | null }> { constructor(p: any) { super(p); this.state = { err: null }; } static getDerivedStateFromError(e: any) { return { err: String(e?.message || e) }; } render() { return this.state.err ? <div style={{ padding: 20, background: "#F0F2F5", color: "#050505", minHeight: "100vh" }}><button onClick={() => { window.location.href = "/dashboard"; }}>← Rudi</button><p>{this.state.err}</p></div> : this.props.children; } }
+class RootGuard extends React.Component<any, { err: string | null }> { constructor(p: any) { super(p); this.state = { err: null }; } static getDerivedStateFromError(e: any) { return { err: String(e?.message || e) }; } render() { return this.state.err ? <div style={{ padding: 20, background: "#F0F2F5", color: "#050505", minHeight: "100vh" }}><button onClick={() => { window.location.href = "/dashboard"; }}>← Back</button><p>{this.state.err}</p></div> : this.props.children; } }
 const FriendRoute = () => { const { friendId } = useParams(); return <Dashboard initialFriendId={friendId} />; };
 const App = () => (
   <QueryClientProvider client={queryClient}>
