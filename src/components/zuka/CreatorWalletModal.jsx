@@ -28,5 +28,20 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
   const canWithdraw = !loading && balance >= minPayout && balance > 0;
   const supportUrl = `${window.location.origin}/?support=${currentUser?.id || ''}`;
   const whatsappUrl = `https://wa.me{encodeURIComponent('Support me on ZUKA: ' + supportUrl)}`;
+  const handleRequest = async (e) => {
+    e.preventDefault();
+    const val = Number(amount);
+    if (!currentUser?.id || loading) return;
+    if (val < minPayout) return setMsg({ text: `Minimum payout is TZS ${minPayout.toLocaleString()}`, type: 'error' });
+    if (val > balance) return setMsg({ text: 'Amount exceeds your available balance.', type: 'error' });
+    if (!account.trim()) return setMsg({ text: 'Enter your mobile money number or PayPal email.', type: 'error' });
+    setLoading(true); setMsg({ text: '', type: 'info' });
+    try {
+      const { error } = await supabase.from('payout_requests').insert({ user_id: currentUser.id, amount: val, currency: 'TZS', payment_provider: provider, payout_account: account.trim() });
+      if (error) throw error;
+      setAmount(''); setMsg({ text: 'Payout request submitted successfully!', type: 'success' }); await loadWallet();
+    } catch (err) { setMsg({ text: err?.message || 'Failed to submit payout request.', type: 'error' }); }
+    setLoading(false);
+  };
   return null;
 }
