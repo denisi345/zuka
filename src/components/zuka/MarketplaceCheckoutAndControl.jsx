@@ -41,6 +41,7 @@ const POPULAR_COUNTRIES = [
 export function MarketplaceCheckoutAndControl({
   item = null,
   product = null,
+  user = null,
   onClose = () => {},
   onOrderSuccess = () => {},
 }) {
@@ -123,7 +124,12 @@ export function MarketplaceCheckoutAndControl({
         }]);
         if (fallback.error) localStorage.setItem('zuka_last_order', JSON.stringify(paymentMetadata));
       }
-      setStatusMsg('✅ Order secured in ZUKA Escrow! Funds are protected until delivery.');
+      const isCard = !['mpesa', 'mixx', 'airtel', 'halopesa', 'mtn'].includes(channel);
+      const { data: reqRow } = await supabase.from('payment_requests').insert({ user_id: user?.id || null, request_type: isBoost ? 'boost' : 'marketplace', amount: rawConvertedAmount, currency, payment_provider: channel, payment_account: walletRef || phone || accountNumber || 'card', status: 'pending' }).select('id').single();
+      const { data: fw, error: fwErr } = await supabase.functions.invoke('gift-stk-push', { body: { reqId: reqRow?.id, payType: activeItem?.title || 'Marketplace Order', amount: rawConvertedAmount, currency, provider: channel, phone: (walletRef || phone || '').trim(), isCard } });
+      if (fwErr) throw fwErr;
+      if (fw?.checkoutUrl) { window.location.href = fw.checkoutUrl; return; }
+      setStatusMsg('✅ STK Push sent to your phone! Enter PIN to complete payment.');
       onOrderSuccess(paymentMetadata);
     } catch (err) {
       localStorage.setItem('zuka_last_order', JSON.stringify(paymentMetadata));
