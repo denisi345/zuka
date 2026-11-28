@@ -1,3 +1,4 @@
+import { Wallet } from "lucide-react";
 import React, { useState } from 'react';
 import { Users, Film, Store, MessageCircle, Sparkles, Newspaper, Calendar, Flag, Bookmark, Settings, HelpCircle, ChevronDown, ChevronUp, Moon, Sun, LogOut, X } from 'lucide-react';
 import ZukaBadge from './ZukaBadge';
