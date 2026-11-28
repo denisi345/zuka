@@ -295,6 +295,8 @@ export default function Marketplace({ userProfile, onMessageSeller, onOpenUserPr
           </div>
         </div>
       )}
-    </div>
+    
+      {ctrlOpen && ctrlItem && (<div onClick={() => setCtrlOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 80, backgroundColor: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", padding: "12px", overflowY: "auto" }}><div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "680px", maxHeight: "92dvh", overflowY: "auto" }}><MarketplaceCheckoutAndControl item={ctrlItem} user={userProfile} onClose={() => setCtrlOpen(false)} onOrderSuccess={() => { setCtrlOpen(false); loadListings(); }} /></div></div>)}
+</div>
   );
 }
