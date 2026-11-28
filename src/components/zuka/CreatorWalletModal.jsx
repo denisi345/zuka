@@ -65,8 +65,6 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
             <button type="button" onClick={() => { navigator.clipboard?.writeText(supportUrl); setMsg({ text: 'Support link copied!', type: 'success' }); }} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #1877F2', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Copy size={14} /> Copy Support Link</button>
             <a href={whatsappUrl} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px', borderRadius: '10px', backgroundColor: '#25D366', color: '#FFF', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}><Share2 size={14} /> Share WhatsApp</a>
           </div>
-        </div>
-      </div>
-    </div>
+        <form onSubmit={handleRequest} style={{ display: "flex", flexDirection: "column", gap: "9px", backgroundColor: "#F7F8FA", padding: "12px", borderRadius: "12px", border: "1px solid #E4E6EB", marginBottom: "14px" }}><div style={{ fontSize: "13px", fontWeight: 700, color: "#050505" }}>Withdraw Funds</div></form></div></div></div>
   );
 }
