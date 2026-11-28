@@ -14,3 +14,19 @@ Deno.serve(async (req) => {
       const pct = Number(setArr?.[0]?.gift_commission_percent || 0);
       const net = Math.max(0, Number((gross * (1 - pct / 100)).toFixed(2)));
       await fetch(`${u}/rest/v1/creator_tips?id=eq.${id}`, { method: "PATCH", headers: h, body: JSON.stringify({ payment_status: ok ? "paid" : "failed", creator_net: ok ? net : 0, transaction_ref: String(body?.data?.id || "") }) });
+    } else if (txRef.startsWith("zuka_req_") && ok) {
+      const id = encodeURIComponent(txRef.replace("zuka_req_", ""));
+      const rArr = await (await fetch(`${u}/rest/v1/payment_requests?id=eq.${id}&select=*`, { headers: h })).json();
+      const r = Array.isArray(rArr) ? (rArr[0] || {}) : {};
+      await fetch(`${u}/rest/v1/payment_requests?id=eq.${id}`, { method: "PATCH", headers: h, body: JSON.stringify({ status: "approved" }) });
+      if (r.request_type === "blue_tick" && r.user_id) {
+        await fetch(`${u}/rest/v1/profiles?id=eq.${r.user_id}`, { method: "PATCH", headers: h, body: JSON.stringify({ is_verified: true, is_blue_tick: true }) });
+      } else if (r.request_type === "boost" && r.target_id) {
+        const exp = new Date(Date.now() + Number(r.duration_days || 3) * 86400000).toISOString();
+        const tbl = r.target_type === "marketplace" ? "marketplace_listings" : "posts";
+        await fetch(`${u}/rest/v1/${tbl}?id=eq.${encodeURIComponent(r.target_id)}`, { method: "PATCH", headers: h, body: JSON.stringify({ is_boosted: true, boost_expires_at: exp }) });
+      }
+    }
+    return new Response("ok", { status: 200 });
+  } catch (e) { return new Response(String(e), { status: 500 }); }
+});
