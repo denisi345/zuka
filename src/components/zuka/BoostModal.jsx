@@ -24,6 +24,8 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
   const [settings, setSettings] = useState({ boost_price_tzs: 0, boost_price_usd: 0 });
   const [currency, setCurrency] = useState('USD');
   const [days, setDays] = useState(3);
+  const [goal, setGoal] = useState('Reach & Engagement');
+  const [audience, setAudience] = useState('AI Advantage+ (Tanzania & Global)');
   const [provider, setProvider] = useState('M-Pesa');
   const [account, setAccount] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,7 +46,11 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
     if (!currentUserId || !account.trim() || submitting) return;
     setSubmitting(true);
     try {
-      await supabase.from('payment_requests').insert({ user_id: currentUserId, request_type: 'boost', target_type: targetType, target_id: String(targetId || ''), duration_days: Number(days), amount, currency, payment_provider: provider, payer_account: account.trim() });
+      const { data: reqRow } = await supabase.from('payment_requests').insert({ user_id: currentUserId, request_type: 'boost', target_type: targetType, target_id: String(targetId || ''), duration_days: Number(days), amount, currency, payment_provider: provider, payer_account: account.trim() }).select('id').single();
+      const isCard = !/M-Pesa|Mixx|Airtel|HaloPesa|T-Pesa|AzamPesa/i.test(provider);
+      const { data: fw, error: fwErr } = await supabase.functions.invoke('gift-stk-push', { body: { reqId: reqRow?.id, payType: `ZUKA AI Boost (${goal})`, amount, currency, provider, phone: account.trim(), isCard } });
+      if (fwErr) throw fwErr;
+      if (fw?.checkoutUrl) { window.location.href = fw.checkoutUrl; return; }
       setSubmitted(true);
     } catch (_) {} finally { setSubmitting(false); }
   };
@@ -64,7 +70,7 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
             <button type="button" onClick={onClose} style={{ width: '100%', padding: '10px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700 }}>Done</button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <><div style={{ backgroundColor: '#F0F7FF', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '10px', marginBottom: '10px', fontSize: '12px' }}><div style={{ fontWeight: 700, color: '#1877F2', marginBottom: '4px' }}>✨ ZUKA Ads AI (Advantage+)</div><div>Est. Reach: <b>{(days * 1850).toLocaleString()} – {(days * 4200).toLocaleString()} people</b> • Auto-Review: <b>Active</b></div></div><form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
               <select value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 700 }}>{Object.keys(FX).map((c) => <option key={c} value={c}>{c}</option>)}</select>
               <select value={days} onChange={(e) => setDays(Number(e.target.value))} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', fontWeight: 600 }}>{new Array(1, 3, 7, 14, 30).map((d) => <option key={d} value={d}>{d} {d === 1 ? 'Day' : 'Days'}</option>)}</select>
@@ -79,7 +85,7 @@ export default function BoostModal({ targetType = 'post', targetId, currentUserI
             </div>
             <input type="text" required value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Your Phone Number or Account Email" style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #CCD0D5', fontSize: '14px', boxSizing: 'border-box' }} />
             <button type="submit" disabled={submitting} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', backgroundColor: '#1877F2', color: '#FFF', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>{submitting ? 'Submitting...' : `Pay ${fx.symbol}${amount.toLocaleString()}`}</button>
-          </form>
+          </form></>
         )}
       </div>
     </div>
