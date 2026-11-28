@@ -7,6 +7,9 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
   const [payouts, setPayouts] = useState([]);
   const [policy, setPolicy] = useState({ min_payout_tzs: 5000, min_payout_usd: 2 });
   const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState("TZS");
+  const RATES = { TZS: 1, KES: 0.05, UGX: 1.42, RWF: 0.52, USD: 0.00038, EUR: 0.00035, GBP: 0.0003, ZAR: 0.007, NGN: 0.6 };
+  const fmt = (tzs) => (Number(tzs || 0) * (RATES[currency] || 1)).toLocaleString(undefined, { maximumFractionDigits: currency === "TZS" || currency === "UGX" || currency === "RWF" ? 0 : 2 });
   const [provider, setProvider] = useState('M-Pesa');
   const [account, setAccount] = useState('');
   const [msg, setMsg] = useState({ text: '', type: 'info' });
