@@ -43,5 +43,30 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
     } catch (err) { setMsg({ text: err?.message || 'Failed to submit payout request.', type: 'error' }); }
     setLoading(false);
   };
-  return null;
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 10000, backgroundColor: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '430px', maxHeight: '88vh', overflowY: 'auto', backgroundColor: '#FFF', borderRadius: '16px', boxShadow: '0 12px 32px rgba(0,0,0,0.25)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #E4E6EB', position: 'sticky', top: 0, backgroundColor: '#FFF', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '34px', height: '34px', borderRadius: '50%', backgroundColor: '#E7F3FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1877F2' }}><Wallet size={18} /></div>
+            <div><div style={{ fontWeight: 800, fontSize: '16px', color: '#050505' }}>Creator Wallet</div><div style={{ fontSize: '11px', color: '#65676B' }}>Earnings & Payouts</div></div>
+          </div>
+          <button type="button" onClick={onClose} style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', backgroundColor: '#F0F2F5', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#050505' }}><X size={18} /></button>
+        </div>
+        <div style={{ padding: '16px' }}>
+          <div style={{ background: 'linear-gradient(135deg, #1877F2, #0D5BD3)', borderRadius: '14px', padding: '16px', color: '#FFF', marginBottom: '12px' }}>
+            <div style={{ fontSize: '12px', opacity: 0.9, fontWeight: 600 }}>Available Balance</div>
+            <div style={{ fontSize: '28px', fontWeight: 800, margin: '4px 0 10px' }}>TZS {balance.toLocaleString()}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', backgroundColor: 'rgba(255,255,255,0.14)', padding: '8px 10px', borderRadius: '8px' }}>
+              <span>Earned: <b>TZS {earned.toLocaleString()}</b></span><span>Withdrawn: <b>TZS {withdrawn.toLocaleString()}</b></span><span>Min: <b>TZS {minPayout.toLocaleString()}</b></span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+            <button type="button" onClick={() => { navigator.clipboard?.writeText(supportUrl); setMsg({ text: 'Support link copied!', type: 'success' }); }} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #1877F2', backgroundColor: '#E7F3FF', color: '#1877F2', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Copy size={14} /> Copy Support Link</button>
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px', borderRadius: '10px', backgroundColor: '#25D366', color: '#FFF', fontWeight: 700, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}><Share2 size={14} /> Share WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
