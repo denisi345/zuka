@@ -16,11 +16,13 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
   const [blueTickOpen, setBlueTickOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [boostTarget, setBoostTarget] = useState(null);
+  const [boostPickerOpen, setBoostPickerOpen] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
   async function handleOpenMenuBoost() {
     if (!profile?.id) return;
-    const { data } = await supabase.from("posts").select("id").eq("user_id", profile.id).order("created_at", { ascending: false }).limit(1);
-    const firstId = Array.isArray(data) && data.length > 0 ? data[0].id : null;
-    setBoostTarget({ targetType: firstId ? "post" : "profile", targetId: firstId || profile.id });
+    const { data } = await supabase.from("posts").select("id, content, image_url, video_url, created_at").eq("user_id", profile.id).order("created_at", { ascending: false }).limit(20);
+    setUserPosts(Array.isArray(data) ? data : []);
+    setBoostPickerOpen(true);
   }
 
   const name = profile?.full_name || profile?.username || 'ZUKA Member';
