@@ -1,3 +1,4 @@
+import { Plus, Music, X, Send, Image as ImageIcon } from "lucide-react";
 import ZukaBadge from './ZukaBadge';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as Icons from 'lucide-react';

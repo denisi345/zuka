@@ -1,3 +1,4 @@
+import { Square, Mic } from "lucide-react";
 import { useMemo } from "react";
 import ZukaBadge from './ZukaBadge';
 import BoostModal from './BoostModal';

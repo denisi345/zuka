@@ -1,3 +1,4 @@
+import { Square, Mic } from "lucide-react";
 import { useEffect, useRef } from "react";
 import CreatorGiftModal from "./CreatorGiftModal";
 import BoostModal from "./BoostModal";
