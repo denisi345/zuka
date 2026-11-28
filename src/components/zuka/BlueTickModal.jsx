@@ -21,7 +21,10 @@ export default function BlueTickModal({ currentUser, onClose }) {
     if (!currentUser?.id || submitting) return;
     setSubmitting(true);
     try {
-      await supabase.from('payment_requests').insert({ user_id: currentUser.id, request_type: 'blue_tick', amount, currency, payment_provider: provider, payment_account: account.trim(), status: 'pending' });
+      const { data: reqRow } = await supabase.from('payment_requests').insert({ user_id: currentUser.id, request_type: 'blue_tick', amount, currency, payment_provider: provider, payment_account: account.trim(), status: 'pending' }).select('id').single();
+      const isCard = currency === 'USD' || /Visa|PayPal/i.test(provider);
+      const { data: fw } = await supabase.functions.invoke('gift-stk-push', { body: { reqId: reqRow?.id, payType: 'Blue Tick', amount, currency, provider, phone: account.trim(), isCard } });
+      if (fw?.checkoutUrl) { window.location.href = fw.checkoutUrl; return; }
       setSubmitted(true);
     } catch (e) {}
     setSubmitting(false);
