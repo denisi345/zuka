@@ -16,6 +16,12 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
   const [blueTickOpen, setBlueTickOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [boostTarget, setBoostTarget] = useState(null);
+  async function handleOpenMenuBoost() {
+    if (!profile?.id) return;
+    const { data } = await supabase.from("posts").select("id").eq("user_id", profile.id).order("created_at", { ascending: false }).limit(1);
+    const firstId = Array.isArray(data) && data.length > 0 ? data[0].id : null;
+    setBoostTarget({ targetType: firstId ? "post" : "profile", targetId: firstId || profile.id });
+  }
 
   const name = profile?.full_name || profile?.username || 'ZUKA Member';
 
@@ -28,6 +34,7 @@ export default function FacebookMenu({ profile, onClose, onNavigateTab, onOpenPr
   const shortcuts = [
     { label: 'Creator Wallet', desc: 'Earnings & payouts', icon: <Wallet size={22} color="#1877F2" />, action: () => setWalletOpen(true) },
     { label: 'Get Verified', desc: 'Blue tick verification', icon: <ZukaBadge size={22} />, action: () => setBlueTickOpen(true) },
+    { label: 'Boost Post', desc: 'Promote posts & grow reach', icon: <TrendingUp size={22} color="#1877F2" />, action: handleOpenMenuBoost },
     { label: 'Friends', desc: 'Find & manage friends', icon: <Users size={22} color="#1877F2" />, action: () => { onNavigateTab('friends'); onClose(); } },
     { label: 'Reels', desc: 'Short vertical videos', icon: <Film size={22} color="#F3425F" />, action: () => { onNavigateTab('reels'); onClose(); } },
     { label: 'Marketplace', desc: 'Buy & sell near you', icon: <Store size={22} color="#1877F2" />, action: () => { onNavigateTab('marketplace'); onClose(); } },
