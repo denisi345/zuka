@@ -21,5 +21,12 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
     if (p) setPayouts(p);
   };
   useEffect(() => { loadWallet(); }, [currentUser?.id]);
+  const earned = tips.reduce((sum, x) => sum + Number(x.creator_net ?? x.amount ?? 0), 0);
+  const withdrawn = payouts.filter((x) => x.status !== 'rejected').reduce((sum, x) => sum + Number(x.amount || 0), 0);
+  const balance = Math.max(0, earned - withdrawn);
+  const minPayout = Number(policy.min_payout_tzs || 5000);
+  const canWithdraw = !loading && balance >= minPayout && balance > 0;
+  const supportUrl = `${window.location.origin}/?support=${currentUser?.id || ''}`;
+  const whatsappUrl = `https://wa.me{encodeURIComponent('Support me on ZUKA: ' + supportUrl)}`;
   return null;
 }
