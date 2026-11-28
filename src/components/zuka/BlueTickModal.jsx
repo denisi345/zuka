@@ -13,7 +13,7 @@ export default function BlueTickModal({ currentUser, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   useEffect(() => {
-    supabase.from('platform_settings').select('blue_tick_price_tzs, blue_tick_price_usd').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPrices({ tzs: Number(data.blue_tick_price_tzs || 0), usd: Number(data.blue_tick_price_usd || 0) }); });
+    supabase.from('system_settings').select('blue_tick_price_tzs, blue_tick_price_usd').eq('id', 1).maybeSingle().then(({ data }) => { if (data) setPrices({ tzs: Number(data.blue_tick_price_tzs || 0), usd: Number(data.blue_tick_price_usd || 0) }); });
   }, []);
   const amount = currency === 'TZS' ? prices.tzs : prices.usd;
   const handlePay = async (e) => {
@@ -21,7 +21,7 @@ export default function BlueTickModal({ currentUser, onClose }) {
     if (!currentUser?.id || submitting) return;
     setSubmitting(true);
     try {
-      await supabase.from('payment_transactions').insert({ user_id: currentUser.id, item_type: 'blue_tick', amount, currency, provider, reference: `BT-${Date.now()}`, status: 'pending' });
+      await supabase.from('payment_requests').insert({ user_id: currentUser.id, request_type: 'blue_tick', amount, currency, payment_provider: provider, payment_account: account.trim(), status: 'pending' });
       setSubmitted(true);
     } catch (e) {}
     setSubmitting(false);
