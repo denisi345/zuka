@@ -11,5 +11,15 @@ export default function CreatorWalletModal({ currentUser, onClose }) {
   const [account, setAccount] = useState('');
   const [msg, setMsg] = useState({ text: '', type: 'info' });
   const [loading, setLoading] = useState(false);
+  const loadWallet = async () => {
+    if (!currentUser?.id) return;
+    const { data: s } = await supabase.from('system_settings').select('min_payout_tzs,min_payout_usd').eq('id', 1).maybeSingle();
+    if (s) setPolicy({ min_payout_tzs: Number(s.min_payout_tzs) > 0 ? Number(s.min_payout_tzs) : 5000, min_payout_usd: Number(s.min_payout_usd) > 0 ? Number(s.min_payout_usd) : 2 });
+    const { data: t } = await supabase.from('creator_tips').select('id,amount,creator_net,created_at').eq('receiver_id', currentUser.id).eq('payment_status', 'paid').order('created_at', { ascending: false }).limit(20);
+    if (t) setTips(t);
+    const { data: p } = await supabase.from('payout_requests').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(20);
+    if (p) setPayouts(p);
+  };
+  useEffect(() => { loadWallet(); }, [currentUser?.id]);
   return null;
 }
