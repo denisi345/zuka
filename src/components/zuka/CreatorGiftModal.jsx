@@ -58,7 +58,7 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
   const handleSend = async (e) => {
     e.preventDefault();
     setErr("");
-    if (!phone.trim()) { setErr(isCardOrGlobal ? "Weka Email yako ya risiti ya malipo." : "Weka namba yako ya simu."); return; }
+    if (!phone.trim()) { setErr(isCardOrGlobal ? "Weka Email yako ya risiti ya malipo." : "Please enter your phone number."); return; }
     if (policy.gifts_enabled === false || !amount || Number(amount) < curr.min || sending) return;
     setSending(true);
     try {
@@ -90,9 +90,9 @@ export default function CreatorGiftModal({ post, currentUserId, isOwner, hideGif
         {step === "pin" ? (
           <div style={{ textAlign: "center", padding: "20px 8px" }}>
             <div style={{ fontSize: "36px", marginBottom: "8px" }}>📲</div>
-            <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "6px", color: "#050505" }}>{isCardOrGlobal ? "Kamilisha Malipo ya Kadi / Kimataifa" : "Weka PIN kwenye simu yako"}</div>
-            <div style={{ fontSize: "13px", color: "#65676B", marginBottom: "14px" }}>{isCardOrGlobal ? `Kamilisha malipo ya ${curr.symbol}${Number(amount).toLocaleString()} kupitia ${provider} (${phone}). Zawadi itaenda kwa mwandaaji mara tu malipo yakithibitishwa.` : `Tumetuma ombi la ${provider} (${curr.symbol}${Number(amount).toLocaleString()}) kwenda ${phone}. Ingiza PIN yako kuthibitisha.`}</div>
-            <button type="button" onClick={() => setStep("form")} style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid #CCD0D5", backgroundColor: "#F0F2F5", fontWeight: 600, fontSize: "13px" }}>Ghairi / Badili Namba</button>
+            <div style={{ fontWeight: 700, fontSize: "16px", marginBottom: "6px", color: "#050505" }}>{isCardOrGlobal ? "Kamilisha Malipo ya Kadi / Kimataifa" : "Enter PIN on your phone"}</div>
+            <div style={{ fontSize: "13px", color: "#65676B", marginBottom: "14px" }}>{isCardOrGlobal ? `Kamilisha malipo ya ${curr.symbol}${Number(amount).toLocaleString()} kupitia ${provider} (${phone}). Zawadi itaenda kwa mwandaaji mara tu malipo yakithibitishwa.` : `Payment request sent via ${provider} (${curr.symbol}${Number(amount).toLocaleString()}) to ${phone}. Enter your PIN to confirm.`}</div>
+            <button type="button" onClick={() => setStep("form")} style={{ padding: "8px 16px", borderRadius: "10px", border: "1px solid #CCD0D5", backgroundColor: "#F0F2F5", fontWeight: 600, fontSize: "13px" }}>Cancel / Change Number</button>
           </div>
         ) : step === "done" ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
